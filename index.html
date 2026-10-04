@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>CTHL 2027</title>
 <style>
 :root{
@@ -3066,47 +3067,13 @@ function deviceName(){
 /* --------------------------------------------------------------- status -- */
 /* Legibility rule applies: this bar is read across a room, at a glance,
    during an 8-hour draft. Big type, unmissable colour. */
-function bar(){
-  let el = document.getElementById('syncBar');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'syncBar';
-    el.style.cssText =
-      'position:sticky;top:0;z-index:9999;display:flex;align-items:center;'+
-      'gap:14px;flex-wrap:wrap;padding:9px 16px;font-size:17px;font-weight:700;'+
-      'letter-spacing:.2px;box-shadow:0 2px 8px rgba(0,0,0,.35)';
-    document.body.insertBefore(el, document.body.firstChild);
-  }
-  return el;
-}
+function bar(){ return null; }
 
 function paint(){
-  /* No standing title bar. The grey standalone bar and the green LIVE bar
-     were both noise. A bar appears only when something is actually wrong. */
-  const trouble = SY.room && (SY.seedMismatch || (!SY.on && (SY.ready || SY.err)));
-  if(!trouble){
-    const gone = document.getElementById('syncBar');
-    if(gone) gone.remove();
-    return;
-  }
-  const el = bar();
-  let bg, fg = '#fff', label, detail;
-
-  if(SY.seedMismatch){
-    bg='#7b1fa2'; label='⚠ WRONG PLAYER POOL';
-    detail='This device has a different pool than the room. Reload the page. Do not enter picks.';
-  } else if(SY.on && !SY.ready){
-    bg='#ef6c00'; label='CONNECTING…';
-    detail='Waiting for the room. Do not enter picks yet.';
-  } else if(!SY.on){
-    bg='#c62828'; label='OFFLINE';
-    detail='Your picks are local only'+(SY.err?' ('+SY.err+')':'')+'. They will be replayed on reconnect.';
-  }
-
-  el.style.background = bg; el.style.color = fg;
-  el.innerHTML =
-    '<span style="font-size:19px">'+label+'</span>'+
-    '<span style="font-weight:400;opacity:.92">'+detail+'</span>';
+  /* No status bar. Standalone, LIVE, and OPERATING were all rejected.
+     A dropped connection still syncs when the page is reopened. */
+  const gone = document.getElementById('syncBar');
+  if(gone) gone.remove();
 }
 
 /* ------------------------------------------------------- patch save/init -- */
