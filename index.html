@@ -720,10 +720,36 @@ function migrate(){
   S.players.forEach(p=>{ if(PRENAME[p.name]) p.name=PRENAME[p.name]; });
   S.picks.forEach(k=>{ if(PRENAME[k.name]) k.name=PRENAME[k.name]; });
   S.taxi.forEach(t=>{ if(PRENAME[t.name]) t.name=PRENAME[t.name]; });
+  restoreSeedKeepers();
   computePosRanks();
   computeOverallRanks();
   computeProspectFloor();
   save();
+}
+/* The 47 keepers live in the baked-in seed. An empty shared room used to
+   replace that list with nothing. Put back any seed keeper who has not
+   already been sold or taxi'd. */
+function restoreSeedKeepers(){
+  let seed;
+  try{ seed = seedState(); }catch(e){ return 0; }
+  if(!Array.isArray(S.picks)) S.picks = [];
+  const taken = new Set(S.picks.map(k => String(k.pid)));
+  let added = 0;
+  (seed.picks||[]).forEach(k => {
+    if(!k || !k.keeper) return;
+    if(taken.has(String(k.pid))) return;
+    S.picks.push(JSON.parse(JSON.stringify(k)));
+    taken.add(String(k.pid));
+    added++;
+  });
+  const byId = {};
+  (S.players||[]).forEach(p => { byId[String(p.id)] = p; });
+  S.picks.forEach(k => {
+    if(!k.keeper) return;
+    const p = byId[String(k.pid)];
+    if(p && !p.pick) p.pick = {team:k.team, price:k.price, keeper:true, taxi:false};
+  });
+  return added;
 }
 
 /* ================= VALUES ENGINE (ported from validated backtest) ================= */
@@ -2713,7 +2739,7 @@ async function pushDelta(){
 
 /* --------------------------------------------------------- inbound merge -- */
 function applyRemote(d){
-  if(!d) return;
+  if(!d){ SY.needsKeeperSeed = true; return; }
 
   /* seedVer guard: a device whose baked-in pool differs from the room's pool
      must not operate. Mismatched pools would silently corrupt the draft —
@@ -2725,7 +2751,13 @@ function applyRemote(d){
 
   SY.applying = true;
   try{
-    S.picks = toArr(d.picks);
+    /* An empty room is "nobody has synced yet," not "the keepers were cut."
+       Never replace the baked-in keeper list with a blank pick list. */
+    const remotePicks = (d.picks == null) ? [] : toArr(d.picks);
+    const remoteIds = new Set(remotePicks.map(k => String(k.pid)));
+    if(remotePicks.length) S.picks = remotePicks;
+    const added = (typeof restoreSeedKeepers === 'function') ? restoreSeedKeepers() : 0;
+    SY.needsKeeperSeed = added > 0 || (S.picks||[]).some(k => k.keeper && !remoteIds.has(String(k.pid)));
     S.taxi  = toArr(d.taxi);
     if(d.hat) S.hat = d.hat;
     rebuildPickRefs();
@@ -2996,6 +3028,12 @@ async function refresh(){
     SY.ready = true;
     if(!SY.seedMismatch){ SY.canWrite = true; SY.heldWrite = true; }
     setOnline(true);
+    if(SY.needsKeeperSeed && SY.canWrite){
+      const snap = snapshot();
+      mirror = {picks:{}, taxi: snap.taxi, hat: snap.hat};
+      await pushDelta();
+      SY.needsKeeperSeed = false;
+    }
   }
   catch(e){ SY.err = e.message; setOnline(false); }
   paint();
@@ -3043,10 +3081,10 @@ function bar(){
 }
 
 function paint(){
-  /* Standalone (no room in the link) is the normal way this file is used.
-     The grey "STANDALONE — NOT SHARED" bar only restated that, so it is not
-     shown. The shared-room states below still appear when a room is in the link. */
-  if(!SY.room){
+  /* No standing title bar. The grey standalone bar and the green LIVE bar
+     were both noise. A bar appears only when something is actually wrong. */
+  const trouble = SY.room && (SY.seedMismatch || (!SY.on && (SY.ready || SY.err)));
+  if(!trouble){
     const gone = document.getElementById('syncBar');
     if(gone) gone.remove();
     return;
@@ -3063,9 +3101,6 @@ function paint(){
   } else if(!SY.on){
     bg='#c62828'; label='OFFLINE';
     detail='Your picks are local only'+(SY.err?' ('+SY.err+')':'')+'. They will be replayed on reconnect.';
-  } else {
-    bg='#2e7d32'; label='LIVE';
-    detail='Everyone on this link can enter sales. Last: '+SY.lastPick;
   }
 
   el.style.background = bg; el.style.color = fg;
