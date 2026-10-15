@@ -666,7 +666,7 @@ function save(){ try{ localStorage.setItem('cthl-auction', JSON.stringify(S)); }
    but only if no real auction has started, so nobody ever loses draft progress.
    Without this, anyone who opened a previous build keeps seeing the old pool
    forever, because localStorage always wins over the baked-in seed. */
-const SEED_VER = '2027-actuals.2';
+const SEED_VER = '2027-actuals.3';
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();
   s.seedVer = SEED_VER;
@@ -2960,21 +2960,21 @@ async function claim(pid){
 
 /* ------------------------------------------------------------- streaming -- */
 function setOnline(v){
-  if(SY.on === v) return;
+  if(SY.on === v && SY.canWrite === v) return;
   if(!v){
     /* Drop: freeze last room-aligned mirror + current local S so reconnect
-       can replay this device's offline additions. Restore heldWrite on
-       reconnect so claim()/replay can write — required, not extra. */
+       can replay this device's offline additions. Everyone in the room can
+       write, so a reconnect always replays. */
     if(!SY.wentOffline){
       SY.wentOffline = true;
-      SY.heldWrite = !!SY.canWrite;
+      SY.heldWrite = true;
       SY.offlineSnap = snapshot();
       SY.offlineLocal = SY.offlineSnap;
       SY.offlineMirror = JSON.parse(JSON.stringify(mirror));
       persistPending();
     }
     SY.canWrite = false;
-  } else if(SY.heldWrite){
+  } else {
     SY.canWrite = true;
   }
   SY.on = v;
@@ -3010,7 +3010,7 @@ function onEvent(ev, isPut){
 }
 
 async function refresh(){
-  try{ await ingest(await rGet('')); SY.ready = true; setOnline(true); }
+  try{ await ingest(await rGet('')); SY.ready = true; SY.canWrite = true; setOnline(true); }
   catch(e){ SY.err = e.message; setOnline(false); }
   paint();
 }
@@ -3077,12 +3077,9 @@ function paint(){
   } else if(!SY.on){
     bg='#c62828'; label='OFFLINE';
     detail='Your picks are local only'+(SY.err?' ('+SY.err+')':'')+'. They will be replayed on reconnect.';
-  } else if(SY.canWrite){
-    bg='#2e7d32'; label='OPERATING';
-    detail='Room '+SY.room.slice(0,8)+'… · last: '+SY.lastPick;
   } else {
-    bg='#37474f'; label='VIEWING';
-    detail='Room '+SY.room.slice(0,8)+'… · last: '+SY.lastPick;
+    bg='#2e7d32'; label='SHARED';
+    detail='Room '+SY.room.slice(0,8)+'… · anyone can enter picks · last: '+SY.lastPick;
   }
 
   el.style.background = bg; el.style.color = fg;
@@ -3090,23 +3087,8 @@ function paint(){
     '<span style="font-size:19px">'+label+'</span>'+
     '<span style="font-weight:400;opacity:.92">'+detail+'</span>';
 
-  if(SY.room && SY.on && SY.ready && !SY.canWrite && !SY.seedMismatch){
-    const b = document.createElement('button');
-    b.textContent = 'Enter operator PIN';
-    b.style.cssText='margin-left:auto;font-size:16px;font-weight:700;padding:6px 14px;'+
-      'border-radius:7px;border:0;cursor:pointer;background:#fff;color:#222';
-    b.onclick = askPin;
-    el.appendChild(b);
-  }
-  if(SY.canWrite){
-    const b = document.createElement('button');
-    b.textContent = 'Stop operating';
-    b.style.cssText='margin-left:auto;font-size:16px;font-weight:700;padding:6px 14px;'+
-      'border-radius:7px;border:0;cursor:pointer;background:rgba(255,255,255,.9);color:#222';
-    b.onclick = () => { SY.canWrite=false; paint(); };
-    el.appendChild(b);
-  }
 }
+
 
 function askPin(){
   if(!SY.ready){ alert('Still connecting to the room. Try again in a moment.'); return; }
