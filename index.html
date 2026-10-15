@@ -547,7 +547,7 @@ a{color:var(--link)}
       <div class="row">
         <button class="btn" onclick="exportState()">⬇ Backup file</button>
         <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Restore backup<input type="file" id="fileRestore" accept=".json" style="display:none"></label>
-        <button class="btn danger" onclick="resetToKeepers()">Reset to Draft Day (46 keepers)</button>
+        <button class="btn danger" onclick="resetToKeepers()">Reset to Draft Day</button>
         <button class="btn danger" onclick="resetAll()">Reset everything (wipes players too)</button>
       </div>
     </div>
@@ -666,7 +666,7 @@ function save(){ try{ localStorage.setItem('cthl-auction', JSON.stringify(S)); }
    but only if no real auction has started, so nobody ever loses draft progress.
    Without this, anyone who opened a previous build keeps seeing the old pool
    forever, because localStorage always wins over the baked-in seed. */
-const SEED_VER = '2027-actuals.1';
+const SEED_VER = '2027-actuals.2';
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();
   s.seedVer = SEED_VER;
@@ -1458,14 +1458,10 @@ function resetAll(){
 // auction/taxi picks. resetAll() nukes the player pool and settings too,
 // which isn't what you want between practice runs.
 function resetToKeepers(){
-  if(!confirm('Reset to Draft Day — clears all auction and taxi picks, keeps the keepers entered so far and the full player pool. Continue?')) return;
-  /* 2026-10-09: the 2027 seed ships with NO keepers (owners declare them over the
-     winter), so a plain seedState() would wipe every keeper already entered.
-     Carry the keepers across — but only from a state built on THIS seed, so an
-     old 2026-test-set save can't smuggle 2026 keepers into the 2027 pool. */
-  const carry = (S && S.seedVer===SEED_VER) ? S.picks.filter(k=>k.keeper) : [];
+  if(!confirm('Reset to Draft Day — loads the current published version: this player pool, these values, and the keepers baked into this file. Auction and taxi picks are cleared. Continue?')) return;
+  /* Loads the file, not whatever happens to be on screen. A winter test board
+     must not survive a reset. The baked-in keepers are the current version. */
   S=seedState();
-  carry.forEach(k=>{ const p=S.players.find(x=>x.id===k.pid); if(p){ p.pick={team:k.team,price:k.price,keeper:true,taxi:false}; S.picks.push(k); } });
   migrate(); save(); renderAll(); loadSettingsForm();
 }
 
@@ -2740,7 +2736,15 @@ function applyRemote(d){
 
   SY.applying = true;
   try{
-    S.picks = toArr(d.picks);
+    /* An empty room is "nobody has synced yet," not "the keepers were cut."
+       Never replace the baked-in keeper list with a blank pick list. A room
+       that already has picks is the shared board and wins. */
+    const remotePicks = (d.picks == null) ? [] : toArr(d.picks);
+    if(remotePicks.length) S.picks = remotePicks;
+    else {
+      const seed = seedState();
+      if(!(S.picks||[]).some(k => k.keeper)) S.picks = (seed.picks||[]).filter(k => k.keeper);
+    }
     S.taxi  = toArr(d.taxi);
     if(d.hat) S.hat = d.hat;
     rebuildPickRefs();
