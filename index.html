@@ -892,7 +892,7 @@ function openPick(id, mode){
   const keepMode2 = (mode==='keeper');
   const p = S.players.find(x=>x.id===id); if(!p) return;
   dlgPlayer=p;
-  const esc=s=>String(s==null?'':s).replace(/&/g,'&').replace(/</g,'<').replace(/"/g,'"');
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&'+'amp;').replace(/</g,'&'+'lt;').replace(/"/g,'&'+'quot;');
   $('dlgLogoWrap').innerHTML = clubLogoHTML(p.team);
   $('dlgName').textContent = p.name;
   const prBadge = posRankBadge(p);
@@ -2174,7 +2174,7 @@ function clubLogoHTML(c){
    can't drift apart. `prefix` is for a lock/taxi glyph ahead of the name.
    Callers own the surrounding <td>/<div> and any click handler. */
 function plCellHTML(p, prefix){
-  const e=s=>String(s==null?'':s).replace(/&/g,'&').replace(/</g,'<').replace(/"/g,'"');
+  const e=s=>String(s==null?'':s).replace(/&/g,'&'+'amp;').replace(/</g,'&'+'lt;').replace(/"/g,'&'+'quot;');
   return clubLogoHTML(p.team)
     + `<span class="txt"><span class="nm">${prefix||''}${e(p.name)}</span>`
     + `<span class="sub">${e(p.team)} · ${e(dispElig(p))||'—'}</span></span>`;
@@ -2276,7 +2276,7 @@ function renderTeamSummary(){
     + tsBig('NEEDS', S.settings.slots-auc.length, 'var(--navy)')
     + tsBig('LEFT', '$'+m.left, 'var(--green)')
     + tsBig('MAX BID', '$'+Math.max(m.max,0), 'var(--red)');
-  const esc=s=>String(s==null?'':s).replace(/&/g,'&').replace(/</g,'<').replace(/"/g,'"');
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&'+'amp;').replace(/</g,'&'+'lt;').replace(/"/g,'&'+'quot;');
   const tq=team.replace(/'/g,"\\'");
 
   /* Name column width, measured once for the whole view so all three sections
