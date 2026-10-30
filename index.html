@@ -487,29 +487,21 @@ a{color:var(--link)}
 </div>
 
 <!-- ============ SETTINGS ============ -->
-<!-- 2026-10-30: stripped to the three things owners need. League rules, teams,
-     pricing and projections are fixed in code (DEFAULTS / seed); resets are
-     commissioner-only (done by the developer, not from the app). -->
+<!-- 2026-10-30: stripped to what owners need (10/30: Backup / Restore removed too). League rules, teams,
+     pricing and projections are fixed in code (DEFAULTS / seed); resets, backups and
+     restores are commissioner-only (scripts outside the app). -->
 <div class="view" id="view-settings">
   <div class="grid cols-2">
     <div class="card">
       <h2>Player pool</h2>
       <p class="muted" style="margin-bottom:10px">Late signings, waiver pickups, minor leaguers not on the loaded list.</p>
       <button class="btn" onclick="addDlg.showModal()">+ Add player</button>
+      <div id="importStatus" class="muted" style="margin-top:8px"></div>
     </div>
     <div class="card">
       <h2>Draft results</h2>
       <p class="muted" style="margin-bottom:10px">CSV of every pick — for entering results into CBS and your records.</p>
       <button class="btn" onclick="exportCSV()">⬇ Download results CSV</button>
-    </div>
-    <div class="card">
-      <h2>Backup / Restore</h2>
-      <p class="muted" style="margin-bottom:10px">State auto-saves in this browser. Download a backup file before draft day and between sessions — restoring it recreates players, keepers and picks.</p>
-      <div class="row">
-        <button class="btn" onclick="exportState()">⬇ Backup file</button>
-        <label class="btn ghost" style="display:inline-block;cursor:pointer">⬆ Restore backup<input type="file" id="fileRestore" accept=".json" style="display:none"></label>
-      </div>
-      <div id="importStatus" class="muted" style="margin-top:8px"></div>
     </div>
   </div>
 </div>
@@ -642,7 +634,7 @@ function load(){
           // draft in progress on an old pool — respect it, but say so out loud
           setTimeout(()=>{
             const el = $('importStatus');
-            if(el) el.textContent = 'Note: a newer player pool ships with this version, but your draft is already underway so your data was kept. To adopt the new pool, download a backup first, then ask the commissioner to load it.';
+            if(el) el.textContent = 'Note: a newer player pool ships with this version, but your draft is already underway so your data was kept. To adopt the new pool, ask the commissioner.';
           }, 0);
         }
         return;
@@ -1269,7 +1261,6 @@ function exportCSV(){
   });
   dl(csv,'CTHL draft results.csv','text/csv');
 }
-function exportState(){ dl(JSON.stringify(S), 'CTHL auction backup '+new Date().toISOString().slice(0,10)+'.json','application/json'); }
 function dl(content,name,type){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name; a.click();
@@ -2250,12 +2241,6 @@ $('dlgTeam').onchange=updateDlgMax;
 $('tsTeam').onchange=renderTeamSummary;
 $('addKind').onchange=renderEligBoxes; renderEligBoxes();
 $('keepBoardSearch').oninput=renderKeepers;
-$('fileRestore').onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{ try{ S=JSON.parse(ev.target.result); migrate(); renderAll(); alert('Backup restored.'); }catch(err){ alert('Invalid backup file.'); } };
-  r.readAsText(f);
-};
 </script>
 <script>
 /* ============================================================================
