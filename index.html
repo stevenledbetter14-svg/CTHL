@@ -330,6 +330,35 @@ a{color:var(--link)}
 .pc-link:hover{border-color:var(--link);background:#f0f6ff}
 /* Best Available — roomier now that hitters and pitchers are split */
 /* #bestTable rules removed 2026-08-16 with the Best Available view. */
+/* Draft List — mirrors the printed draft day sheet, greyscale only */
+.dlteams{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.dlteam{background:#fff;border:1px solid #bbb;border-radius:5px;padding:4px 6px;min-width:58px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--font);font-size:13px;font-weight:700;color:#111}
+.dlteam img{height:30px;width:auto;display:block}
+.dlteam .abbr{display:none}
+.dlteam:hover{background:#f2f2f2}
+.dlteam .dlab{padding:0 5px;border-radius:3px}
+.dlteam.active{border-color:#333;box-shadow:0 0 0 1px #333}
+.dlteam.active .dlab{background:#333;color:#fff}
+.dlname{text-align:center;font-size:24px;font-weight:800;color:#111}
+.dlcount{text-align:center;font-size:14px;color:#777;margin-bottom:12px}
+.dlsec{margin-bottom:14px;color:#111;font-size:16.5px}
+.dlhead,.dlcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:16px}
+.dlhead{background:#e6e6e6;border:1px solid #bbb;padding:4px 0;font-weight:700}
+.dlhc,.dlrow{display:flex;gap:8px;padding:0 6px}
+.dlm{flex:0 0 44px}
+.dlrow{cursor:pointer;padding-top:5px}
+.dlrow:hover{background:#f2f2f2}
+.dlrow .dlm{border-bottom:1px solid #999}
+.dlrow .dlnm{flex:1;min-width:0;border-bottom:1px solid #bbb;padding-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlhc .dlnm{flex:1;min-width:0}
+.dlown{flex:0 0 34%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlhc .dlown{font-weight:400;font-size:13px;color:#555;align-self:flex-end}
+.dlrow .dlown{border-bottom:1px solid #999;font-size:14.5px;padding-bottom:2px}
+.dlrow .dlm{font-weight:700;text-align:right;padding-right:3px}
+@media(max-width:760px){
+  .dlhead,.dlcols{grid-template-columns:1fr}
+  .dlhc:not(:first-child){display:none}
+}
 </style>
 </head>
 <body>
@@ -343,6 +372,14 @@ a{color:var(--link)}
   </div>
 </header>
 <main>
+
+<!-- ============ DRAFT LIST ============ -->
+<div class="view" id="view-list">
+  <div class="card dlcard">
+    <div class="dlteams" id="dlTeams"></div>
+    <div id="dlSheet"></div>
+  </div>
+</div>
 
 <!-- ============ DRAFT ROOM ============ -->
 <div class="view" id="view-draft">
@@ -1269,14 +1306,14 @@ function dl(content,name,type){
 /* ================= RENDER ================= */
 // 'best' and 'rosters' removed 2026-08-16 — superseded by the Player Pool and
 // the Team Summary respectively.
-const NAVS=[['draft','Draft Room'],['money','Money Check'],['team','Team Summary'],['standings','Standings'],['keepers','Keepers'],['taxi','Taxi Draft'],['settings','Settings']];
-let activeView='draft', mlbSel='';
+const NAVS=[['list','Draft List'],['draft','Projections'],['money','Money Check'],['team','Team Summary'],['standings','Standings'],['keepers','Keepers'],['taxi','Taxi Draft'],['settings','Settings']];
+let activeView='list', mlbSel='';
 
 function show(v){
   // guard added 2026-08-16 when the Rosters and Best Available views were
   // removed — a stale view name would otherwise throw on the null lookup and
   // take the whole render down with it
-  if(!$('view-'+v)) v='draft';
+  if(!$('view-'+v)) v='list';
   activeView=v;
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   $('view-'+v).classList.add('active');
@@ -1906,6 +1943,55 @@ function renderClubs(){
   }).join('');
 }
 
+/* ================= DRAFT LIST ================= */
+/* Mirrors the printed draft day list: one club at a time, every player on it,
+   no keeper marks. The $$$ and Team write-in spaces fill from p.pick (same
+   source as the Player Pool) once a player is sold at auction; keepers and
+   taxi picks stay blank. */
+const DLORDER=['BAL','BOS','CHW','CLE','DET','HOU','KCR','LAA','MIN','NYY','ATH','OAK','SEA','TBR','TEX','TOR'];
+const DLNAMES={BAL:'Baltimore Orioles',BOS:'Boston Red Sox',CHW:'Chicago White Sox',CLE:'Cleveland Guardians',DET:'Detroit Tigers',HOU:'Houston Astros',KCR:'Kansas City Royals',LAA:'Los Angeles Angels',MIN:'Minnesota Twins',NYY:'New York Yankees',ATH:'Athletics',OAK:'Athletics',SEA:'Seattle Mariners',TBR:'Tampa Bay Rays',TEX:'Texas Rangers',TOR:'Toronto Blue Jays'};
+const DLSECTIONS=['Pitchers','Catchers','Infielders','Outfielders','DH'];
+let dlClub=null;
+function dlSet(c){ dlClub=c; renderDraftList(); }
+function dlSection(p){
+  if(p.kind==='P') return 'Pitchers';
+  const parts=(p.elig||'').split('/').filter(x=>x && !['MI','CI','Util'].includes(x));
+  if(parts.includes('C')) return 'Catchers';
+  if(parts.some(x=>['1B','2B','3B','SS'].includes(x))) return 'Infielders';
+  if(parts.includes('OF')) return 'Outfielders';
+  return 'DH';
+}
+function renderDraftList(){
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const ALset=new Set((S.settings.al||'').split(',').map(x=>x.trim().toUpperCase()));
+  const rank=c=>{ const i=DLORDER.indexOf(String(c).toUpperCase()); return i<0?DLORDER.length:i; };
+  const clubs=[...new Set(S.players.map(p=>p.team))].filter(c=>ALset.has(String(c).toUpperCase()))
+    .sort((a,b)=>rank(a)-rank(b)||String(a).localeCompare(String(b)));
+  if(!clubs.includes(dlClub)) dlClub=clubs.length?clubs[0]:null;
+  $('dlTeams').innerHTML=clubs.map(c=>
+    `<button class="dlteam${c===dlClub?' active':''}" onclick="dlSet('${c}')">${clubLogoHTML(c)}<span class="dlab">${esc(c)}</span></button>`
+  ).join('');
+  if(dlClub===null){ $('dlSheet').innerHTML=''; return; }
+
+  const players=S.players.filter(p=>p.team===dlClub);
+  const row=p=>{
+    const sold = p.pick && !p.pick.keeper && !p.pick.taxi;
+    return `<div class="dlrow${sold?' sold':''}" data-pid="${esc(p.id)}" onclick="openPick(this.dataset.pid)">`
+      + `<span class="dlm">${sold?'$'+esc(p.pick.price):''}</span><span class="dlnm">${esc(p.name)}</span>`
+      + `<span class="dlown"${sold?` title="${esc(p.pick.team)}"`:''}>${sold?esc(p.pick.team):''}</span></div>`;
+  };
+  const sections=DLSECTIONS.map(title=>{
+    const list=players.filter(p=>dlSection(p)===title)
+      .sort((a,b)=>lastKey(a.name).localeCompare(lastKey(b.name))||String(a.name).localeCompare(String(b.name)));
+    const rows=Math.ceil(list.length/3);
+    const cell=`<div class="dlhc"><span class="dlm">$$$</span><span class="dlnm">${title}</span><span class="dlown">Team</span></div>`;
+    const cols=[0,1,2].map(i=>`<div class="dlcol">${list.slice(i*rows,(i+1)*rows).map(row).join('')}</div>`).join('');
+    return `<div class="dlsec"><div class="dlhead">${cell.repeat(3)}</div><div class="dlcols">${cols}</div></div>`;
+  }).join('');
+  $('dlSheet').innerHTML=`<div class="dlname">${esc(DLNAMES[String(dlClub).toUpperCase()]||dlClub)}</div>`
+    + `<div class="dlcount">${players.length} players</div>${sections}`;
+}
+
 /* ================= MONEY CHECK ================= */
 function renderMoney(){
   const teams=S.settings.teams;
@@ -2229,11 +2315,11 @@ function renderStandings(){
 function renderAll(){
   // isolate view renders so one failure can't blank the others
   const safe=f=>{ try{ f(); }catch(e){ console.error(f.name, e); } };
-  [renderMeter,renderPool,renderTeams,renderLog,renderKeepers,renderTaxi,renderTaxiBoard,renderTeamSummary,renderStandings,renderMoney,renderClubs].forEach(safe);
+  [renderMeter,renderPool,renderTeams,renderLog,renderKeepers,renderTaxi,renderTaxiBoard,renderTeamSummary,renderStandings,renderMoney,renderClubs,renderDraftList].forEach(safe);
 }
 
 /* ================= INIT ================= */
-load(); renderNav(); renderAll(); show('draft');
+load(); renderNav(); renderAll(); show('list');
 $('search').oninput=renderPool;
 $('taxiBoardSearch').oninput=renderTaxiBoard;
 $('hideDrafted').onchange=renderPool;
