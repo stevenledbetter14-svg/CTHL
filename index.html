@@ -17,7 +17,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:17
    pages (Money Check) get the exact same header layout — no reflow on nav */
 html{scrollbar-gutter:stable}
 header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"title nav nav" "clubs clubs meter";
+  grid-template-areas:"title nav meter";
   align-items:center;column-gap:18px;padding:10px 18px;
   background:linear-gradient(90deg,var(--navy),var(--accent));border-bottom:3px solid var(--navy);position:sticky;top:0;z-index:50}
 header h1{grid-area:title;font-size:20px;color:#fff;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
@@ -30,6 +30,10 @@ nav::-webkit-scrollbar-track{background:transparent}
 nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.45);border-radius:4px}
 nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.7)}
 /* ---- MLB club logo bar (the hat) ---- */
+/* 2026-10-31: the hat bar is no longer shown in the header (club-by-club
+   now lives in the Draft List tab), so the header is one row at desktop
+   width. The element stays, hidden, so the hat bookkeeping still renders. */
+#clubBar{display:none!important}
 #clubBar{grid-area:clubs;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 0 1px;border-top:1px solid rgba(255,255,255,.22);margin-top:8px}
 #clubBar .hatlabel{font-size:13px;color:rgba(255,255,255,.72);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;margin-right:2px}
 .clublogo{background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.5);border-radius:6px;padding:3px 7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;height:42px;min-width:52px;transition:opacity .15s,filter .15s}
@@ -267,6 +271,30 @@ table.stand td.tm{cursor:pointer}
 #meter .mstat{display:inline-block;margin-left:16px;text-align:right;vertical-align:top}
 #meter .mstat .mlab{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.7)}
 #meter .mstat .mval{display:block;font-size:21px;font-weight:700;color:#fff;line-height:1.15}
+/* one-row header: tab labels never wrap; tighter tabs + meter below 1400px */
+nav button{white-space:nowrap}
+@media(max-width:1400px){
+  header{column-gap:14px}
+  nav button{padding:8px 8px;font-size:14.5px}
+  #meter .mstat{margin-left:12px}
+  #meter .mstat .mlab{font-size:11px}
+  #meter .mstat .mval{font-size:19px}
+}
+/* narrow screens: title + meter on top, tabs (scrollable) underneath */
+@media(max-width:900px){
+  header{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"title meter" "nav nav";row-gap:6px;padding:8px 12px}
+  #meter{border-left:none;padding-left:0}
+  #meter .mstat{margin-left:12px}
+  #meter .mstat .mlab{font-size:10.5px}
+  #meter .mstat .mval{font-size:17px}
+}
+@media(max-width:480px){
+  header{column-gap:8px}
+  header h1{font-size:15px;letter-spacing:.2px}
+  #meter .mstat{margin-left:9px}
+  #meter .mstat .mlab{font-size:9px;letter-spacing:.2px}
+  #meter .mstat .mval{font-size:16px}
+}
 .over{color:var(--red)}.under{color:var(--green)}
 #log li{list-style:none;padding:5px 0;border-bottom:1px solid #edeef2;font-size:15px}
 .muted{color:var(--dim);font-size:15px}
@@ -366,7 +394,7 @@ a{color:var(--link)}
   <h1>⚾ CTHL 2027</h1>
   <nav id="nav"></nav>
   <div id="meter"></div>
-  <div id="clubBar">
+  <div id="clubBar" hidden>
     <span class="hatlabel">In the hat <span id="clubCount"></span></span>
     <span id="clubChips" style="display:contents"></span>
   </div>
@@ -1946,8 +1974,10 @@ function renderClubs(){
 /* ================= DRAFT LIST ================= */
 /* Mirrors the printed draft day list: one club at a time, every player on it,
    no keeper marks. The $$$ and Team write-in spaces fill from p.pick (same
-   source as the Player Pool) once a player is sold at auction; keepers and
-   taxi picks stay blank. */
+   source as the Player Pool) once a player is owned. 2026-10-31: keepers fill
+   like auction sales (keeper price + team; $ blank if no price). Taxi picks
+   show the team only — the app never prices them (price 0, excluded from
+   the meter and budgets), so the $$$ stays blank. */
 const DLORDER=['BAL','BOS','CHW','CLE','DET','HOU','KCR','LAA','MIN','NYY','ATH','OAK','SEA','TBR','TEX','TOR'];
 const DLNAMES={BAL:'Baltimore Orioles',BOS:'Boston Red Sox',CHW:'Chicago White Sox',CLE:'Cleveland Guardians',DET:'Detroit Tigers',HOU:'Houston Astros',KCR:'Kansas City Royals',LAA:'Los Angeles Angels',MIN:'Minnesota Twins',NYY:'New York Yankees',ATH:'Athletics',OAK:'Athletics',SEA:'Seattle Mariners',TBR:'Tampa Bay Rays',TEX:'Texas Rangers',TOR:'Toronto Blue Jays'};
 const DLSECTIONS=['Pitchers','Catchers','Infielders','Outfielders','DH'];
@@ -1975,10 +2005,11 @@ function renderDraftList(){
 
   const players=S.players.filter(p=>p.team===dlClub);
   const row=p=>{
-    const sold = p.pick && !p.pick.keeper && !p.pick.taxi;
-    return `<div class="dlrow${sold?' sold':''}" data-pid="${esc(p.id)}" onclick="openPick(this.dataset.pid)">`
-      + `<span class="dlm">${sold?'$'+esc(p.pick.price):''}</span><span class="dlnm">${esc(p.name)}</span>`
-      + `<span class="dlown"${sold?` title="${esc(p.pick.team)}"`:''}>${sold?esc(p.pick.team):''}</span></div>`;
+    const k=p.pick, own=!!(k && k.team);
+    const pr=own && !k.taxi && k.price!=null && k.price!=='' && !(k.keeper && !(Number(k.price)>0));
+    return `<div class="dlrow${own?' sold':''}" data-pid="${esc(p.id)}" onclick="openPick(this.dataset.pid)">`
+      + `<span class="dlm">${pr?'$'+esc(k.price):''}</span><span class="dlnm">${esc(p.name)}</span>`
+      + `<span class="dlown"${own?` title="${esc(k.team)}"`:''}>${own?esc(k.team):''}</span></div>`;
   };
   const sections=DLSECTIONS.map(title=>{
     const list=players.filter(p=>dlSection(p)===title)
