@@ -249,6 +249,7 @@ table.pool th.aav{background:#e6ecf5}
    on declaration day) but reads as struck off and takes no click. */
 table.pool tr.kdead{opacity:.5}
 table.pool tr.kdead td.pl .nm{text-decoration:line-through}
+table.pool td.aav .kstat{white-space:nowrap;font-size:12px;font-weight:700}
 .stsec .tsbody .tsrow{min-height:56px}
 .stsec .slot{font-size:17px}
 @media(max-width:1100px){
@@ -680,9 +681,16 @@ const SEED2026 = {"settings":{"budget":260,"slots":25,"maxKeep":5,"taxiRounds":5
      CBS eligibility (elig) is NOT changed. Players not listed keep the
      section worked out from their CBS eligibility.
    * team:    MLB club code to use instead of the pool's team.
-   * exclude: dropped from the pool on load. Safety: a player who has a pick
-     (keeper, sale or taxi) in this browser or the room stays in, with a
-     warning, so a room is never broken.
+   * status:  "nl:<TEAM>" (traded to the NL; "nl:?" = team not known yet)
+     or "fa" (free agent). Struck through on the Keeper List with a note
+     ("Traded to NL (LAD)", "Traded to NL", "FA"), can't be declared a
+     keeper, and left out of the pool and Draft List. Delete the entry, or
+     give him an AL "team" entry, and he's restored everywhere.
+   * exclude: dropped from the pool on load, no Keeper List note. Still
+     works, but status is the one source of truth for NL / FA players.
+   Safety (status and exclude): a player who already has a pick (keeper,
+   sale or taxi) in this browser or the room stays in, with a warning, so
+   a room is never broken.
    Overrides are applied on every load, so they do NOT need a SEED_VER bump. */
 const POOL_OVERRIDES = {
   "section": {
@@ -727,18 +735,21 @@ const POOL_OVERRIDES = {
   "team": {
     "pcb5c742": "DET"   // Tsung-Che Cheng (was BOS)
   },
+  "status": {
+    "p18f135d": "nl:?",   // Connelly Early (NL) - Traded to NL
+    "pfc2e6a5": "nl:?",   // Kevin Gausman (NL) - Traded to NL
+    "p7bdc968": "nl:?",   // Kris Bubic (NL) - Traded to NL
+    "p10c475": "nl:LAD",   // Tarik Skubal (NL) - Traded to NL (LAD)
+    "pe883a1d": "nl:?",   // Kirby Yates (NL) - Traded to NL
+    "p7b8bcdc": "nl:?",   // Gabriel Arias (NL) - Traded to NL
+    "p4995239": "nl:?",   // Bo Naylor (NL) - Traded to NL
+    "p6ce193c": "nl:?",   // Jesus Sanchez (NL) - Traded to NL
+    "p174c77a": "nl:?",   // Lane Thomas (NL) - Traded to NL
+    "p7731af1": "nl:?",   // Marcelo Mayer (NL) - Traded to NL
+    "paa05e11": "nl:?"   // Austin Hays (NL) - Traded to NL
+  },
   "exclude": [
-    "p18f135d",   // Connelly Early (NL)
-    "pfc2e6a5",   // Kevin Gausman (NL)
-    "p7bdc968",   // Kris Bubic (NL)
-    "p10c475",   // Tarik Skubal (NL)
-    "pe883a1d",   // Kirby Yates (NL)
-    "p7b8bcdc",   // Gabriel Arias (NL)
-    "p4995239",   // Bo Naylor (NL)
-    "p6ce193c",   // Jesus Sanchez (NL)
-    "p174c77a",   // Lane Thomas (NL)
-    "p7731af1",   // Marcelo Mayer (NL)
-    "paa05e11"   // Austin Hays (NL)
+
   ]
 };
 /* ================= END POOL OVERRIDES ================= */
@@ -976,6 +987,8 @@ function confirmKeeperPick(){
   /* `traded` is a destination team name on the 2027 list but a bare `true` on
      the 2026 one — that PDF strikes the row through without recording where he
      went. Handle both rather than printing "was traded to true". */
+  const stNote=poolStatusNote(p.id);
+  if(stNote){ alert(p.name+' — '+stNote+' — ineligible to keep.'); return; }
   if(kl&&kl.traded){
     alert(p.name + (typeof kl.traded==='string' ? ' was traded to '+kl.traded : ' was traded in-season')
       + ' — ineligible to keep.'); return;
@@ -1703,13 +1716,20 @@ function keepSort(k){
    clicked and they sort to the bottom on price. */
 function keeperCandidates(){
   const out=[];
-  S.players.forEach(p=>{
-    const kl=keeperLookup(p.name);
+  /* POOL_OVERRIDES status players (NL / FA) are out of the pool but stay on
+     the Keeper List, struck through with a note — same idea as a CTHL trade. */
+  const inPool=new Set(S.players.map(p=>String(p.id)));
+  const list=S.players.concat(Object.values(poolStruck).filter(p=>!inPool.has(String(p.id))));
+  list.forEach(p=>{
+    const note=poolStatusNote(p.id);
+    // a status player missing from the loaded price list (Skubal) still shows,
+    // from the built-in 2027 list, so the strike-through is visible
+    const kl=keeperLookup(p.name) || (note ? KEEPERS2027[knorm(p.name)] : null);
     if(!kl) return;
     // owner column: the 2027 list names the destination team, the 2026 one
     // only knows he's gone — fall back to the listing team either way
     const own = (typeof kl.traded==='string') ? kl.traded : (kl.team||'');
-    out.push({p, kv:kl.traded?-1:(kl.v||0), owner:own, traded:!!kl.traded});
+    out.push({p, kv:(kl.traded||note)?-1:(kl.v||0), owner:own, traded:!!kl.traded, status:note, price:kl.v||0});
   });
   return out;
 }
@@ -1766,7 +1786,7 @@ function renderKeepers(){
   const tbl=$('keepBoardTable');
   const wPl=plCellWidth(rows.length?rows.map(x=>x.p):S.players.filter(p=>p.kind===keepMode), 3, 210, 20);
   const cols=`<colgroup><col style="width:86px"><col style="width:${wPl}px">`
-    + '<col style="width:110px"><col style="width:150px"><col></colgroup>';
+    + '<col style="width:170px"><col style="width:150px"><col></colgroup>';
   const head='<thead><tr>'
     + `<th class="st rank" onclick="keepSort('rank')" title="Same overall rank used on the Player Pool">Rank${arrow('rank')}</th>`
     + `<th class="pl" onclick="keepSort('name')">Player${arrow('name')}</th>`
@@ -1779,11 +1799,13 @@ function renderKeepers(){
     const kept=p.pick&&p.pick.keeper;
     // opens the same player card the Draft Room uses, in keeper mode — team
     // and salary prefilled from the Keeper List, both editable
-    const click = x.traded ? '' : ` style="cursor:pointer" onclick="openPick('${p.id}','keeper')"`;
-    const val = x.traded ? '<span class="over">TRADED</span>'
+    const dead = x.traded || !!x.status;
+    const click = dead ? '' : ` style="cursor:pointer" onclick="openPick('${p.id}','keeper')"`;
+    const val = x.status ? `<s class="muted">${fmt$(x.price)}</s> <span class="over kstat" title="${x.traded?'Also traded within CTHL':''}">${x.status}</span>`
+              : x.traded ? '<span class="over">TRADED</span>'
               : kept ? `<b>${fmt$(x.kv)}</b> 🔒`
               : `<b>${fmt$(x.kv)}</b>`;
-    body+=`<tr${click} class="${x.traded?'kdead':''}">`
+    body+=`<tr${click} class="${dead?'kdead':''}">`
       + `<td class="st rank muted">${rk?'#'+rk:'—'}</td>`
       + `<td class="pl"><div class="tspl">${plCellHTML(p)}</div></td>`
       + `<td class="st aav">${val}</td>`
@@ -2418,8 +2440,25 @@ function renderStandings(){
   $('standSub').textContent = `— ${drafted} active roster spots filled`;
 }
 
-/* ---- POOL_OVERRIDES: team + exclude (section is read by dlSection) ---- */
+/* ---- POOL_OVERRIDES: team + status + exclude (section is read by dlSection) ---- */
 const poolStash = {};     // excluded players, kept aside in case a room has a pick on one
+const poolStruck = {};    // id -> player with an active status (NL / FA), for the Keeper List
+/* Active status for a player id, or null. An AL "team" override beats a
+   status: that's how a player who signs back with an AL club is restored. */
+function poolStatus(id){
+  const O=(typeof POOL_OVERRIDES==='object' && POOL_OVERRIDES) || {};
+  const st=(O.status||{})[id]; if(!st) return null;
+  const t=(O.team||{})[id];
+  const al=new Set(String((S&&S.settings&&S.settings.al)||SEED2026.settings.al||'').split(',').map(x=>x.trim().toUpperCase()));
+  if(t && al.has(String(t).toUpperCase())) return null;
+  return String(st);
+}
+function poolStatusNote(id){
+  const st=poolStatus(id); if(!st) return '';
+  if(st==='fa') return 'FA';
+  const m=st.match(/^nl:(.*)$/i); if(!m) return '';
+  return (m[1] && m[1]!=='?') ? 'Traded to NL ('+m[1].toUpperCase()+')' : 'Traded to NL';
+}
 const poolKeptWarn = {};  // id -> name of excluded players kept because they're picked
 function poolPickedIds(){
   return new Set([...(S.picks||[]).map(k=>String(k.pid)), ...(S.taxi||[]).map(t=>String(t.pid))]);
@@ -2434,6 +2473,7 @@ function poolWarn(p){
 function applyPoolOverrides(){
   const O=(typeof POOL_OVERRIDES==='object' && POOL_OVERRIDES) || {};
   const T=O.team||{}, ex=new Set((O.exclude||[]).map(String));
+  Object.keys(O.status||{}).forEach(id=>{ if(poolStatus(id)) ex.add(String(id)); });
   /* Same seed as this build: re-derive from SEED2026 each load, so taking an
      entry OUT of the block also undoes it (team reset, player back in). */
   const seedP = (S.seedVer===SEED_VER && SEED2026 && SEED2026.players) || [];
@@ -2443,6 +2483,12 @@ function applyPoolOverrides(){
   S.players.forEach(p=>{
     if(T[p.id]) p.team=T[p.id];
     else if(seedIdx[String(p.id)]) p.team=seedIdx[String(p.id)].team;
+  });
+  Object.keys(poolStruck).forEach(id=>{ delete poolStruck[id]; });
+  Object.keys(O.status||{}).forEach(id=>{
+    if(!poolStatus(id)) return;
+    const p=S.players.find(x=>String(x.id)===String(id)) || seedIdx[String(id)];
+    if(p) poolStruck[id]=p;
   });
   if(!ex.size) return;
   const picked=poolPickedIds();
