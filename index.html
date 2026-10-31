@@ -682,8 +682,8 @@ const SEED2026 = {"settings":{"budget":260,"slots":25,"maxKeep":5,"taxiRounds":5
      section worked out from their CBS eligibility.
    * team:    MLB club code to use instead of the pool's team.
    * status:  "nl:<TEAM>" (traded to the NL; "nl:?" = team not known yet)
-     or "fa" (free agent). Struck through on the Keeper List with a note
-     ("Traded to NL (LAD)", "Traded to NL", "FA"), can't be declared a
+     "fa" (free agent) or "retired". Struck through on the Keeper List with a note
+     ("Traded to NL (LAD)", "Traded to NL", "FA", "Retired"), can't be declared a
      keeper, and left out of the pool and Draft List. Delete the entry, or
      give him an AL "team" entry, and he's restored everywhere.
    * exclude: dropped from the pool on load, no Keeper List note. Still
@@ -728,25 +728,169 @@ const POOL_OVERRIDES = {
     "p5dbe302": "OF",   // Ryan Vilade (TBR, CBS 1B/2B/MI/CI/OF)
     "p263cfa5": "OF",   // Addison Barger (TOR, CBS 3B/CI/OF)
     "p44d82a5": "OF",   // Davis Schneider (TOR, CBS 2B/MI/OF)
+    "pd82e198": "OF",   // Cameron Cauley (TEX, CBS 2B/SS/MI/OF)
     "p269dd08": "IF",   // Jose Barrero (BAL, CBS OF)
     "p3f63af8": "IF",   // C.J. Kayfus (CLE, CBS OF)
     "pf938a7d": "C"   // Shawn Ross (TOR, CBS SS/MI)
   },
   "team": {
-    "pcb5c742": "DET"   // Tsung-Che Cheng (was BOS)
+    "pcb5c742": "DET",   // Tsung-Che Cheng (was BOS)
+    "pabb1b8b": "ATH",   // Nathan Eaton (was BOS)
+    "p960af4c": "NYY",   // Elijah Morgan (was KCR)
+    "p6b421e7": "DET",   // Mike Siani (was BAL)
+    "pbb2d420": "NYY",   // Jarred Kelenic (was TEX)
+    "pefe09f0": "SEA"   // Simeon Woods Richardson (was TOR)
   },
   "status": {
-    "p18f135d": "nl:?",   // Connelly Early (NL) - Traded to NL
-    "pfc2e6a5": "nl:?",   // Kevin Gausman (NL) - Traded to NL
-    "p7bdc968": "nl:?",   // Kris Bubic (NL) - Traded to NL
-    "p10c475": "nl:LAD",   // Tarik Skubal (NL) - Traded to NL (LAD)
-    "pe883a1d": "nl:?",   // Kirby Yates (NL) - Traded to NL
-    "p7b8bcdc": "nl:?",   // Gabriel Arias (NL) - Traded to NL
-    "p4995239": "nl:?",   // Bo Naylor (NL) - Traded to NL
-    "p6ce193c": "nl:?",   // Jesus Sanchez (NL) - Traded to NL
-    "p174c77a": "nl:?",   // Lane Thomas (NL) - Traded to NL
-    "p7731af1": "nl:?",   // Marcelo Mayer (NL) - Traded to NL
-    "paa05e11": "nl:?"   // Austin Hays (NL) - Traded to NL
+    "p18f135d": "nl:WSH",   // Connelly Early (NL) - Traded to NL (WSH)
+    "pfc2e6a5": "fa",   // Kevin Gausman (NL) - FA
+    "p7bdc968": "fa",   // Kris Bubic (NL) - FA
+    "p10c475": "fa",   // Tarik Skubal (NL) - FA
+    "pe883a1d": "fa",   // Kirby Yates (NL) - FA
+    "p7b8bcdc": "nl:CHC",   // Gabriel Arias (NL) - Traded to NL (CHC)
+    "p4995239": "nl:MIL",   // Bo Naylor (NL) - Traded to NL (MIL)
+    "p6ce193c": "nl:AZ",   // Jesus Sanchez (NL) - Traded to NL (AZ)
+    "p174c77a": "fa",   // Lane Thomas (NL) - FA
+    "p7731af1": "nl:SF",   // Marcelo Mayer (NL) - Traded to NL (SF)
+    "paa05e11": "fa",   // Austin Hays (NL) - FA
+    "p1cba1ef": "fa",   // Brooks Kriske (ATH) - FA
+    "pa997f35": "fa",   // Joey Meneses (ATH) - FA
+    "p45416ea": "fa",   // Jonah Heim (ATH) - FA
+    "p3ae5d47": "fa",   // Jose Suarez (ATH) - FA
+    "p40783f0": "fa",   // Mark Leiter (ATH) - FA
+    "pdfb85c0": "fa",   // Michael Kelly (ATH) - FA
+    "pd37ee91": "fa",   // Scott Barlow (ATH) - FA
+    "pe8e25d9": "fa",   // Andrew Kittredge (BAL) - FA
+    "p6513270": "fa",   // Chris Bassitt (BAL) - FA
+    "p52e6b43": "fa",   // Keegan Akin (BAL) - FA
+    "p8b67d71": "fa",   // Nick Raquet (BAL) - FA
+    "p41a747a": "fa",   // Sam Huff (BAL) - FA
+    "p269e0d3": "fa",   // Trevor Rogers (BAL) - FA
+    "p11e20b8": "fa",   // Zach Eflin (BAL) - FA
+    "p5ab0f1f": "fa",   // Danny Coulombe (BOS) - FA
+    "p3e7d1bf": "fa",   // Isiah Kiner-Falefa (BOS) - FA
+    "p4e549c2": "fa",   // Joe La Sorsa (BOS) - FA
+    "p94e3bf9": "fa",   // Patrick Sandoval (BOS) - FA
+    "pbd6c2c6": "fa",   // Seth Martinez (BOS) - FA
+    "pb64ce42": "fa",   // Sonny Gray (BOS) - FA
+    "p4b35a73": "fa",   // Tommy Kahnle (BOS) - FA
+    "pb2d94ef": "nl:ATL",   // Eric Haase (CHW) - Traded to NL (ATL)
+    "p92b1d3f": "fa",   // Erick Fedde (CHW) - FA
+    "p519088f": "fa",   // Jake Rogers (CHW) - FA
+    "p09fa91f": "fa",   // Lucas Sims (CHW) - FA
+    "pca04c79": "fa",   // Osvaldo Bido (CHW) - FA
+    "p57a40b": "fa",   // Randal Grichuk (CHW) - FA
+    "pb73b85f": "fa",   // Reese McGuire (CHW) - FA
+    "p8ede0d7": "fa",   // Sean Newcomb (CHW) - FA
+    "p89d163e": "fa",   // Tommy Pham (CHW) - FA
+    "p2b7f492": "fa",   // Trevor Richards (CHW) - FA
+    "pc4aaeac": "fa",   // Austin Hedges (CLE) - FA
+    "p7215837": "fa",   // Carlos Hernandez (CLE) - FA
+    "pab2cd31": "fa",   // Connor Brogdon (CLE) - FA
+    "p24c9b18": "fa",   // Foster Griffin (CLE) - FA
+    "p6b6dcb2": "nl:PHI",   // Kolby Allard (CLE) - Traded to NL (PHI)
+    "p8ea196e": "fa",   // Nate Lowe (CLE) - FA
+    "p72fdf20": "fa",   // Rhys Hoskins (CLE) - FA
+    "pd269a9a": "fa",   // Shawn Armstrong (CLE) - FA
+    "p74c87e9": "fa",   // Burch Smith (DET) - FA
+    "pb0c4312": "fa",   // Gleyber Torres (DET) - FA
+    "p153e7c2": "fa",   // Jack Flaherty (DET) - FA
+    "p68bffe0": "fa",   // Jacob Waguespack (DET) - FA
+    "p26a2c0b": "fa",   // Justin Verlander (DET) - FA
+    "p43435cc": "fa",   // Tanner Rainey (DET) - FA
+    "pc22fb0b": "fa",   // Tyler Kinley (DET) - FA
+    "p8f2c6ec": "fa",   // Bryan Abreu (HOU) - FA
+    "p93085c7": "fa",   // Christian Vazquez (HOU) - FA
+    "p0b15592": "fa",   // Daniel Johnson (HOU) - FA
+    "pe531696": "fa",   // Daulton Varsho (HOU) - FA
+    "pd75985": "fa",   // Enyel De Los Santos (HOU) - FA
+    "pbbed8e4": "fa",   // J.P. France (HOU) - FA
+    "p66237a0": "fa",   // Jason Alexander (HOU) - FA
+    "p86b71a1": "fa",   // LaMonte Wade Jr. (HOU) - FA
+    "pfdef6aa": "fa",   // Nelson Velazquez (HOU) - FA
+    "p113db17": "fa",   // Ryan Weiss (HOU) - FA
+    "p99c9430": "fa",   // Steven Okert (HOU) - FA
+    "pecd571e": "fa",   // Aaron Bummer (KCR) - FA
+    "p7a4f3ed": "fa",   // Andrew Velazquez (KCR) - FA
+    "pb12aa1f": "fa",   // Carlos Estevez (KCR) - FA
+    "p18e2f09": "fa",   // Connor Seabold (KCR) - FA
+    "pacb6d7e": "fa",   // Craig Kimbrel (KCR) - FA
+    "p44e71b9": "fa",   // Easton McGee (KCR) - FA
+    "p2587be6": "fa",   // Jonathan India (KCR) - FA
+    "p617a37a": "fa",   // Josh Rojas (KCR) - FA
+    "p7fa0dbb": "fa",   // Luke Maile (KCR) - FA
+    "pfe3bfad": "fa",   // Matt Strahm (KCR) - FA
+    "p42d8720": "fa",   // Starling Marte (KCR) - FA
+    "p6693403": "fa",   // Adam Frazier (LAA) - FA
+    "p5de0099": "fa",   // Alek Manoah (LAA) - FA
+    "pdc6d0d0": "fa",   // Jeimer Candelario (LAA) - FA
+    "pd1e6f9e": "fa",   // Joey Lucchesi (LAA) - FA
+    "p4787f93": "fa",   // Jorge Soler (LAA) - FA
+    "p3a0b996": "nl:NYM",   // Kyren Paris (LAA) - Traded to NL (NYM)
+    "p9a54513": "fa",   // Taijuan Walker (LAA) - FA
+    "p3d4882a": "fa",   // Travis d'Arnaud (LAA) - FA
+    "p1f8313b": "retired",   // Trey Mancini (LAA) - Retired
+    "p7e26f36": "fa",   // Yoan Moncada (LAA) - FA
+    "pd00fbdd": "fa",   // A.J. Minter (MIN) - FA
+    "paa988c1": "fa",   // Austin Voth (MIN) - FA
+    "p9c3a23c": "fa",   // Josh Bell (MIN) - FA
+    "pef8fae6": "nl:PIT",   // Kyler Fedko (MIN) - Traded to NL (PIT)
+    "p871e266": "nl:CIN",   // Orlando Arcia (MIN) - Traded to NL (CIN)
+    "p9fc2d0a": "fa",   // Ryan Jeffers (MIN) - FA
+    "p3a12917": "fa",   // Taylor Rogers (MIN) - FA
+    "pdd9dd12": "fa",   // Woo-Suk Go (MIN) - FA
+    "pa842bc1": "fa",   // Amed Rosario (NYY) - FA
+    "pe39639b": "fa",   // David Bednar (NYY) - FA
+    "pd39630d": "fa",   // Jazz Chisholm Jr. (NYY) - FA
+    "p5e999f": "fa",   // John Schreiber (NYY) - FA
+    "p12829c2": "fa",   // Michael Fulmer (NYY) - FA
+    "pf8be883": "fa",   // Paul Blackburn (NYY) - FA
+    "peffddee": "fa",   // Paul Goldschmidt (NYY) - FA
+    "pf237e45": "fa",   // Ryan Yarbrough (NYY) - FA
+    "pb8c9817": "fa",   // Tim Hill (NYY) - FA
+    "p3a56cc": "fa",   // Trent Grisham (NYY) - FA
+    "p8764a8f": "fa",   // Hoby Milner (SEA) - FA
+    "p73c1cd2": "fa",   // J.P. Crawford (SEA) - FA
+    "p81f98b5": "fa",   // Miles Mastrobuoni (SEA) - FA
+    "pe4ddf9b": "fa",   // Randy Arozarena (SEA) - FA
+    "pe998d0e": "fa",   // Rob Refsnyder (SEA) - FA
+    "p8e81973": "fa",   // Taylor Ward (SEA) - FA
+    "p7178ba0": "fa",   // Victor Robles (SEA) - FA
+    "p9c64bc0": "fa",   // Aaron Brooks (TBR) - FA
+    "p5ca1116": "fa",   // Freddy Peralta (TBR) - FA
+    "p2789d05": "fa",   // Jake Fraley (TBR) - FA
+    "p7a60968": "fa",   // Jake Woodford (TBR) - FA
+    "pdb6caea": "fa",   // Jorge Mateo (TBR) - FA
+    "pfea7bf7": "nl:ATL",   // Michael Grove (TBR) - Traded to NL (ATL)
+    "pa5353b0": "fa",   // Oliver Dunn (TBR) - FA
+    "pf5f554e": "fa",   // Andrew McCutchen (TEX) - FA
+    "pd58dcdb": "nl:CHC",   // Austin Wynns (TEX) - Traded to NL (CHC)
+    "pca93c65": "fa",   // Cal Quantrill (TEX) - FA
+    "p6e7836a": "fa",   // Chris Martin (TEX) - FA
+    "p3a60b4f": "fa",   // Chris Paddack (TEX) - FA
+    "pcdfcfce": "fa",   // Elias Diaz (TEX) - FA
+    "p5848342": "fa",   // Jalen Beeks (TEX) - FA
+    "pd10dbd6": "fa",   // Jonah Bride (TEX) - FA
+    "p83feb17": "fa",   // Jordan Montgomery (TEX) - FA
+    "p7e74922": "fa",   // Marco Gonzales (TEX) - FA
+    "p165e037": "fa",   // Nicky Lopez (TEX) - FA
+    "p84768b8": "fa",   // Sam Haggerty (TEX) - FA
+    "p80b50d0": "nl:AZ",   // Santiago Espinal (TEX) - Traded to NL (AZ)
+    "p0cd08c8": "fa",   // Trevor Williams (TEX) - FA
+    "p249a458": "fa",   // Tyler Alexander (TEX) - FA
+    "pa35898a": "fa",   // Eloy Jimenez (TOR) - FA
+    "pccb1c51": "fa",   // George Springer (TOR) - FA
+    "pfa5e03e": "fa",   // Jameson Taillon (TOR) - FA
+    "pf6fb3fd": "fa",   // Joe Mantiply (TOR) - FA
+    "p5897b58": "nl:STL",   // Josh Fleming (TOR) - Traded to NL (STL)
+    "p74c9df6": "fa",   // Lenyn Sosa (TOR) - FA
+    "p5b009bd": "fa",   // Luis Urias (TOR) - FA
+    "peb25f8a": "fa",   // Max Scherzer (TOR) - FA
+    "p0573e3f": "fa",   // Michael Lorenzen (TOR) - FA
+    "p121b860": "fa",   // Patrick Corbin (TOR) - FA
+    "pd3b8623": "fa",   // Paul Sewald (TOR) - FA
+    "pe05b3e1": "fa",   // Shane Bieber (TOR) - FA
+    "p1b29fc9": "retired"   // Mitch Garver (SEA) - Retired
   },
   "exclude": [
 
@@ -1786,7 +1930,7 @@ function renderKeepers(){
   const tbl=$('keepBoardTable');
   const wPl=plCellWidth(rows.length?rows.map(x=>x.p):S.players.filter(p=>p.kind===keepMode), 3, 210, 20);
   const cols=`<colgroup><col style="width:86px"><col style="width:${wPl}px">`
-    + '<col style="width:170px"><col style="width:150px"><col></colgroup>';
+    + '<col style="width:230px"><col style="width:150px"><col></colgroup>';
   const head='<thead><tr>'
     + `<th class="st rank" onclick="keepSort('rank')" title="Same overall rank used on the Player Pool">Rank${arrow('rank')}</th>`
     + `<th class="pl" onclick="keepSort('name')">Player${arrow('name')}</th>`
@@ -1801,7 +1945,8 @@ function renderKeepers(){
     // and salary prefilled from the Keeper List, both editable
     const dead = x.traded || !!x.status;
     const click = dead ? '' : ` style="cursor:pointer" onclick="openPick('${p.id}','keeper')"`;
-    const val = x.status ? `<s class="muted">${fmt$(x.price)}</s> <span class="over kstat" title="${x.traded?'Also traded within CTHL':''}">${x.status}</span>`
+    const val = x.status ? `<s class="muted">${fmt$(x.price)}</s> <span class="over kstat">${x.status}</span>`
+                + (x.traded ? ' <span class="muted kstat" title="Also traded within CTHL">· TRADED</span>' : '')
               : x.traded ? '<span class="over">TRADED</span>'
               : kept ? `<b>${fmt$(x.kv)}</b> 🔒`
               : `<b>${fmt$(x.kv)}</b>`;
@@ -2456,6 +2601,7 @@ function poolStatus(id){
 function poolStatusNote(id){
   const st=poolStatus(id); if(!st) return '';
   if(st==='fa') return 'FA';
+  if(st==='retired') return 'Retired';
   const m=st.match(/^nl:(.*)$/i); if(!m) return '';
   return (m[1] && m[1]!=='?') ? 'Traded to NL ('+m[1].toUpperCase()+')' : 'Traded to NL';
 }
