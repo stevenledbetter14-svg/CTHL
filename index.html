@@ -1503,11 +1503,10 @@ function renderTaxiBoard(){
      position filter buttons above do that job. */
   const wPl=plCellWidth(rows.length?rows:S.players.filter(p=>p.kind===taxiBoardMode), 3, 210, 20);
   const cols=`<colgroup><col style="width:86px"><col style="width:${wPl}px">`
-    + '<col style="width:96px"><col></colgroup>';
+    + '<col></colgroup>';
   const head='<thead><tr>'
     + `<th class="st rank" onclick="taxiBoardSort('rank')" title="Same overall rank used on the Player Pool">Rank${arrow('rank')}</th>`
     + `<th class="pl" onclick="taxiBoardSort('name')">Player${arrow('name')}</th>`
-    + `<th class="st aav" onclick="taxiBoardSort('val')" title="2027 Steamer $ (raw)">Steamer${arrow('val')}</th>`
     + '<th class="pad"></th>'
     + '</tr></thead>';
   let body='<tbody>';
@@ -1516,7 +1515,6 @@ function renderTaxiBoard(){
     body+=`<tr style="cursor:pointer" onclick="openPick('${p.id}', true)">`
       + `<td class="st rank muted">${rk?'#'+rk:'—'}</td>`
       + `<td class="pl"><div class="tspl">${plCellHTML(p)}</div></td>`
-      + `<td class="st aav">${aavCellHTML(p)}</td>`
       + '<td class="pad"></td>'
       + '</tr>';
   });
