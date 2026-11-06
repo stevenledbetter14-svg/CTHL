@@ -1589,7 +1589,7 @@ function toggleProspectOnly(){ poolProspectOnly=!poolProspectOnly; renderPool();
    Steamer fields (PA for hitters, GS for pitchers; no H / no KBB column). */
 const POOL_COLS={
   H:[['PA','PA'],['R','R'],['HR','HR'],['RBI','RBI'],['SB','SB'],['AVG','AVG']],
-  P:[['IP','IP'],['W','W'],['SV','SV'],['SO','K'],['BB','BB'],['ERA','ERA'],['GS','GS']]
+  P:[['IP','IP'],['W','W'],['SV','SV'],['ERA','ERA'],['SO','K'],['BB','BB'],['KBB','K/BB'],['GS','GS']]
 };
 const POOL_ASC=new Set(['name','team','owner','elig','ERA','BB','rank']);   // these read better low-to-high
 // Short display names for the Owner column only — Teams grid, Money Check,
@@ -1616,6 +1616,11 @@ function poolSort(k){
 function poolStat(p,k){
   /* Prefer 2027 Steamer (p27); fall back to 2026 fields only when no projection. */
   const s=p.p27;
+  if(k==='KBB'){
+    const so=s?s.SO:p.SO, bb=s?s.BB:p.BB;
+    if(!bb) return null;                 // blank when BB is 0 or missing
+    return so/bb;
+  }
   if(s && (k in s)) return s[k];
   if(k==='PA') return p.AB||0;          // 2026 had AB, not PA
   if(k==='GS') return 0;
@@ -1731,7 +1736,7 @@ function renderPool(){
      centred, so it reads as intentional rather than as a gap beside the name. */
   const wPl=poolNameWidth(poolMode);
   const statW = poolMode==='H' ? ['74px','62px','66px','72px','62px','82px']
-                               : ['80px','58px','62px','62px','62px','78px','62px'];
+                               : ['72px','52px','52px','70px','58px','58px','72px','52px'];
   const colHtml='<colgroup><col style="width:86px"><col style="width:'+wPl+'px">'
     + '<col style="width:96px">'
     + statW.map(w=>`<col style="width:${w}">`).join('')
@@ -1748,7 +1753,8 @@ function renderPool(){
   tbl.innerHTML = colHtml + '<thead>' + head + '</thead><tbody></tbody>';
   const tb=tbl.tBodies[0];
   const fmt={AVG:v=>(+v||0).toFixed(3).replace(/^0/,''),
-             ERA:v=>(+v||0).toFixed(2)};
+             ERA:v=>(+v||0).toFixed(2),
+             KBB:v=> (v==null||!isFinite(v)) ? '' : (+v).toFixed(2)};
   rows.slice(0,500).forEach(p=>{
     const tr=document.createElement('tr');
     const owner = p.pick
@@ -1846,7 +1852,13 @@ function renderKeepers(){
   const g=$('keeperBoard'); g.innerHTML='';
   let filled=0;
   S.settings.teams.forEach(t=>{
-    const ks=S.picks.filter(k=>k.team===t&&k.keeper);
+    /* 2026-11-06: one combined list per owner, $ high→low (keeper price on
+       the board), ties broken by 2027 Steamer val. No H/P split. */
+    const ks=S.picks.filter(k=>k.team===t&&k.keeper).slice().sort((a,b)=>{
+      const dp=(Number(b.price)||0)-(Number(a.price)||0); if(dp) return dp;
+      const pa=S.players.find(p=>p.id===a.pid), pb=S.players.find(p=>p.id===b.pid);
+      return (Number(pb&&pb.val)||0)-(Number(pa&&pa.val)||0);
+    });
     filled+=ks.length;
     const spent=ks.reduce((s,k)=>s+k.price,0);
     const d=document.createElement('div'); d.className='teamcard txcard';
@@ -1875,11 +1887,13 @@ function renderKeepers(){
   const kval=(x,k)=> k==='rank'?(overallRank(x.p)||99999) : k==='name'?lastKey(x.p.name)
                    : k==='owner'?x.owner : x.kv;
   rows.sort((a,b)=>{
-    // hitters first, then pitchers — the order the old H/P split showed
-    const g=(a.p.kind==='P')-(b.p.kind==='P'); if(g) return g;
+    // 2026-11-06: combined list (no H/P split). Default key is keeper $ (kv).
     const x=kval(a,keepSortKey), y=kval(b,keepSortKey);
     const c=(typeof x==='string')? String(x).localeCompare(String(y)) : (x-y);
-    return c!==0 ? c*keepSortDir : (overallRank(a.p)||99999)-(overallRank(b.p)||99999);
+    if(c!==0) return c*keepSortDir;
+    // tiebreak: 2027 Steamer val, then overall rank
+    const dv=(Number(b.p.val)||0)-(Number(a.p.val)||0); if(dv) return dv;
+    return (overallRank(a.p)||99999)-(overallRank(b.p)||99999);
   });
 
   const arrow=k=> k===keepSortKey ? (keepSortDir>0?' ▲':' ▼') : '';
