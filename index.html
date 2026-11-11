@@ -1453,15 +1453,15 @@ function prospectBadge(p){
 }
 /* Card-front prospect rank (2026-11-11). The provisional Top 100
    (CARDS.t, cthl_top100_provisional.csv, rank <= 100, the same number the
-   Future Stars front prints) wins over the preseason MLB/P361 ranks in p.pr.
-   Players not on that list keep the preseason best rank. */
+   Future Stars front prints) is the only source for card-front PR tags.
+   Players not on that list get no tag, even with a preseason MLB/P361 rank
+   in p.pr (Enddy Azocar's leftover PR99 dropped 2026-11-11). */
 function cardProspectRank(p){
-  const t=CARDS.t[p.id];
-  return t ? t : bestProspectRank(p);
+  return CARDS.t[p.id] || null;
 }
 function cardProspectTitle(p){
   const t=CARDS.t[p.id];
-  return t ? 'Top 100 prospect — Provisional #'+t : prospectTitle(p);
+  return t ? 'Top 100 prospect — Provisional #'+t : '';
 }
 function bestProspectRank(p){
   if(!isProspect(p)) return null;
