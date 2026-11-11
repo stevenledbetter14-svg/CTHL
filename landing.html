@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTHL 2027 Draft Room — Crabtown Tagliaboo Haters</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<!-- PREVIEW (not deployed). 1987 is the look; CTHL / Crabtown is the brand.
+     Homage only — not a Topps product. One shared room link for every owner. -->
+<style>
+:root{
+  --ink:#16213e; --cream:#f6efd9; --gold:#f2c230; --green:#3fae3a;
+  --orange:#df4601; --blue:#1d3a8a; --red:#c8202f;
+  --wood-dk:#3b2414; --wood-md:#6b4226; --wood-lt:#8a5a35;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  color:var(--ink); line-height:1.4;
+  background:#14213d radial-gradient(ellipse at top,#22355f 0%,#14213d 70%) fixed;
+  min-height:100vh; overflow-x:hidden;
+}
+a{color:inherit}
+
+/* 1987 wood-grain border: layered gradients, no image needed */
+.wood{
+  background:
+    repeating-linear-gradient(92deg,rgba(0,0,0,.18) 0 2px,transparent 2px 7px,rgba(255,255,255,.05) 7px 9px,transparent 9px 17px),
+    repeating-linear-gradient(88deg,rgba(0,0,0,.12) 0 1px,transparent 1px 23px),
+    linear-gradient(180deg,var(--wood-lt),var(--wood-md) 45%,var(--wood-dk));
+  padding:14px; border-radius:6px;
+  box-shadow:0 10px 28px rgba(0,0,0,.45), inset 0 0 0 2px rgba(0,0,0,.35);
+}
+.wood > .inner{
+  background:var(--cream); border:3px solid #111; border-radius:2px;
+}
+
+.wrap{max-width:1120px; margin:0 auto; padding:24px 16px 40px}
+
+/* masthead */
+.mast{text-align:center; color:var(--cream); margin:4px 0 20px}
+.mast .mark{
+  display:inline-block; font-family:"Arial Black",Impact,"Helvetica Neue",sans-serif;
+  font-weight:900; font-style:italic; letter-spacing:.02em;
+  font-size:clamp(40px,10vw,76px); line-height:1; color:var(--gold);
+  text-shadow:3px 3px 0 var(--orange),5px 5px 0 #000;
+}
+.mast .sub{
+  margin:8px 0 0; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
+  font-size:clamp(12px,2.6vw,15px);
+}
+
+/* hero: pack thumbnail + pitch */
+.hero .inner{
+  display:grid; grid-template-columns:minmax(0,360px) minmax(0,1fr);
+  gap:28px; align-items:center; padding:24px;
+}
+.pack{
+  display:block; text-decoration:none; position:relative;
+  transform:rotate(-2deg); transition:transform .15s ease;
+}
+.pack:hover,.pack:focus-visible{transform:rotate(0) scale(1.02)}
+.pack:focus-visible{outline:4px solid var(--orange); outline-offset:6px}
+.pack img{
+  display:block; width:100%; height:auto; border-radius:4px;
+  box-shadow:0 10px 22px rgba(0,0,0,.35);
+}
+.pack .rip{
+  position:absolute; left:50%; bottom:-14px; transform:translateX(-50%) rotate(2deg);
+  background:var(--orange); color:#fff; font-weight:900; text-transform:uppercase;
+  letter-spacing:.06em; padding:8px 14px; border:3px solid #111; border-radius:3px;
+  white-space:nowrap; font-size:15px;
+}
+.pitch h1{
+  margin:0 0 6px; font-family:"Arial Black",Impact,sans-serif; font-weight:900;
+  font-size:clamp(28px,4.4vw,44px); line-height:1.05; color:var(--blue);
+}
+.pitch .kicker{
+  display:inline-block; background:var(--green); color:#fff; font-weight:800;
+  text-transform:uppercase; letter-spacing:.12em; font-size:12px;
+  padding:4px 10px; border:2px solid #111; margin-bottom:12px;
+}
+.pitch p{margin:0 0 12px; font-size:17px}
+.btn{
+  display:inline-block; text-decoration:none; font-weight:900; text-transform:uppercase;
+  letter-spacing:.05em; background:var(--gold); color:#111;
+  border:3px solid #111; border-radius:3px; padding:12px 18px; font-size:17px;
+  box-shadow:4px 4px 0 #111;
+}
+.btn:hover,.btn:focus-visible{background:#ffd84a}
+.btn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #111}
+.fine{font-size:13px; color:#4a4a4a}
+.roomid{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; word-break:break-all}
+
+/* 1987-style link cards: wood border, sky window, magenta/blue nameplate */
+.cards{
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:22px; margin-top:28px;
+}
+.card{display:flex; flex-direction:column; min-width:0}
+.card .inner{display:flex; flex-direction:column; flex:1; overflow:hidden}
+.card .window{
+  background:linear-gradient(180deg,#8fc3e8,#cfe6f3); border-bottom:3px solid #111;
+  padding:18px 16px 14px; flex:1;
+}
+.card .tag{
+  font-weight:900; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--blue); margin:0 0 6px;
+}
+.card h2{margin:0 0 8px; font-family:"Arial Black",Impact,sans-serif; font-size:22px; line-height:1.1}
+.card p{margin:0; font-size:15px}
+.card .plate{
+  display:block; text-align:center; text-decoration:none; color:#fff;
+  font-weight:900; text-transform:uppercase; letter-spacing:.08em; font-size:15px;
+  padding:12px 10px; background:#c2197a; overflow-wrap:anywhere;
+}
+.card.cbs .plate{background:var(--blue)}
+.card.news .plate{background:#7a7a7a; cursor:default}
+a.plate:hover,a.plate:focus-visible{filter:brightness(1.15); text-decoration:underline}
+.soon{
+  display:inline-block; background:var(--gold); border:2px solid #111;
+  font-weight:900; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  padding:2px 8px; margin-bottom:8px;
+}
+
+/* the one line */
+.grudge{
+  margin:30px auto 0; max-width:760px; text-align:center; color:var(--cream);
+  font-style:italic; font-size:16px; padding:0 8px;
+}
+.grudge b{color:var(--gold); font-style:normal}
+
+footer{
+  margin-top:26px; text-align:center; color:#aab4cf; font-size:12px; padding:0 8px;
+}
+
+@media (max-width:860px){
+  .hero .inner{grid-template-columns:1fr; text-align:center; padding:18px}
+  .pack{max-width:300px; margin:0 auto 18px}
+  .cards{grid-template-columns:1fr}
+}
+@media (max-width:420px){
+  .wrap{padding:16px 10px 32px}
+  .wood{padding:10px}
+  .pitch p{font-size:16px}
+  .btn{font-size:15px; padding:11px 14px}
+}
+@media (prefers-reduced-motion:reduce){ .pack,.pack:hover{transition:none; transform:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="mark">CTHL</div>
+    <p class="sub">Crabtown Tagliaboo Haters &middot; Baltimore, Hon</p>
+  </header>
+
+  <section class="hero wood" aria-labelledby="h-room">
+    <div class="inner">
+      <a class="pack" id="roomThumb"
+         href="index.html?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551"
+         aria-label="Open the CTHL 2027 Draft Room">
+        <picture>
+          <source srcset="landing/cthl-2027-pack.webp" type="image/webp">
+          <img src="landing/cthl-2027-pack.jpg" width="720" height="897"
+               alt="CTHL 2027 wax pack — Crabtown, the Real one!">
+        </picture>
+        <span class="rip">Rip it open &rarr;</span>
+      </a>
+      <div class="pitch">
+        <span class="kicker">2027 Auction Draft</span>
+        <h1 id="h-room">The Draft Room is open.</h1>
+        <p>One pack, one room. Every owner uses this same link, so every bid lands on the same board. Grab a Natty Boh, crack the Old Bay, and don't start your own room, hon.</p>
+        <p><a class="btn" href="index.html?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551">Enter the Draft Room</a></p>
+        <p class="fine">Room: <span class="roomid">cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cards" aria-label="League links">
+    <article class="card wood">
+      <div class="inner">
+        <div class="window">
+          <p class="tag">Printable</p>
+          <h2>CTHL 2027 Draft List</h2>
+          <p>Eno's printable Draft List (rosters draft dated 11/11/26).</p>
+        </div>
+        <a class="plate" href="landing/CTHL-2027-Draft-List.pdf" target="_blank" rel="noopener">Open the PDF</a>
+      </div>
+    </article>
+
+    <article class="card news wood">
+      <div class="inner">
+        <div class="window">
+          <span class="soon">Coming soon</span>
+          <h2>2027 BB Newsletter</h2>
+          <p>If Dave writes the 2027 update this winter, it goes right here. Nothing to read yet.</p>
+        </div>
+        <span class="plate" aria-disabled="true">Not yet published</span>
+      </div>
+    </article>
+
+    <article class="card cbs wood">
+      <div class="inner">
+        <div class="window">
+          <p class="tag">League home</p>
+          <h2>CTHL on CBS</h2>
+          <p>Standings, rosters, and transactions at crabtown.baseball.cbssports.com.</p>
+        </div>
+        <a class="plate" href="https://crabtown.baseball.cbssports.com" target="_blank" rel="noopener">Go to the CBS league site</a>
+      </div>
+    </article>
+  </section>
+
+  <p class="grudge"><b>Never forget:</b> the Colts snuck out in the snow in '84, and when we asked for a team back, Tagliabue said build a museum. We built a league instead.</p>
+
+  <footer>
+    CTHL / Crabtown homage to the 1987 wax-pack look. Not affiliated with or endorsed by Topps, MLB, or the NFL.
+  </footer>
+</div>
+</body>
+</html>
