@@ -1151,7 +1151,7 @@ function openPick(id, mode){
   // otherwise look empty for a player that does have a signal, so flag it.
   const projOnly = !prBadge && !isProspect(p) && p.val<=0 && (p.ord||0)>0;
   $('dlgSub').innerHTML = `<b>${esc(p.team)}</b> · ${esc(dispElig(p))||'—'}`
-    + (isProspect(p) ? ` · <span class="pill prospect" title="${esc(prospectTitle(p))}">${esc(prospectTitle(p))}</span>` : '')
+    + (cardProspectRank(p) ? ` · <span class="pill prospect" title="${esc(cardProspectTitle(p))}">${esc(cardProspectTitle(p))}</span>` : '')
     + (prBadge ? ` · <span style="opacity:.8" title="Rank among AL-eligible players by NFBC ADP">ADP ${esc(prBadge)}</span>` : '')
     + (projOnly ? ` · <span style="opacity:.6" title="No NFBC ADP and not a Top 100 prospect — ranked off our own projection order instead">no ADP</span>` : '');
   // unpriced players still get something in the box — position rank when we
@@ -1162,7 +1162,7 @@ function openPick(id, mode){
   if(p.pick && p.pick.keeper){ ab.textContent='🔒 '+fmt$(p.pick.price); ab.previousElementSibling.textContent='Keeper'; }
   else if(a27 && a27.a>0){ ab.textContent=fmt$(a27.a); ab.previousElementSibling.textContent='CTHL AAV 2027'; }
   else if(prBadge){ ab.textContent=prBadge; ab.previousElementSibling.textContent='ADP'; }
-  else if(isProspect(p)){ ab.textContent='PR'+bestProspectRank(p); ab.previousElementSibling.textContent='Top Prospect'; }
+  else if(cardProspectRank(p)){ ab.textContent='PR'+cardProspectRank(p); ab.previousElementSibling.textContent='Top Prospect'; }
   // 2026-08-16: was "LABR tier / proj" — internal jargon that read as an
   // error to anyone but us. Unpriced, un-ADP'd players just show a dash.
   else { ab.textContent='—'; ab.previousElementSibling.textContent='CTHL AAV'; }
@@ -1171,7 +1171,12 @@ function openPick(id, mode){
      provisional 2027 Steamer $ (no 750-IP reliever adjustment), to be rebased
      on LABR. No Steamer line -> blank, never $0. */
   const lab=t=>`<span style="display:inline-block;min-width:100px;font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.03em">${t}</span>`;
-  $('dlgStats').innerHTML = lab('2026') + (p.kind==='H'
+  /* 2026-11-11: a prospect with no 2026 MLB time (0 AB / 0 IP) gets text,
+     never a .000 AVG or 0.00 ERA built from an empty line. */
+  const no26 = p.kind==='H' ? !(+p.AB>0) : !(parseFloat(p.IP)>0);
+  $('dlgStats').innerHTML = lab('2026') + (no26
+    ? '<span style="color:var(--dim);font-weight:400">No 2026 MLB stats</span>'
+    : p.kind==='H'
     ? `${p.AB} AB · ${p.R} R · ${p.HR} HR · ${p.RBI} RBI · ${p.SB} SB · ${(p.AB?(p.H/p.AB):0).toFixed(3).replace(/^0/,'')} AVG`
     : `${p.IP} IP · ${p.W} W · ${p.SV} SV · ${p.SO} K · ${p.BB} BB · ${(+p.ERA||0).toFixed(2)} ERA · ${p.BB?(p.SO/p.BB).toFixed(2):'—'} K/BB`);
   const q=p.p27;
@@ -1445,6 +1450,18 @@ function prospectBadge(p){
   if(!isProspect(p)) return '';
   const best=Math.min(...p.pr.filter(Boolean));
   return ` <span class="pill prospect" title="${prospectTitle(p)}">PR${best}</span>`;
+}
+/* Card-front prospect rank (2026-11-11). The provisional Top 100
+   (CARDS.t, cthl_top100_provisional.csv, rank <= 100, the same number the
+   Future Stars front prints) wins over the preseason MLB/P361 ranks in p.pr.
+   Players not on that list keep the preseason best rank. */
+function cardProspectRank(p){
+  const t=CARDS.t[p.id];
+  return t ? t : bestProspectRank(p);
+}
+function cardProspectTitle(p){
+  const t=CARDS.t[p.id];
+  return t ? 'Top 100 prospect — Provisional #'+t : prospectTitle(p);
 }
 function bestProspectRank(p){
   if(!isProspect(p)) return null;
