@@ -1,225 +1,286 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CTHL 2027 Draft Room — Crabtown Tagliaboo Haters</title>
-<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CTHL 2027 · Draft Room · Year 46</title>
+<meta name="description" content="Crabtown Tagliaboo Haters League — one shared Draft Room for the 2027 auction.">
 <link rel="icon" href="data:,">
-<!-- PREVIEW (not deployed). 1987 is the look; CTHL / Crabtown is the brand.
-     Homage only — not a Topps product. One shared room link for every owner. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Graduate&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&family=Yellowtail&display=swap" rel="stylesheet">
 <style>
+/* ===== TOKENS ===== */
 :root{
-  --ink:#16213e; --cream:#f6efd9; --gold:#f2c230; --green:#3fae3a;
-  --orange:#df4601; --blue:#1d3a8a; --red:#c8202f;
-  --wood-dk:#3b2414; --wood-md:#6b4226; --wood-lt:#8a5a35;
+  --ink:#0b0f1a; --ink2:#111727; --card:#151c2e; --line:#253049;
+  --chalk:#f4ede0; --mut:#9aa3bb; --soft:#cdd3e4;
+  --orange:#f26b1d; --orange2:#ff9a3d; --ember:#e0431a;
+  --brick:#8c3b22; --gold:#f2c230; --navy:#14213d; --stitch:#d7322b;
+  --r:18px;
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{
-  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
-  color:var(--ink); line-height:1.4;
-  background:#14213d radial-gradient(ellipse at top,#22355f 0%,#14213d 70%) fixed;
-  min-height:100vh; overflow-x:hidden;
-}
-a{color:inherit}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--ink)}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--chalk);background:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+/* film grain over everything */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
 
-/* 1987 wood-grain border: layered gradients, no image needed */
-.wood{
-  background:
-    repeating-linear-gradient(92deg,rgba(0,0,0,.18) 0 2px,transparent 2px 7px,rgba(255,255,255,.05) 7px 9px,transparent 9px 17px),
-    repeating-linear-gradient(88deg,rgba(0,0,0,.12) 0 1px,transparent 1px 23px),
-    linear-gradient(180deg,var(--wood-lt),var(--wood-md) 45%,var(--wood-dk));
-  padding:14px; border-radius:6px;
-  box-shadow:0 10px 28px rgba(0,0,0,.45), inset 0 0 0 2px rgba(0,0,0,.35);
-}
-.wood > .inner{
-  background:var(--cream); border:3px solid #111; border-radius:2px;
-}
+/* ===== SECTION 1 · HERO ===== */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;isolation:isolate;overflow:hidden}
+.hero-photo{position:absolute;inset:0;z-index:-3;background:url(landing/draft-room-illustration.jpg) center 30%/cover no-repeat;background-image:image-set(url(landing/draft-room-illustration.webp) type("image/webp"),url(landing/draft-room-illustration.jpg) type("image/jpeg"));filter:saturate(.7) contrast(1.05)}
+.hero-shade{position:absolute;inset:0;z-index:-2;background:
+  radial-gradient(900px 620px at 74% 46%, rgba(242,107,29,.34), transparent 62%),
+  linear-gradient(90deg, rgba(11,15,26,.97) 0%, rgba(11,15,26,.90) 42%, rgba(11,15,26,.72) 70%, rgba(11,15,26,.86) 100%),
+  linear-gradient(180deg, rgba(11,15,26,.5) 0%, rgba(11,15,26,0) 30%, rgba(11,15,26,1) 100%)}
+.lights{position:absolute;top:-40px;right:6%;width:520px;height:220px;z-index:-1;background:radial-gradient(closest-side,rgba(255,240,210,.22),transparent);filter:blur(10px)}
+.edge{position:absolute;right:22px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font:600 12px/1 Inter;letter-spacing:.42em;color:rgba(242,107,29,.55);white-space:nowrap;z-index:2}
 
-.wrap{max-width:1120px; margin:0 auto; padding:24px 16px 40px}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:26px 0 0}
+.brand{display:flex;align-items:center;gap:16px}
+.mark{font-family:Yellowtail,cursive;font-size:44px;line-height:1;color:var(--chalk);transform:rotate(-6deg);text-shadow:2px 2px 0 var(--stitch);padding-right:4px}
+.league{font:600 12.5px/1.35 Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--soft)}
+.league b{color:var(--chalk);font-weight:700}
+.yr{display:flex;align-items:center;gap:10px;font:600 12px/1 Inter;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);border:1px solid var(--line);background:rgba(21,28,46,.6);backdrop-filter:blur(8px);border-radius:999px;padding:10px 16px;white-space:nowrap}
+.yr i{font-style:normal;color:var(--orange2)}
 
-/* masthead */
-.mast{text-align:center; color:var(--cream); margin:4px 0 20px}
-.mast .mark{
-  display:inline-block; font-family:"Arial Black",Impact,"Helvetica Neue",sans-serif;
-  font-weight:900; font-style:italic; letter-spacing:.02em;
-  font-size:clamp(40px,10vw,76px); line-height:1; color:var(--gold);
-  text-shadow:3px 3px 0 var(--orange),5px 5px 0 #000;
-}
-.mast .sub{
-  margin:8px 0 0; font-weight:700; letter-spacing:.18em; text-transform:uppercase;
-  font-size:clamp(12px,2.6vw,15px);
-}
+.hero-grid{flex:1;display:grid;grid-template-columns:1.18fr .82fr;align-items:center;gap:40px;padding:36px 0 80px}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:700 12.5px/1 Inter;letter-spacing:.26em;text-transform:uppercase;color:var(--orange2)}
+.live{width:9px;height:9px;border-radius:50%;background:#ff4d3d;box-shadow:0 0 0 0 rgba(255,77,61,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,77,61,.55)}70%{box-shadow:0 0 0 12px rgba(255,77,61,0)}100%{box-shadow:0 0 0 0 rgba(255,77,61,0)}}
+h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(64px,7.4vw,112px);line-height:.92;letter-spacing:-.005em;text-transform:uppercase;margin:18px 0 22px}
+h1 .l2{display:block;background:linear-gradient(92deg,var(--orange2) 0%,var(--orange) 45%,var(--ember) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:20px;line-height:1.55;color:var(--soft);max-width:560px}
+.lead b{color:var(--chalk);font-weight:600}
+.hon{font-family:Yellowtail,cursive;color:var(--orange2);font-size:1.25em;line-height:1}
 
-/* hero: pack thumbnail + pitch */
-.hero .inner{
-  display:grid; grid-template-columns:minmax(0,360px) minmax(0,1fr);
-  gap:28px; align-items:center; padding:24px;
-}
-.pack{
-  display:block; text-decoration:none; position:relative;
-  transform:rotate(-2deg); transition:transform .15s ease;
-}
-.pack:hover,.pack:focus-visible{transform:rotate(0) scale(1.02)}
-.pack:focus-visible{outline:4px solid var(--orange); outline-offset:6px}
-.pack img{
-  display:block; width:100%; height:auto; border-radius:4px;
-  box-shadow:0 10px 22px rgba(0,0,0,.35);
-}
-.pack .rip{
-  position:absolute; left:50%; bottom:-14px; transform:translateX(-50%) rotate(2deg);
-  background:var(--orange); color:#fff; font-weight:900; text-transform:uppercase;
-  letter-spacing:.06em; padding:8px 14px; border:3px solid #111; border-radius:3px;
-  white-space:nowrap; font-size:15px;
-}
-.pitch h1{
-  margin:0 0 6px; font-family:"Arial Black",Impact,sans-serif; font-weight:900;
-  font-size:clamp(28px,4.4vw,44px); line-height:1.05; color:var(--blue);
-}
-.pitch .kicker{
-  display:inline-block; background:var(--green); color:#fff; font-weight:800;
-  text-transform:uppercase; letter-spacing:.12em; font-size:12px;
-  padding:4px 10px; border:2px solid #111; margin-bottom:12px;
-}
-.pitch p{margin:0 0 12px; font-size:17px}
-.btn{
-  display:inline-block; text-decoration:none; font-weight:900; text-transform:uppercase;
-  letter-spacing:.05em; background:var(--gold); color:#111;
-  border:3px solid #111; border-radius:3px; padding:12px 18px; font-size:17px;
-  box-shadow:4px 4px 0 #111;
-}
-.btn:hover,.btn:focus-visible{background:#ffd84a}
-.btn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #111}
-.fine{font-size:13px; color:#4a4a4a}
-.roomid{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; word-break:break-all}
+.cta-block{margin-top:32px;display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.cta{position:relative;display:inline-flex;align-items:center;gap:18px;padding:24px 34px 24px 38px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#ff8a3d 0%,#f26b1d 55%,#e0561a 100%);color:#140a04;
+  font:800 24px/1 Inter;letter-spacing:-.01em;
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset,0 -3px 0 rgba(0,0,0,.18) inset,0 18px 40px -10px rgba(242,107,29,.7),0 0 0 1px rgba(255,170,100,.35);
+  transition:transform .15s ease, box-shadow .15s ease}
+.cta:hover{transform:translateY(-2px)}
+.cta .arr{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#140a04;color:var(--orange2);font-size:20px}
+.cta::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);animation:shine 4.5s ease-in-out infinite}
+@keyframes shine{0%,62%{left:-60%}100%{left:130%}}
+.room{display:flex;align-items:center;gap:10px;font:500 12.5px/1.3 "JetBrains Mono",ui-monospace,monospace;color:var(--mut)}
+.room code{font:inherit;color:var(--soft);background:rgba(21,28,46,.7);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.why-mini{font-size:14.5px;color:var(--mut)}
+.why-mini b{color:var(--chalk);font-weight:600}
 
-/* 1987-style link cards: wood border, sky window, magenta/blue nameplate */
-.cards{
-  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:22px; margin-top:28px;
-}
-.card{display:flex; flex-direction:column; min-width:0}
-.card .inner{display:flex; flex-direction:column; flex:1; overflow:hidden}
-.card .window{
-  background:linear-gradient(180deg,#8fc3e8,#cfe6f3); border-bottom:3px solid #111;
-  padding:18px 16px 14px; flex:1;
-}
-.card .tag{
-  font-weight:900; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--blue); margin:0 0 6px;
-}
-.card h2{margin:0 0 8px; font-family:"Arial Black",Impact,sans-serif; font-size:22px; line-height:1.1}
-.card p{margin:0; font-size:15px}
-.card .plate{
-  display:block; text-align:center; text-decoration:none; color:#fff;
-  font-weight:900; text-transform:uppercase; letter-spacing:.08em; font-size:15px;
-  padding:12px 10px; background:#c2197a; overflow-wrap:anywhere;
-}
-.card.cbs .plate{background:var(--blue)}
-.card.news .plate{background:#7a7a7a; cursor:default}
-a.plate:hover,a.plate:focus-visible{filter:brightness(1.15); text-decoration:underline}
-.soon{
-  display:inline-block; background:var(--gold); border:2px solid #111;
-  font-weight:900; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
-  padding:2px 8px; margin-bottom:8px;
-}
+.chips{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+.chip{min-width:118px;padding:14px 18px;border-radius:14px;background:rgba(21,28,46,.62);border:1px solid var(--line);backdrop-filter:blur(10px)}
+.chip .v{font:400 30px/1 Anton,sans-serif;color:var(--chalk)}
+.chip .v.o{color:var(--orange2)}
+.chip .k{margin-top:6px;font:700 10.5px/1 Inter;letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}
 
-/* the one line */
-.grudge{
-  margin:30px auto 0; max-width:760px; text-align:center; color:var(--cream);
-  font-style:italic; font-size:16px; padding:0 8px;
-}
-.grudge b{color:var(--gold); font-style:normal}
+.pack-stage{position:relative;display:grid;place-items:center;min-height:660px;padding-bottom:70px}
+.halo{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(closest-side,rgba(242,107,29,.55),rgba(242,107,29,.12) 60%,transparent);filter:blur(16px)}
+.diamond{position:absolute;width:560px;height:560px;transform:rotate(45deg);border:1.5px solid rgba(244,237,224,.14);border-radius:14px}
+.diamond::after{content:"";position:absolute;inset:70px;border:1.5px dashed rgba(244,237,224,.12);border-radius:10px}
+.pack{position:relative;width:min(400px,86%);transform:rotate(-5deg);animation:bob 6s ease-in-out infinite;filter:drop-shadow(0 40px 50px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(0,0,0,.5))}
+.pack img{display:block;width:100%;height:auto}
+@keyframes bob{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(-3.5deg) translateY(-14px)}}
+.ticket{position:absolute;left:50%;bottom:6px;transform:translateX(-50%) rotate(-2.5deg);display:flex;align-items:stretch;width:390px;border-radius:10px;overflow:hidden;
+  background:#f4ede0;color:#14213d;box-shadow:0 22px 40px -14px rgba(0,0,0,.8)}
+.ticket .stub{display:grid;place-items:center;width:78px;flex-shrink:0;background:var(--orange);color:#140a04;font:400 26px/1 Anton,sans-serif;letter-spacing:.04em;border-right:2px dashed rgba(20,10,4,.45)}
+.ticket .body{padding:12px 16px 12px 16px}
+.ticket .w2{font:400 21px/1.05 Anton,sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.ticket .w3{font:600 10.5px/1.35 Inter;letter-spacing:.04em;color:#47506a;margin-top:5px}
+.scroll{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font:600 11px/1 Inter;letter-spacing:.3em;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll span{width:1px;height:28px;background:linear-gradient(var(--mut),transparent);animation:drip 2s ease-in-out infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 
-footer{
-  margin-top:26px; text-align:center; color:#aab4cf; font-size:12px; padding:0 8px;
-}
+/* ===== SECTION 2 · WHY ONE LINK ===== */
+.divider{position:relative;display:grid;place-items:center}
+.stitch{display:block;width:100%;height:26px;margin:0 auto}
+.ball{position:absolute;width:46px;height:46px;padding:0;background:var(--ink);border-radius:50%;box-shadow:0 0 0 10px var(--ink)}
+.why{padding-top:72px;padding-bottom:30px}
+.sec-k{font:700 12px/1 Inter;letter-spacing:.26em;text-transform:uppercase;color:var(--orange2)}
+.sec-h{font:400 52px/1.02 Anton,sans-serif;text-transform:uppercase;margin-top:12px;letter-spacing:.005em}
+.sec-p{color:var(--mut);font-size:17px;max-width:640px;margin-top:12px}
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
+.why-c{position:relative;padding:28px 26px 26px;border-radius:var(--r);background:linear-gradient(180deg,#161d30,#121828);border:1px solid var(--line);overflow:hidden}
+.why-c::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--orange),transparent)}
+.why-c .n{font:400 15px/1 Graduate,serif;color:var(--orange2);letter-spacing:.06em}
+.why-c h3{font:800 22px/1.2 Inter;margin-top:16px;letter-spacing:-.01em}
+.why-c p{color:var(--mut);font-size:15.5px;margin-top:8px}
 
-@media (max-width:860px){
-  .hero .inner{grid-template-columns:1fr; text-align:center; padding:18px}
-  .pack{max-width:300px; margin:0 auto 18px}
-  .cards{grid-template-columns:1fr}
+/* ===== SECTION 3 · BEFORE YOU BID (secondary links) ===== */
+.links{padding-top:56px;padding-bottom:24px}
+.link-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;margin-top:30px}
+.lk{display:flex;flex-direction:column;justify-content:space-between;gap:26px;min-height:200px;padding:26px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);transition:border-color .15s, transform .15s}
+a.lk:hover{border-color:rgba(242,107,29,.6);transform:translateY(-2px)}
+.lk .t{font:700 11px/1 Inter;letter-spacing:.22em;text-transform:uppercase;color:var(--mut)}
+.lk h3{font:800 23px/1.2 Inter;margin-top:12px;letter-spacing:-.01em}
+.lk p{color:var(--mut);font-size:15px;margin-top:6px}
+.lk .go{display:flex;align-items:center;justify-content:space-between;font:700 15px/1 Inter;color:var(--chalk);border-top:1px solid var(--line);padding-top:16px}
+.lk .go em{font-style:normal;color:var(--orange2)}
+.lk.pdf{background:linear-gradient(135deg,rgba(242,107,29,.16),rgba(21,28,46,1) 60%)}
+.lk.soon{border-style:dashed;background:transparent}
+.lk.soon .go{color:var(--mut)}
+.pill{display:inline-block;font:700 10.5px/1 Inter;letter-spacing:.18em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
+
+/* ===== SECTION 4 · PHOTO BAND ===== */
+.band{position:relative;isolation:isolate;margin:56px auto 0;max-width:1240px;height:380px;border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+.band img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;z-index:-1;filter:grayscale(1) contrast(1.1) brightness(.8) blur(1.5px)}
+.band::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(120deg,rgba(242,107,29,.55),rgba(20,33,61,.75));mix-blend-mode:multiply}
+.band::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(0deg,rgba(11,15,26,.95) 4%,rgba(11,15,26,.35) 55%,rgba(11,15,26,.15))}
+.band .cap{position:absolute;left:32px;bottom:28px;right:32px;z-index:1}
+.band h3{font:800 26px/1.2 Inter;letter-spacing:-.01em}
+.band p{color:var(--soft);font-size:16px;margin-top:6px;max-width:620px}
+
+/* ===== SECTION 5 · FOOTER / SKYLINE ===== */
+.foot{position:relative;margin-top:90px}
+.skyline{display:block;width:100%;height:260px}
+.foot-in{background:#07090f;border-top:2px solid var(--orange);padding:34px 0 40px}
+.foot-row{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.foot .mark{font-size:34px}
+.fine{font-size:13px;color:var(--mut)}
+.again{display:inline-flex;align-items:center;gap:10px;font:700 15px/1 Inter;color:var(--orange2);border:1px solid rgba(242,107,29,.45);padding:12px 16px;border-radius:12px}
+
+/* ===== PHONE ===== */
+@media (max-width:760px){
+  .wrap{padding:0 20px}
+  .edge,.scroll,.lights{display:none}
+  .bar{padding-top:16px}
+  .mark{font-size:36px}
+  .league{font-size:10.5px;letter-spacing:.14em}
+  .yr{padding:8px 11px;font-size:10.5px;letter-spacing:.14em}
+  .yr .y1{display:none}
+  .hero{min-height:auto}
+  .hero-photo{background-position:62% 20%}
+  .hero-shade{background:linear-gradient(180deg,rgba(11,15,26,.88) 0%,rgba(11,15,26,.82) 45%,rgba(11,15,26,1) 92%),radial-gradient(500px 400px at 50% 80%,rgba(242,107,29,.3),transparent 70%)}
+  .hero-grid{grid-template-columns:1fr;gap:10px;padding:26px 0 40px}
+  .eyebrow{font-size:11px;letter-spacing:.2em}
+  h1{font-size:60px;margin:14px 0 14px}
+  .lead{font-size:16.5px}
+  .cta-block{margin-top:22px;align-items:stretch}
+  .cta{justify-content:space-between;font-size:21px;padding:21px 22px 21px 26px}
+  .room{font-size:11px;flex-wrap:wrap}
+  .chips{display:none}
+  .pack-stage{min-height:470px;margin-top:4px}
+  .halo{width:360px;height:360px}
+  .diamond{width:330px;height:330px}
+  .pack{width:270px}
+  .pack-stage{padding-bottom:84px}
+  .ticket{width:340px}
+  .ticket .stub{width:64px;font-size:22px}
+  .ticket .w2{font-size:18px}
+  .why{padding-top:40px;padding-bottom:10px}
+  .sec-h{font-size:38px}
+  .sec-p{font-size:15.5px}
+  .why-grid,.link-grid{grid-template-columns:1fr;gap:12px;margin-top:24px}
+  .why-c{padding:22px 20px}
+  .lk{min-height:auto;padding:22px 20px}
+  .band{margin:40px 20px 0;height:300px;border-radius:18px}
+  .band .cap{left:20px;right:20px;bottom:20px}
+  .band h3{font-size:21px}.band p{font-size:14.5px}
+  .foot{margin-top:56px}
+  .skyline{height:150px}
+  .foot-row{flex-direction:column;align-items:flex-start}
 }
-@media (max-width:420px){
-  .wrap{padding:16px 10px 32px}
-  .wood{padding:10px}
-  .pitch p{font-size:16px}
-  .btn{font-size:15px; padding:11px 14px}
-}
-@media (prefers-reduced-motion:reduce){ .pack,.pack:hover{transition:none; transform:none} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header class="mast">
-    <div class="mark">CTHL</div>
-    <p class="sub">Crabtown Tagliaboo Haters &middot; Baltimore, Hon</p>
-  </header>
-
-  <section class="hero wood" aria-labelledby="h-room">
-    <div class="inner">
-      <a class="pack" id="roomThumb"
-         href="index.html?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551"
-         aria-label="Open the CTHL 2027 Draft Room">
-        <picture>
-          <source srcset="landing/cthl-2027-pack.webp" type="image/webp">
-          <img src="landing/cthl-2027-pack.jpg" width="720" height="897"
-               alt="CTHL 2027 wax pack — Crabtown, the Real one!">
-        </picture>
-        <span class="rip">Rip it open &rarr;</span>
-      </a>
-      <div class="pitch">
-        <span class="kicker">2027 Auction Draft</span>
-        <h1 id="h-room">The Draft Room is open.</h1>
-        <p>One pack, one room. Every owner uses this same link, so every bid lands on the same board. Grab a Natty Boh, crack the Old Bay, and don't start your own room, hon.</p>
-        <p><a class="btn" href="index.html?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551">Enter the Draft Room</a></p>
-        <p class="fine">Room: <span class="roomid">cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551</span></p>
+<!-- ==================== SECTION 1 · HERO ==================== -->
+<header class="hero">
+  <div class="hero-photo" role="img" aria-label="Drawn illustration of a fantasy baseball draft-day room"></div>
+  <div class="hero-shade"></div><div class="lights"></div>
+  <div class="edge">39.29° N · 76.61° W · CRABTOWN, HON</div>
+  <div class="wrap" style="width:100%">
+    <div class="bar">
+      <div class="brand"><span class="mark">CTHL</span><span class="league"><b>Crabtown Tagliaboo Haters League</b><br>Baltimore, Hon · Since 1981</span></div>
+      <div class="yr"><span class="y1">2027 Season</span><i>●</i><span>Year 46</span></div>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow"><span class="live"></span>Draft Room open · 2027 auction</span>
+        <h1>One room.<span class="l2">Every owner.</span></h1>
+        <p class="lead">Every owner enters through <b>this one link</b>. That keeps us on <b>the same app version</b>, bidding into <b>the same shared database</b>, so every nomination and sale lands on one board. <span class="hon">Play ball, hon.</span></p>
+        <div class="cta-block">
+          <a class="cta" href="https://stevenledbetter14-svg.github.io/CTHL/?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551">Enter the Draft Room <span class="arr">→</span></a>
+          <div class="room"><span>Shared room</span><code>cthl-2027-draft-7dc8…8551</code></div>
+          <p class="why-mini"><b>Bookmark it.</b> Don't start your own room or use an old copy.</p>
+        </div>
+        <div class="chips">
+          <div class="chip"><div class="v o">46</div><div class="k">Year</div></div>
+          <div class="chip"><div class="v">1981</div><div class="k">Founded</div></div>
+          <div class="chip"><div class="v">AL</div><div class="k">Only · Roto</div></div>
+          <div class="chip"><div class="v">1</div><div class="k">Shared room</div></div>
+        </div>
+      </div>
+      <div class="pack-stage">
+        <div class="diamond"></div><div class="halo"></div>
+        <a class="pack" href="https://stevenledbetter14-svg.github.io/CTHL/?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551" aria-label="Open the CTHL 2027 Draft Room">
+          <img src="landing/cthl-2027-pack-cutout-900.webp" width="900" height="1121" alt="CTHL 2027 wax pack: Crabtown, the Real one!">
+        </a>
+        <div class="ticket" aria-label="Win a trip to 2028 Spring Training">
+          <div class="stub">WIN</div>
+          <div class="body"><div class="w2">A trip to 2028 Spring Training</div>
+          <div class="w3">(Entry Form Inside) · NO PURCHASE NECESSARY (See back)</div></div>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
+  <div class="scroll">SCROLL<span></span></div>
+</header>
 
-  <section class="cards" aria-label="League links">
-    <article class="card wood">
-      <div class="inner">
-        <div class="window">
-          <p class="tag">Printable</p>
-          <h2>CTHL 2027 Draft List</h2>
-          <p>Eno's printable Draft List (rosters draft dated 11/11/26).</p>
-        </div>
-        <a class="plate" href="landing/CTHL-2027-Draft-List.pdf" target="_blank" rel="noopener">Open the PDF</a>
-      </div>
-    </article>
+<!-- ==================== SECTION 2 · WHY ONE LINK ==================== -->
+<main>
+<section class="why wrap" aria-labelledby="h-why">
+  <div class="divider"><svg class="stitch" viewBox="0 0 1260 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13H1260" stroke="#253049" stroke-width="1.5"/><g stroke="#d7322b" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M8 19 l7 -12"/><path d="M26 19 l7 -12"/><path d="M44 19 l7 -12"/><path d="M62 19 l7 -12"/><path d="M80 19 l7 -12"/><path d="M98 19 l7 -12"/><path d="M116 19 l7 -12"/><path d="M134 19 l7 -12"/><path d="M152 19 l7 -12"/><path d="M170 19 l7 -12"/><path d="M188 19 l7 -12"/><path d="M206 19 l7 -12"/><path d="M224 19 l7 -12"/><path d="M242 19 l7 -12"/><path d="M260 19 l7 -12"/><path d="M278 19 l7 -12"/><path d="M296 19 l7 -12"/><path d="M314 19 l7 -12"/><path d="M332 19 l7 -12"/><path d="M350 19 l7 -12"/><path d="M368 19 l7 -12"/><path d="M386 19 l7 -12"/><path d="M404 19 l7 -12"/><path d="M422 19 l7 -12"/><path d="M440 19 l7 -12"/><path d="M458 19 l7 -12"/><path d="M476 19 l7 -12"/><path d="M494 19 l7 -12"/><path d="M512 19 l7 -12"/><path d="M530 19 l7 -12"/><path d="M548 19 l7 -12"/><path d="M566 19 l7 -12"/><path d="M584 19 l7 -12"/><path d="M602 19 l7 -12"/><path d="M620 19 l7 -12"/><path d="M638 19 l7 -12"/><path d="M656 19 l7 -12"/><path d="M674 19 l7 -12"/><path d="M692 19 l7 -12"/><path d="M710 19 l7 -12"/><path d="M728 19 l7 -12"/><path d="M746 19 l7 -12"/><path d="M764 19 l7 -12"/><path d="M782 19 l7 -12"/><path d="M800 19 l7 -12"/><path d="M818 19 l7 -12"/><path d="M836 19 l7 -12"/><path d="M854 19 l7 -12"/><path d="M872 19 l7 -12"/><path d="M890 19 l7 -12"/><path d="M908 19 l7 -12"/><path d="M926 19 l7 -12"/><path d="M944 19 l7 -12"/><path d="M962 19 l7 -12"/><path d="M980 19 l7 -12"/><path d="M998 19 l7 -12"/><path d="M1016 19 l7 -12"/><path d="M1034 19 l7 -12"/><path d="M1052 19 l7 -12"/><path d="M1070 19 l7 -12"/><path d="M1088 19 l7 -12"/><path d="M1106 19 l7 -12"/><path d="M1124 19 l7 -12"/><path d="M1142 19 l7 -12"/><path d="M1160 19 l7 -12"/><path d="M1178 19 l7 -12"/><path d="M1196 19 l7 -12"/><path d="M1214 19 l7 -12"/><path d="M1232 19 l7 -12"/><path d="M1250 19 l7 -12"/></g></svg><svg class="ball" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#f4ede0"/><path d="M12 8c6 6 6 26 0 32M36 8c-6 6-6 26 0 32" fill="none" stroke="#d7322b" stroke-width="1.6"/><g stroke="#d7322b" stroke-width="1.6" stroke-linecap="round"><path d="M13 13l3-1M15 18l3-.5M15.5 24h3M15 30l3 .5M13 35l3 1M35 13l-3-1M33 18l-3-.5M32.5 24h-3M33 30l-3 .5M35 35l-3 1"/></g></svg></div>
+  <div style="margin-top:40px">
+    <div class="sec-k">Why one link</div>
+    <h2 class="sec-h" id="h-why">Same app. Same database.<br>Same board.</h2>
+  </div>
+  <div class="why-grid">
+    <div class="why-c"><div class="n">01</div><h3>Same app version</h3><p>The link always opens the current build, so nobody bids from a stale copy.</p></div>
+    <div class="why-c"><div class="n">02</div><h3>Same shared database</h3><p>Every nomination, bid and sale writes to one place that every owner reads.</p></div>
+    <div class="why-c"><div class="n">03</div><h3>Same board, live</h3><p>Budgets, rosters and keepers line up for everyone, pick by pick.</p></div>
+  </div>
+</section>
 
-    <article class="card news wood">
-      <div class="inner">
-        <div class="window">
-          <span class="soon">Coming soon</span>
-          <h2>2027 BB Newsletter</h2>
-          <p>If Dave writes the 2027 update this winter, it goes right here. Nothing to read yet.</p>
-        </div>
-        <span class="plate" aria-disabled="true">Not yet published</span>
-      </div>
-    </article>
+<!-- ==================== SECTION 3 · BEFORE YOU BID ==================== -->
+<section class="links wrap" aria-labelledby="h-links">
+  <div class="sec-k">Before you bid</div>
+  <h2 class="sec-h" id="h-links">Homework, hon.</h2>
+  <div class="link-grid">
+    <a class="lk pdf" href="landing/CTHL-2027-Draft-List.pdf" target="_blank" rel="noopener">
+      <div><div class="t">Printable · PDF</div><h3>Eno's 2027 Draft List</h3><p>The printable list, rosters draft dated 11/11/26.</p></div>
+      <div class="go">Open the PDF <em>↗</em></div>
+    </a>
+    <div class="lk soon" aria-disabled="true">
+      <div><div class="t">Newsletter</div><h3>2027 BB Newsletter</h3><p>It goes right here when it's written.</p></div>
+      <div class="go"><span class="pill">Not yet published</span></div>
+    </div>
+    <a class="lk" href="https://crabtown.baseball.cbssports.com" target="_blank" rel="noopener">
+      <div><div class="t">League home</div><h3>CTHL on CBS</h3><p>Standings, rosters and transactions.</p></div>
+      <div class="go">crabtown.baseball.cbssports.com <em>↗</em></div>
+    </a>
+  </div>
+</section>
 
-    <article class="card cbs wood">
-      <div class="inner">
-        <div class="window">
-          <p class="tag">League home</p>
-          <h2>CTHL on CBS</h2>
-          <p>Standings, rosters, and transactions at crabtown.baseball.cbssports.com.</p>
-        </div>
-        <a class="plate" href="https://crabtown.baseball.cbssports.com" target="_blank" rel="noopener">Go to the CBS league site</a>
-      </div>
-    </article>
-  </section>
+<!-- ==================== SECTION 4 · ILLUSTRATION BAND ==================== -->
+<section class="band" aria-label="Draft day illustration">
+  <picture><source srcset="landing/draft-room-illustration.webp" type="image/webp"><img src="landing/draft-room-illustration.jpg" width="2400" height="1350" alt="Drawn illustration of a fantasy baseball draft-day room: a table with pencils, calculators and newspapers" loading="lazy"></picture>
+  <div class="cap"><h3>Draft day, the Real one.</h3><p>We were Rotisserie before it was cool: pencils, calculators and newspapers. Now it's one room on everyone's laptop.</p></div>
+</section>
+</main>
 
-  <p class="grudge"><b>Never forget:</b> the Colts snuck out in the snow in '84, and when we asked for a team back, Tagliabue said build a museum. We built a league instead.</p>
-
-  <footer>
-    CTHL / Crabtown homage to the 1987 wax-pack look. Not affiliated with or endorsed by Topps, MLB, or the NFL.
-  </footer>
-</div>
+<!-- ==================== SECTION 5 · FOOTER ==================== -->
+<footer class="foot">
+  <svg class="skyline" viewBox="0 0 1440 260" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><pattern id="brick" width="24" height="12" patternUnits="userSpaceOnUse"><rect width="24" height="12" fill="#6e2a17"/><path d="M0 11.5H24M12 0V6M0 6H24M0 6V12M24 6V12" stroke="#4a1a0e" stroke-width="1"/></pattern><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0f1a" stop-opacity="0"/><stop offset="1" stop-color="#0b0f1a" stop-opacity=".65"/></linearGradient></defs><rect x="760" y="18" width="5" height="200" fill="#1c2438"/><rect x="730" y="6" width="65" height="28" rx="3" fill="#1c2438"/><circle cx="738.0" cy="12" r="3" fill="#fff6e0"/><circle cx="748.5" cy="12" r="3" fill="#fff6e0"/><circle cx="759.0" cy="12" r="3" fill="#fff6e0"/><circle cx="769.5" cy="12" r="3" fill="#fff6e0"/><circle cx="780.0" cy="12" r="3" fill="#fff6e0"/><circle cx="790.5" cy="12" r="3" fill="#fff6e0"/><circle cx="738.0" cy="20" r="3" fill="#fff6e0"/><circle cx="748.5" cy="20" r="3" fill="#fff6e0"/><circle cx="759.0" cy="20" r="3" fill="#fff6e0"/><circle cx="769.5" cy="20" r="3" fill="#fff6e0"/><circle cx="780.0" cy="20" r="3" fill="#fff6e0"/><circle cx="790.5" cy="20" r="3" fill="#fff6e0"/><circle cx="738.0" cy="28" r="3" fill="#fff6e0"/><circle cx="748.5" cy="28" r="3" fill="#fff6e0"/><circle cx="759.0" cy="28" r="3" fill="#fff6e0"/><circle cx="769.5" cy="28" r="3" fill="#fff6e0"/><circle cx="780.0" cy="28" r="3" fill="#fff6e0"/><circle cx="790.5" cy="28" r="3" fill="#fff6e0"/><rect x="1318" y="18" width="5" height="200" fill="#1c2438"/><rect x="1288" y="6" width="65" height="28" rx="3" fill="#1c2438"/><circle cx="1296.0" cy="12" r="3" fill="#fff6e0"/><circle cx="1306.5" cy="12" r="3" fill="#fff6e0"/><circle cx="1317.0" cy="12" r="3" fill="#fff6e0"/><circle cx="1327.5" cy="12" r="3" fill="#fff6e0"/><circle cx="1338.0" cy="12" r="3" fill="#fff6e0"/><circle cx="1348.5" cy="12" r="3" fill="#fff6e0"/><circle cx="1296.0" cy="20" r="3" fill="#fff6e0"/><circle cx="1306.5" cy="20" r="3" fill="#fff6e0"/><circle cx="1317.0" cy="20" r="3" fill="#fff6e0"/><circle cx="1327.5" cy="20" r="3" fill="#fff6e0"/><circle cx="1338.0" cy="20" r="3" fill="#fff6e0"/><circle cx="1348.5" cy="20" r="3" fill="#fff6e0"/><circle cx="1296.0" cy="28" r="3" fill="#fff6e0"/><circle cx="1306.5" cy="28" r="3" fill="#fff6e0"/><circle cx="1317.0" cy="28" r="3" fill="#fff6e0"/><circle cx="1327.5" cy="28" r="3" fill="#fff6e0"/><circle cx="1338.0" cy="28" r="3" fill="#fff6e0"/><circle cx="1348.5" cy="28" r="3" fill="#fff6e0"/><rect x="0" y="134" width="64" height="126" fill="#1a1420"/><rect x="-2" y="127" width="68" height="8" fill="#2c3550"/><rect x="11" y="152" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="42" y="152" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="11" y="188" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="42" y="188" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="20.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="64" y="130" width="64" height="130" fill="#211722"/><rect x="62" y="123" width="68" height="8" fill="#2c3550"/><rect x="75" y="148" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="106" y="148" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="75" y="184" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="106" y="184" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="84.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="128" y="140" width="70" height="120" fill="#1c1622"/><rect x="126" y="133" width="74" height="8" fill="#2c3550"/><rect x="139" y="158" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="176" y="158" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="139" y="194" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="176" y="194" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="151.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="198" y="130" width="70" height="130" fill="#24191f"/><rect x="196" y="123" width="74" height="8" fill="#2c3550"/><rect x="209" y="148" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="246" y="148" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="209" y="184" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="246" y="184" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="221.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="268" y="140" width="58" height="120" fill="#1a1420"/><rect x="266" y="133" width="62" height="8" fill="#2c3550"/><rect x="279" y="158" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="304" y="158" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="279" y="194" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="304" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="285.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="326" y="120" width="58" height="140" fill="#211722"/><rect x="324" y="113" width="62" height="8" fill="#2c3550"/><rect x="337" y="138" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="362" y="138" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="337" y="174" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="362" y="174" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="343.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="384" y="140" width="70" height="120" fill="#1c1622"/><rect x="382" y="133" width="74" height="8" fill="#2c3550"/><rect x="395" y="158" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="432" y="158" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="395" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="432" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="407.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="454" y="140" width="58" height="120" fill="#24191f"/><rect x="452" y="133" width="62" height="8" fill="#2c3550"/><rect x="465" y="158" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="490" y="158" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="465" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="490" y="194" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="471.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="512" y="140" width="70" height="120" fill="#1a1420"/><rect x="510" y="133" width="74" height="8" fill="#2c3550"/><rect x="523" y="158" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="560" y="158" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="523" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="560" y="194" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="535.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="582" y="134" width="70" height="126" fill="#211722"/><rect x="580" y="127" width="74" height="8" fill="#2c3550"/><rect x="593" y="152" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="630" y="152" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="593" y="188" width="11" height="20" fill="#ffb347" opacity="0.9"/><rect x="630" y="188" width="11" height="20" fill="#0e1322" opacity="1"/><rect x="605.0" y="250" width="24" height="10" fill="#e9e2d2" opacity=".7"/><rect x="660" y="70" width="780" height="190" fill="url(#brick)"/><rect x="656" y="62" width="784" height="10" fill="#3b150b"/><rect x="682" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="718" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="754" y="86" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="790" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="826" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="862" y="86" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="898" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="934" y="86" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="970" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1006" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1042" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1078" y="86" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1114" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1150" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1186" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1222" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1258" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1294" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1330" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1366" y="86" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1402" y="86" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="682" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="718" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="754" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="790" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="826" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="862" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="898" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="934" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="970" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1006" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1042" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1078" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1114" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1150" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1186" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1222" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1258" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1294" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1330" y="126" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1366" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1402" y="126" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="682" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="718" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="754" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="790" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="826" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="862" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="898" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="934" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="970" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1006" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1042" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1078" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1114" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1150" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1186" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1222" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1258" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1294" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1330" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1366" y="166" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1402" y="166" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="682" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="718" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="754" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="790" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="826" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="862" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="898" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="934" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="970" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1006" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1042" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1078" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1114" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1150" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1186" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1222" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1258" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1294" y="206" width="15" height="24" rx="7.5" fill="#160b08" opacity="0.9"/><rect x="1330" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1366" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="1402" y="206" width="15" height="24" rx="7.5" fill="#ffb347" opacity="0.85"/><rect x="0" y="0" width="1440" height="260" fill="url(#fade)"/></svg>
+  <div class="foot-in"><div class="wrap">
+    <div class="foot-row">
+      <div class="brand"><span class="mark">CTHL</span><span class="league"><b>Crabtown Tagliaboo Haters League</b><br>Baltimore, Hon · 2027 · Year 46</span></div>
+      <a class="again" href="https://stevenledbetter14-svg.github.io/CTHL/?room=cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551">Enter the Draft Room →</a>
+    </div>
+    <p class="fine" style="margin-top:22px">Not affiliated with or endorsed by Topps, MLB, or the NFL.</p>
+  </div></div>
+</footer>
 </body>
 </html>
