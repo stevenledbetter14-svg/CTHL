@@ -1,0 +1,153 @@
+{
+ "spec": "specs/single-pass-aav-spec-2026-11-14.md",
+ "keepers": 48,
+ "keeper_salary": 467,
+ "solved_pot": {
+  "H": 2233.116557096502,
+  "P": 808.3674395096073,
+  "total": 3041.4839966061095
+ },
+ "prefinal_pot": {
+  "rate": 1.1689,
+  "rate_2025": 1.1704,
+  "rate_2026": 1.1673,
+  "H": 2253.6392,
+  "P": 750.4338,
+  "total": 3004.0730000000003,
+  "nonkeeper_H": 1579.2521193441494,
+  "nonkeeper_P": 501.47145980040466,
+  "nonkeeper_total": 2080.723579144554,
+  "cash_check": 2547.723579144554,
+  "vs_v31_max_abs": 3,
+  "vs_v31_moved": 43,
+  "keeper_curve_total": 923.3494208554467
+ },
+ "nonkeeper_total": 2103,
+ "cash_check": 2570,
+ "vs_v31": {
+  "compared": 202,
+  "max_abs": 0,
+  "moved": 0,
+  "moved_players": [],
+  "unrounded_max_abs": 2.842170943040401e-14
+ },
+ "keepers_vs_display": {
+  "changed": [],
+  "checks": {
+   "Nick Kurtz": 48,
+   "Julio Rodriguez": 39,
+   "Cam Schlittler": 37,
+   "Ben Rice": 37,
+   "Logan Gilbert": 37
+  }
+ },
+ "meta": {
+  "H": {
+   "pot": 2233.116557096502,
+   "keepers": 38,
+   "keeper_salary": 363.0,
+   "paid": 123,
+   "stashes": 11,
+   "scale": 1.0277818005371784,
+   "replacement_sgp": 4.026195205530669,
+   "zero_weight_keepers": [
+    "Emmanuel Rodriguez",
+    "Leo De Vries"
+   ]
+  },
+  "P": {
+   "pot": 808.3674395096073,
+   "keepers": 10,
+   "keeper_salary": 104.0,
+   "paid": 67,
+   "stashes": 1,
+   "scale": 1.639573394669354,
+   "replacement_sgp": 2.508644119669534,
+   "zero_weight_keepers": []
+  }
+ },
+ "scenarios": {
+  "42": {
+   "keepers": 42,
+   "keeper_salary": 309,
+   "max_per_team": 5,
+   "pot_H": 2199.245623901863,
+   "pot_P": 773.7142322399861,
+   "pot_total": 2972.959856141849,
+   "nonkeeper_total": 2261,
+   "cash_check": 2570,
+   "added_vs_48": [
+    "Brooks Lee",
+    "Bryce Rainer",
+    "Coby Mayo",
+    "Dillon Dingler",
+    "Jonathan Aranda",
+    "Kody Clemens",
+    "Michael Wacha",
+    "Taylor Walls",
+    "Trey Yesavage"
+   ],
+   "dropped_vs_48": [
+    "Andrew Benintendi",
+    "Bryan Woo",
+    "Cal Raleigh",
+    "Cam Smith",
+    "Jake Burger",
+    "Jordan Westburg",
+    "Josh Hader",
+    "Julio Rodriguez",
+    "Kaelen Culpepper",
+    "Kyle Teel",
+    "Lazaro Montes",
+    "Logan Gilbert",
+    "Riley Greene",
+    "Spencer Jones",
+    "Yandy Diaz"
+   ]
+  },
+  "47": {
+   "keepers": 47,
+   "keeper_salary": 424,
+   "max_per_team": 5,
+   "pot_H": 2246.3652322082535,
+   "pot_P": 808.3674395096073,
+   "pot_total": 3054.7326717178607,
+   "nonkeeper_total": 2146,
+   "cash_check": 2570,
+   "added_vs_48": [],
+   "dropped_vs_48": [
+    "Pete Alonso"
+   ]
+  },
+  "48": {
+   "keepers": 48,
+   "keeper_salary": 467,
+   "max_per_team": 5,
+   "pot_H": 2233.116557096502,
+   "pot_P": 808.3674395096073,
+   "pot_total": 3041.4839966061095,
+   "nonkeeper_total": 2103,
+   "cash_check": 2570,
+   "added_vs_48": [],
+   "dropped_vs_48": []
+  },
+  "50": {
+   "keepers": 50,
+   "keeper_salary": 471,
+   "max_per_team": 5,
+   "pot_H": 2233.116557096502,
+   "pot_P": 808.3674395096073,
+   "pot_total": 3041.4839966061095,
+   "nonkeeper_total": 2099,
+   "cash_check": 2570,
+   "added_vs_48": [
+    "Brice Matthews",
+    "Seth Lugo"
+   ],
+   "dropped_vs_48": []
+  }
+ },
+ "scenarios_dropped": {
+  "50u": "breaks the 5-per-team cap; not run"
+ }
+}
