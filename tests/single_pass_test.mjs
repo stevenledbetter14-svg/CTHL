@@ -62,13 +62,14 @@ ok(!!lastRun, 'a dated run CSV + report exist in reports/', lastRun || 'none');
   }
   ok(bad.length === 0 && runCsv.length === Object.keys(blk).length, `index.html AAV_2027 = latest run CSV for all ${runCsv.length} pool players`, bad.slice(0, 5).join('; '));
 }
-ok(/^CUTOFF_DATE = ''/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DATE default is blank (no cutoff)');
+ok(/^CUTOFF_DATE = '2027-03-15'/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DATE default is 2027-03-15 (AAV lock after LABR 2027)');
 
 /* cutoff gate + write path, in a temp copy (repo files untouched) */
 {
   const tmp = mkdtempSync(join(tmpdir(), 'cthl-run-')); copyFileSync(join(ROOT, 'index.html'), join(tmp, 'index.html'));
+  const { CTHL_AAV_CUTOFF: _, ...baseEnv } = process.env;   // no env override unless a check sets one
   const py = (env, ...a) => spawnSync('python3', [SCRIPT, '--root', tmp, ...a],
-    { env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', ...env }, encoding: 'utf8' });
+    { env: { ...baseEnv, PYTHONDONTWRITEBYTECODE: '1', ...env }, encoding: 'utf8' });
   const written = () => existsSync(join(tmp, 'reports')) ? readdirSync(join(tmp, 'reports')) : [];
   let r = py({ CTHL_AAV_CUTOFF: '2020-01-01' }, '--write');
   ok(r.status === 3 && /refusing to write.*after the cutoff 2020-01-01/.test(r.stderr) && written().length === 0,
@@ -79,11 +80,12 @@ ok(/^CUTOFF_DATE = ''/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DATE default
     'past cutoff + --override: writes run .md/.csv; index.html byte-identical (no price changed)', `exit ${r.status}, ${w1.join(' ')}`);
   const m1 = w1.length ? readFileSync(join(tmp, 'reports', w1.find(f => f.endsWith('.md'))), 'utf8') : '';
   ok(/vs v3\.1 baseline .* \(first run\)/.test(m1) && /PASSED, written with --override/.test(m1), 'first run diffs vs the v3.1 baseline; report notes the override');
-  r = py({ CTHL_AAV_CUTOFF: '2999-12-31' }, '--write');
+  r = py({}, '--write');   // default CUTOFF_DATE, today before it
   const w2 = written(), md2 = w2.filter(f => f.endsWith('.md') && !w1.includes(f));
   const m2 = md2.length ? readFileSync(join(tmp, 'reports', md2[0]), 'utf8') : '';
-  ok(r.status === 0 && w2.length === 4 && /_\d{4}\.md$/.test(md2[0] || '') && /0 moved \(max \$0\), 0 added, 0 dropped vs previous run `reports\/aav_run_[\d-]+\.csv`/.test(m2),
-    'future cutoff: write allowed; second run same day gets _HHMM and diffs vs the previous run (0 moved)', `exit ${r.status}, ${md2.join(' ')}`);
+  ok(r.status === 0 && w2.length === 4 && /_\d{4}\.md$/.test(md2[0] || '') && /0 moved \(max \$0\), 0 added, 0 dropped vs previous run `reports\/aav_run_[\d-]+\.csv`/.test(m2)
+    && /Cutoff: 2027-03-15 \(not reached\)/.test(m2),
+    'default cutoff 2027-03-15, today before it: --write works; second run same day gets _HHMM and diffs vs the previous run (0 moved)', `exit ${r.status}, ${md2.join(' ')}`);
   r = py({}, '--projections', 'atc', '--atc-dir', join(tmp, 'no-atc-here'));
   ok(r.status === 2 && /ATC 2027 data not found/.test(r.stderr) && !/^Pot:/m.test(r.stdout), '--projections atc without ATC data fails clearly (no values)');
   rmSync(tmp, { recursive: true, force: true });

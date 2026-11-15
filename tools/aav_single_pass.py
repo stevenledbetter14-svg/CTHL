@@ -9,7 +9,7 @@ USAGE (from the repo root)
                       run report and the diff vs the previous run; writes nothing.
   --write             also write reports/aav_run_YYYY-MM-DD[_HHMM].md + .csv and, only
                       if any price changed, the AAV_2027 block in index.html.
-  --override          allow --write after CUTOFF_DATE (below).
+  --override          allow --write after CUTOFF_DATE (below; 2027-03-15, the AAV lock).
   --projections atc   use ATC 2027 instead of Steamer. Needs ATC_DIR/2027_bat.json and
                       2027_pit.json (FanGraphs JSON export, same format as the Steamer
                       pull). Missing -> the run stops; it never falls back to Steamer.
@@ -24,8 +24,9 @@ WHERE TO EDIT
     same set as the app's SEED2026.picks and the v3.1 engine). Columns used: pid,
     owner, keeper_salary, kind. If you change it, also change SEED2026.picks in
     index.html (+ BAKED_KEEPER_SET); --write refuses while the two disagree.
-  * Cutoff: CUTOFF_DATE below ('' = no cutoff). Env CTHL_AAV_CUTOFF overrides it
-    (tests only).
+  * Cutoff: CUTOFF_DATE below, the AAV lock right after LABR 2027. Currently 2027-03-15,
+    a placeholder until LABR publishes its date; move that one value. Env
+    CTHL_AAV_CUTOFF overrides it (tests only).
 
 METHOD (unchanged v3.1 mechanics, aav_v3.calculate): 75/25 H/P (pots $1,928 / $642,
 172H / 78P slots), paid cohort + replacement SGP, gamma 1.40 / 1.55, K/BB tilt inside
@@ -47,7 +48,9 @@ from pathlib import Path
 warnings.filterwarnings('ignore')
 
 # ==================== CONFIG — edit here ====================
-CUTOFF_DATE = ''                   # 'YYYY-MM-DD'. Blank = no cutoff. After it, --write needs --override.
+# AAV lock: set right after LABR 2027. PLACEHOLDER until LABR publishes its date; move this
+# one value then (it is the only place the date lives). After it, --write needs --override.
+CUTOFF_DATE = '2027-03-15'
 DB = Path('/workspace/db2027')
 KEEPERS_CSV = DB / 'keepers/keeper_split_2026-11-06_room.csv'   # the likely-keeper list
 ATC_DIR = DB / 'atc'               # expects 2027_bat.json + 2027_pit.json

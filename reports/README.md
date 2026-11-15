@@ -12,7 +12,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/aav_single_pass.py [--write] [--override
 - Every report has a pot/inflation line (solved pot H/P, the 2570 x 1.1689 reference pot, implied inflation), the $2,570 cash check, and a diff vs the previous `aav_run_*.csv`: players moved and by how much, added to or dropped from the 250. The first run (2026-11-14) diffs against the v3.1 baseline (`/workspace/db2027/excel_method/aav_2027_v3_1.csv`).
 - The CSV has one row per pool player: `status` is keeper / paid / stash / none, `aav` is the board price (for keepers, the display-only keeper AAV), and `unrounded` is the curve value.
 - Likely keepers: edit `KEEPERS_CSV` at the top of the script (today: `/workspace/db2027/keepers/keeper_split_2026-11-06_room.csv`, 48 / $467). It must match `SEED2026.picks` in `index.html`; `--write` refuses if they disagree.
-- Cutoff: `CUTOFF_DATE` at the top of the script, blank = none. After that date `--write` refuses unless `--override` is given.
+- Cutoff: `CUTOFF_DATE` at the top of the script (the only place the date lives) is the AAV lock, set right after LABR 2027: `2027-03-15`, a placeholder until LABR publishes its date. After that date `--write` refuses unless `--override` is given.
 - `--projections atc` needs `/workspace/db2027/atc/2027_bat.json` and `2027_pit.json` (FanGraphs JSON export). Until those exist, it stops with an error. It never falls back to Steamer.
 - New Steamer pull: refresh `/workspace/db2027/steamer` (`match.py`, then `valuation.py`) first. If the stored pool values don't match the projection JSON, the run stops and says so.
 - Check: `node tests/single_pass_test.mjs`.
