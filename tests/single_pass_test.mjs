@@ -5,8 +5,8 @@
    DevTools protocol and checks every acceptance item against the app itself.
    Run: node tests/single_pass_test.mjs [--v31 path/to/aav_2027_v3_1.csv]
    Needs node >= 22 (built-in WebSocket) and google-chrome. */
-import { spawn } from 'node:child_process';
-import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync, readdirSync, existsSync, copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +36,58 @@ const v31 = parseCSV(readFileSync(V31, 'utf8'));
 const report = JSON.parse(readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.json'), 'utf8'));
 const reportMd = readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.md'), 'utf8');
 const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+
+/* ---------- winter rerun command: latest run report + CSV ---------- */
+const SCRIPT = join(ROOT, 'tools/aav_single_pass.py');
+const runs = readdirSync(join(ROOT, 'reports')).filter(f => /^aav_run_.*\.csv$/.test(f)).sort();
+const lastRun = runs.at(-1);
+const runCsv = lastRun ? parseCSV(readFileSync(join(ROOT, 'reports', lastRun), 'utf8')) : [];
+const runMd = lastRun ? readFileSync(join(ROOT, 'reports', lastRun.replace(/\.csv$/, '.md')), 'utf8') : '';
+ok(!!lastRun, 'a dated run CSV + report exist in reports/', lastRun || 'none');
+{
+  const kSal = runCsv.filter(r => r.status === 'keeper').reduce((s, r) => s + Number(r.keeper_salary), 0);
+  const nk = runCsv.filter(r => r.status !== 'keeper').reduce((s, r) => s + Number(r.aav), 0);
+  ok(kSal + nk === 2570 && runCsv.filter(r => r.status !== 'none').length === 250,
+    `run CSV cash: $${kSal} keepers + $${nk} non-keeper = $${kSal + nk}; 250 slots`);
+  ok(/^Pot: solved \$[\d,.]+ \(H \$[\d,.]+ \/ P \$[\d,.]+\) \| reference 2570 x 1\.1689 = \$3,004\.07 .*\| implied inflation \d\.\d{4} /m.test(runMd),
+    'run report has the pot line: solved (H/P), 2570 x 1.1689 reference, implied inflation');
+  ok(/\*\*\$2,570\*\*/.test(runMd) && /## Diff vs previous\n\n\d+ moved .*\d+ added, \d+ dropped vs /.test(runMd), 'run report shows cash $2,570 and the diff-vs-previous summary');
+}
+{
+  const blk = JSON.parse(html.match(/const AAV_2027 = (\{.*?\});\n/)[1]), bad = [];
+  for (const r of runCsv) {
+    const b = blk[r.pool_id], n = Number(r.aav);
+    const good = b && (r.status === 'keeper' ? b.k === n && b.a == null : r.status === 'stash' ? b.a === 1 && b.s === 1 : b.a === n && b.k == null);
+    if (!good) bad.push(`${r.player} ${r.status} ${n} vs ${JSON.stringify(b)}`);
+  }
+  ok(bad.length === 0 && runCsv.length === Object.keys(blk).length, `index.html AAV_2027 = latest run CSV for all ${runCsv.length} pool players`, bad.slice(0, 5).join('; '));
+}
+ok(/^CUTOFF_DATE = ''/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DATE default is blank (no cutoff)');
+
+/* cutoff gate + write path, in a temp copy (repo files untouched) */
+{
+  const tmp = mkdtempSync(join(tmpdir(), 'cthl-run-')); copyFileSync(join(ROOT, 'index.html'), join(tmp, 'index.html'));
+  const py = (env, ...a) => spawnSync('python3', [SCRIPT, '--root', tmp, ...a],
+    { env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1', ...env }, encoding: 'utf8' });
+  const written = () => existsSync(join(tmp, 'reports')) ? readdirSync(join(tmp, 'reports')) : [];
+  let r = py({ CTHL_AAV_CUTOFF: '2020-01-01' }, '--write');
+  ok(r.status === 3 && /refusing to write.*after the cutoff 2020-01-01/.test(r.stderr) && written().length === 0,
+    'past cutoff: --write refused, nothing written', `exit ${r.status}`);
+  r = py({ CTHL_AAV_CUTOFF: '2020-01-01' }, '--write', '--override');
+  const w1 = written();
+  ok(r.status === 0 && w1.length === 2 && readFileSync(join(tmp, 'index.html'), 'utf8') === html && /index\.html unchanged/.test(r.stdout),
+    'past cutoff + --override: writes run .md/.csv; index.html byte-identical (no price changed)', `exit ${r.status}, ${w1.join(' ')}`);
+  const m1 = w1.length ? readFileSync(join(tmp, 'reports', w1.find(f => f.endsWith('.md'))), 'utf8') : '';
+  ok(/vs v3\.1 baseline .* \(first run\)/.test(m1) && /PASSED, written with --override/.test(m1), 'first run diffs vs the v3.1 baseline; report notes the override');
+  r = py({ CTHL_AAV_CUTOFF: '2999-12-31' }, '--write');
+  const w2 = written(), md2 = w2.filter(f => f.endsWith('.md') && !w1.includes(f));
+  const m2 = md2.length ? readFileSync(join(tmp, 'reports', md2[0]), 'utf8') : '';
+  ok(r.status === 0 && w2.length === 4 && /_\d{4}\.md$/.test(md2[0] || '') && /0 moved \(max \$0\), 0 added, 0 dropped vs previous run `reports\/aav_run_[\d-]+\.csv`/.test(m2),
+    'future cutoff: write allowed; second run same day gets _HHMM and diffs vs the previous run (0 moved)', `exit ${r.status}, ${md2.join(' ')}`);
+  r = py({}, '--projections', 'atc', '--atc-dir', join(tmp, 'no-atc-here'));
+  ok(r.status === 2 && /ATC 2027 data not found/.test(r.stderr) && !/^Pot:/m.test(r.stdout), '--projections atc without ATC data fails clearly (no values)');
+  rmSync(tmp, { recursive: true, force: true });
+}
 
 /* ---------- headless Chrome over CDP ---------- */
 const prof = mkdtempSync(join(tmpdir(), 'cthl-sp-'));

@@ -1,63 +1,195 @@
 #!/usr/bin/env python3
-"""CTHL AAV single pass (Eno spec 2026-11-14, specs/single-pass-aav-spec-2026-11-14.md).
+"""CTHL AAV single pass: the ONE winter rerun command (Eno spec 2026-11-14,
+specs/single-pass-aav-spec-2026-11-14.md; rerun requirements Steven via Eno 11/14).
 
-Replaces v3.1's two steps (price non-keepers from $2,570 - keeper salaries, then
-a separate keeper display calc) with ONE pass: every one of the 250 slots per
-side (keepers + paid non-keepers + $1 stashes) is priced on one curve.
+USAGE (from the repo root)
+  PYTHONDONTWRITEBYTECODE=1 python3 tools/aav_single_pass.py [--write] [--override] [--projections steamer|atc]
 
-  * Pot, keepers final: solved per side so the non-keeper AAVs total exactly
-    $2,570 - keeper salaries (H 1928 - S_H, P 642 - S_P).
-  * Pot, before keepers are final / sanity check: 2570 x 1.1689 (consistent-form
-    keeper inflation, avg of 2025 1.1704 / 2026 1.1673), split 1928:642.
-  * Unchanged from v3.1 (aav_v3.calculate): paid cohort + replacement SGP,
-    gamma 1.40/1.55, K/BB tilt inside the scores, $31 RP ceiling, $2 floor,
-    12 $1 stashes (Irish swap), largest-remainder rounding of the paid
-    non-keepers to their cash. A keeper's curve price is display only (never
-    cash); it is rounded on its own, so it can never move the cash total.
-  * Keeper scenarios: only sets that respect the 5-per-team cap (42/47/48/50;
-    the cap-breaking 50u set is not run). Each is re-solved.
+  (no flags)          rebuild values from the current pool + projections, print the
+                      run report and the diff vs the previous run; writes nothing.
+  --write             also write reports/aav_run_YYYY-MM-DD[_HHMM].md + .csv and, only
+                      if any price changed, the AAV_2027 block in index.html.
+  --override          allow --write after CUTOFF_DATE (below).
+  --projections atc   use ATC 2027 instead of Steamer. Needs ATC_DIR/2027_bat.json and
+                      2027_pit.json (FanGraphs JSON export, same format as the Steamer
+                      pull). Missing -> the run stops; it never falls back to Steamer.
+  --root DIR          where index.html and reports/ live (default: this repo; tests use a copy).
 
-Run (from the repo root):
-  PYTHONDONTWRITEBYTECODE=1 python3 tools/aav_single_pass.py [--engine DIR] [--write]
---write regenerates the AAV_2027 block in index.html and the reports/ files.
-Without it, the script only prints the report.
-Reads (never writes) the v3.1 engine, its CSV and the keeper sets in /workspace/db2027.
+  Winter refresh order: drop new projection JSON in /workspace/db2027/steamer (or atc/),
+  run steamer/match.py and steamer/valuation.py there, then this script. If the stored
+  pool values don't match the JSON, the run stops and says so.
+
+WHERE TO EDIT
+  * Likely keepers: KEEPERS_CSV below (today: Steven's keepers room, 11/6, 48 / $467;
+    same set as the app's SEED2026.picks and the v3.1 engine). Columns used: pid,
+    owner, keeper_salary, kind. If you change it, also change SEED2026.picks in
+    index.html (+ BAKED_KEEPER_SET); --write refuses while the two disagree.
+  * Cutoff: CUTOFF_DATE below ('' = no cutoff). Env CTHL_AAV_CUTOFF overrides it
+    (tests only).
+
+METHOD (unchanged v3.1 mechanics, aav_v3.calculate): 75/25 H/P (pots $1,928 / $642,
+172H / 78P slots), paid cohort + replacement SGP, gamma 1.40 / 1.55, K/BB tilt inside
+the pitcher score, $31 RP ceiling, $2 floor, 12 $1 stashes (Ike Irish swap, Steven
+11/6), largest-remainder rounding of the paid non-keepers to their exact cash.
+ONE pass prices all 250 slots per side, keepers included; the pot is solved per side so
+the non-keeper AAVs total exactly $2,570 - keeper salaries. A keeper's curve price is
+display only (never cash) and is rounded on its own, so it can never move the cash total.
+Reference pot (before keepers are final): 2570 x 1.1689 (keeper inflation 2025/2026 avg).
+
+Each run diffs against the previous reports/aav_run_*.csv; the first run diffs against
+the v3.1 baseline (excel_method/aav_2027_v3_1.csv). Reads, never writes, /workspace/db2027.
 """
-import sys, csv, json, re, argparse, warnings
+import sys, os, csv, json, re, argparse, warnings
 from collections import Counter
 from dataclasses import replace
+from datetime import date, datetime
 from pathlib import Path
 warnings.filterwarnings('ignore')
 
+# ==================== CONFIG — edit here ====================
+CUTOFF_DATE = ''                   # 'YYYY-MM-DD'. Blank = no cutoff. After it, --write needs --override.
+DB = Path('/workspace/db2027')
+KEEPERS_CSV = DB / 'keepers/keeper_split_2026-11-06_room.csv'   # the likely-keeper list
+ATC_DIR = DB / 'atc'               # expects 2027_bat.json + 2027_pit.json
+V31_BASELINE = DB / 'excel_method/aav_2027_v3_1.csv'
+STASH_SWAP_IN = 'Ike Irish'        # Steven 11/6 (AFL): replaces the lowest-ranked of the 12 stashes
+BASIS = 2570
+RATE_2025, RATE_2026 = 1.1704, 1.1673
+RATE = 1.1689                      # avg, as published in keeper_inflation_2026-11-14.md
+CAP = 5                            # keepers per team
+# =============================================================
+
 ROOT = Path(__file__).resolve().parent.parent
-ap = argparse.ArgumentParser()
-ap.add_argument('--engine', default='/workspace/db2027/excel_method')
-ap.add_argument('--keepers', default='/workspace/db2027/keepers')
-ap.add_argument('--write', action='store_true')
+ap = argparse.ArgumentParser(description='CTHL AAV single pass winter rerun (see the docstring for usage).')
+ap.add_argument('--write', action='store_true', help='write the run report/CSV and, if prices changed, index.html')
+ap.add_argument('--override', action='store_true', help='allow --write after CUTOFF_DATE')
+ap.add_argument('--projections', choices=['steamer', 'atc'], default='steamer')
+ap.add_argument('--engine', default=str(DB / 'excel_method'), help='v3.1 engine dir')
+ap.add_argument('--keepers', default=str(KEEPERS_CSV), help='likely-keeper CSV')
+ap.add_argument('--atc-dir', default=str(ATC_DIR))
+ap.add_argument('--root', default=str(ROOT), help='dir holding index.html and reports/')
 args = ap.parse_args()
+OUT = Path(args.root)
+
+
+def die(msg, code=2):
+    print('aav_single_pass: ' + msg, file=sys.stderr); sys.exit(code)
+
+
+# ---------- cutoff gate (before any work) ----------
+cutoff = os.environ.get('CTHL_AAV_CUTOFF', CUTOFF_DATE).strip()
+if cutoff:
+    try: cutoff_d = date.fromisoformat(cutoff)
+    except ValueError: die(f'CUTOFF_DATE {cutoff!r} is not YYYY-MM-DD')
+    past_cutoff = date.today() > cutoff_d
+else:
+    cutoff_d, past_cutoff = None, False
+if args.write and past_cutoff and not args.override:
+    die(f'refusing to write: today {date.today()} is after the cutoff {cutoff_d}. '
+        'Values are frozen; rerun with --override to write anyway.', 3)
+cutoff_note = ('none' if not cutoff_d else
+               f"{cutoff_d} ({'PASSED, written with --override' if past_cutoff and args.write else 'passed' if past_cutoff else 'not reached'})")
+
+# ---------- projections present? (ATC never fakes it) ----------
+if args.projections == 'atc':
+    atc = Path(args.atc_dir)
+    missing = [f for f in ('2027_bat.json', '2027_pit.json') if not (atc / f).is_file()]
+    if missing:
+        die(f"--projections atc: ATC 2027 data not found ({', '.join(str(atc / f) for f in missing)}). "
+            'Export ATC 2027 batters/pitchers from FanGraphs as JSON (same format as steamer/2027_*.json) '
+            'into that dir. Note /workspace/fantasy-baseball/inspect/ATC Projections.xlsx is 2026 '
+            'preseason ATC with no MLBAM ids; it is not usable. No values were computed.')
+
 ENG = Path(args.engine); sys.path.insert(0, str(ENG))
 import numpy as np
 import aav_v3 as v
 v2 = v.v2
 
-BASIS = 2570
-RATE_2025, RATE_2026 = 1.1704, 1.1673
-RATE = 1.1689                      # avg, as published in keeper_inflation_2026-11-14.md
-CAP = 5                            # keepers per team
 POTS, SLOTS, GAMMA = v2.POTS, v2.SLOTS, v2.GAMMA
 assert POTS == {'H': 1928, 'P': 642} and sum(POTS.values()) == BASIS and SLOTS == {'H': 172, 'P': 78}
 assert abs((RATE_2025 + RATE_2026) / 2 - RATE) < 1e-4   # published avg uses unrounded yearly rates
 
-# ---------- v3.1 board inputs, identical to aav_v3_1.py ----------
-ps, rows, valid, scores, ranks, _, bb = v2.raw_current()
-fixed = v.stash_ids(ps, ranks, rows)
-irish = next(p for p in ps if p.name == 'Ike Irish')
-removed = max([p for p in ps if p.id in fixed], key=lambda p: (ranks[rows[p.id]['mlbam']], p.id))
-fixed.remove(removed.id); fixed.add(irish.id)
-raw31, int31, disp31, meta31, _ = v.calculate(ps, fixed, valid, scores, current=True)
+# ---------- pool + Steamer (v3.1 inputs, identical to aav_v3_1.py) ----------
+try:
+    ps, rows, valid, scores, ranks, _, team_bb = v2.raw_current()
+except AssertionError as e:
+    die('the pool values (steamer/values_2027_steamer.csv) do not match the projection JSON '
+        f'(steamer/2027_bat.json, 2027_pit.json): {str(e)[:300]}. Rerun steamer/match.py and '
+        'steamer/valuation.py in /workspace/db2027 first.')
+
+
+def raw_scores(bat_rows, pit_rows):
+    """The exact unpadded SGP equations of aav_v2.raw_current (K/BB tilt in the pitcher term),
+    on any FanGraphs-format projection set. Returns (valid, scores, team_bb, side_mismatch)."""
+    poolids = {int(r['fg_mlbam']) for r in csv.DictReader((DB / 'steamer/match_report.csv').open()) if r['fg_mlbam']}
+    al = lambda x: x['League'] == 'AL' or (x.get('xMLBAMID') and int(x['xMLBAMID']) in poolids)
+    bat = {int(x['xMLBAMID']): x for x in bat_rows if x.get('xMLBAMID') and al(x)}
+    pit = {int(x['xMLBAMID']): x for x in pit_rows if x.get('xMLBAMID') and al(x)}
+    top = sorted(pit.values(), key=lambda x: -x['IP'])[:78]
+    bb = sum(x['BB'] for x in top) / sum(x['IP'] for x in top) * 862
+    raw, roles = {}, {}
+    for i in set(bat) | set(pit):
+        role = 'P' if (pit.get(i, {}).get('IP', 0) >= 20 and bat.get(i, {}).get('PA', 0) < 100) or i not in bat else 'H'
+        roles[i] = role
+        if role == 'H':
+            x = bat[i]; raw[i] = (x['H'] - .2444 * x['AB']) / 6378 / .002 + x['HR'] / 6.25 + x['R'] / 17.7 + x['RBI'] / 18 + x['SB'] / 6.43
+        else:
+            x = pit[i]; raw[i] = (3.822 * x['IP'] / 9 - x['ER']) * 9 / 862 / .123 + (x['SO'] - 3.02 * x['BB']) / bb / .078 + x['SV'] / 5.99 + x['W'] / 1.75
+    val, sc, mismatch = {}, {}, []
+    for p in ps:
+        i = int(rows[p.id]['mlbam']) if rows[p.id]['mlbam'] else None
+        if i in raw:
+            if roles[i] != p.side: mismatch.append(p.name); continue    # projected on the other side: no line
+            sc[p.id] = raw[i]; val[p.id] = bat[i] if p.side == 'H' else pit[i]
+    return val, sc, bb, mismatch
+
+
+# self-check: the scorer reproduces the engine's Steamer scores bit for bit (so ATC uses the same math)
+_load = lambda d: (json.loads((d / '2027_bat.json').read_text()), json.loads((d / '2027_pit.json').read_text()))
+_v, _s, _bb, _mm = raw_scores(*_load(DB / 'steamer'))
+assert _s == scores and _bb == team_bb and not _mm and all(_v[i] is valid[i] or _v[i] == valid[i] for i in valid)
+side_mismatch = []
+if args.projections == 'atc':
+    b, p_ = _load(Path(args.atc_dir))
+    need = {'xMLBAMID', 'League', 'PA', 'AB', 'H', 'HR', 'R', 'RBI', 'SB'}, {'xMLBAMID', 'League', 'IP', 'ER', 'SO', 'BB', 'SV', 'W', 'G', 'GS'}
+    for name, rr, cols in (('2027_bat.json', b, need[0]), ('2027_pit.json', p_, need[1])):
+        gone = cols - set(rr[0] if rr else {})
+        if gone: die(f'ATC {name} is missing columns {sorted(gone)}; expected the FanGraphs JSON export format.')
+    valid, scores, team_bb, side_mismatch = raw_scores(b, p_)
+PROJ_LABEL = {'steamer': 'Steamer 2027 (steamer/2027_bat.json, 2027_pit.json)',
+              'atc': f'ATC 2027 ({args.atc_dir}/2027_bat.json, 2027_pit.json)'}[args.projections]
+
+# ---------- likely keepers ----------
 byname = {p.name: p for p in ps}; byid = {p.id: p for p in ps}
+kpath = Path(args.keepers)
+if not kpath.is_file(): die(f'keeper list not found: {kpath}')
+krows = list(csv.DictReader(kpath.open()))
+bad = [r.get('pid') for r in krows if r.get('pid') not in byid]
+if bad: die(f'keeper list {kpath.name}: pid not in the pool: {bad}')
+for r in krows:
+    if r['kind'] != byid[r['pid']].side: die(f"keeper list: {r['player']} kind {r['kind']} but pool side {byid[r['pid']].side}")
+keepers = {r['pid']: float(r['keeper_salary']) for r in krows}
+owner = {r['pid']: r['owner'] for r in krows}
+if len(keepers) != len(krows): die('keeper list has duplicate pids')
+per_team = Counter(owner.values())
+if per_team and max(per_team.values()) > CAP: die(f'keeper list breaks the {CAP}-per-team cap: {per_team.most_common(3)}')
+ps = [replace(p, keeper=p.id in keepers, salary=keepers.get(p.id, 0.)) for p in ps]
+byname = {p.name: p for p in ps}; byid = {p.id: p for p in ps}
+
+# app's baked keeper set must be the same list (else the app's cash check can't total $2,570)
+html_path = OUT / 'index.html'
+html = html_path.read_text()
+seed = json.loads(re.search(r'const SEED2026 = (\{.*?\});\n', html).group(1))
+app_k = {k['pid']: float(k['price']) for k in seed.get('picks', []) if k.get('keeper')}
+app_match = app_k == keepers
+
+# ---------- $1 stashes (v3.1: 12 top-ranked zero-base AL prospects, Irish swap) ----------
+fixed = v.stash_ids(ps, ranks, rows)
+irish = byname[STASH_SWAP_IN]
+if irish.id not in fixed and not irish.keeper:
+    removed = max([p for p in ps if p.id in fixed], key=lambda p: (ranks[rows[p.id]['mlbam']], p.id))
+    fixed.remove(removed.id); fixed.add(irish.id)
 isrp = lambda p: p.side == 'P' and p.id in valid and v2.rp_type(valid[p.id])
-v31csv = {r['player']: r for r in csv.DictReader(open(ENG / 'aav_2027_v3_1.csv'))}
 
 
 def curve(keepers, pots):
@@ -124,130 +256,139 @@ def board(keepers, pots, sal):
     return out, meta, ints
 
 
-def cash_total(keepers, out, ints):
-    return int(sum(keepers.values()) + sum(ints[i] for i, (k, x) in out.items() if k != 'keeper'))
+# ---------- the run ----------
+ksal = int(sum(keepers.values()))
+pots, sal = solve(keepers)
+out, meta, ints = board(keepers, pots, sal)
+nonkeeper = int(sum(ints[i] for i, (k, x) in out.items() if k != 'keeper'))
+cash = ksal + nonkeeper
+assert cash == BASIS, cash
+assert sum(1 for i in out if ints[i] > 0 or out[i][0] == 'keeper') == 250
+potR = {s: POTS[s] * RATE for s in 'HP'}
+pot_tot, potR_tot = sum(pots.values()), sum(potR.values())
 
-
-# ---------- the live 48 (Steven's keepers room, 11/6) ----------
-k48 = {p.id: p.salary for p in ps if p.keeper}
-assert len(k48) == 48 and sum(k48.values()) == 467
-pots48, sal48 = solve(k48)
-out48, meta48, int48 = board(k48, pots48, sal48)
-assert cash_total(k48, out48, int48) == BASIS
-assert sum(1 for i in out48 if int48[i] > 0 or out48[i][0] == 'keeper') == 250
-
-nk31 = [p for p in ps if not p.keeper and int31[p.id] > 0]
-diffs = [(p.name, p.side, int31[p.id], int48[p.id]) for p in nk31 if int48[p.id] != int31[p.id]]
-dmax = max([abs(b - a) for _, _, a, b in diffs], default=0)
-kdiffs = [(p.name, round(disp31[p.id]), int48[p.id]) for p in ps if p.keeper and int48[p.id] != round(disp31[p.id])]
-unr_max = max(abs(out48[p.id][1] - raw31[p.id]) for p in nk31)
-# every board entry also agrees with the published v3.1 CSV
+now = datetime.now()
+cur = {}
 for p in ps:
-    r = v31csv[p.name]
-    if p.keeper: assert abs(int(r['keeper display $']) - int48[p.id]) <= 1, p.name
-    else: assert abs(int(r['CTHL AAV']) - int48.get(p.id, 0)) <= 1, p.name
+    k, x = out.get(p.id, ('none', 0.))
+    cur[p.id] = dict(pool_id=p.id, player=p.name, team=p.team, side=p.side, status=k, aav=ints.get(p.id, 0),
+                     unrounded=round(x, 6), keeper_salary=int(p.salary) if p.keeper else '', owner=owner.get(p.id, ''),
+                     rp='Y' if isrp(p) else '', projections=args.projections)
 
-# ---------- pre-final pot: 2570 x 1.1689, 1928:642 ----------
-potsR = {s: POTS[s] * RATE for s in 'HP'}
-outR, metaR = curve(k48, potsR)
-nkR = {s: nonkeeper_sum(outR, s) for s in 'HP'}
-rdiff = [abs(round(outR[p.id][1]) - int31[p.id]) for p in nk31]
-prefinal = dict(rate=RATE, rate_2025=RATE_2025, rate_2026=RATE_2026, H=potsR['H'], P=potsR['P'], total=sum(potsR.values()),
-                nonkeeper_H=nkR['H'], nonkeeper_P=nkR['P'], nonkeeper_total=sum(nkR.values()),
-                cash_check=sum(k48.values()) + sum(nkR.values()),
-                vs_v31_max_abs=int(max(rdiff)), vs_v31_moved=int(sum(d > 0 for d in rdiff)),
-                keeper_curve_total=sum(x for k, x in outR.values() if k == 'keeper'))
+# ---------- previous run (or the v3.1 baseline) ----------
+rep = OUT / 'reports'
+runs = sorted(rep.glob('aav_run_*.csv')) if rep.is_dir() else []
+if runs:
+    prev_label = f'previous run `reports/{runs[-1].name}`'
+    prev = {r['pool_id']: dict(player=r['player'], status=r['status'], aav=int(r['aav'])) for r in csv.DictReader(runs[-1].open())}
+else:
+    prev_label = f'v3.1 baseline `{V31_BASELINE}` (first run)'
+    prev = {}
+    for r in csv.DictReader(V31_BASELINE.open()):
+        p = byname.get(r['player'])
+        if not p: continue
+        if r['kept']: st, a = 'keeper', int(r['keeper display $'] or 0)
+        elif r['prospect$1 flag']: st, a = 'stash', 1
+        elif int(r['CTHL AAV'] or 0) > 0: st, a = 'paid', int(r['CTHL AAV'])
+        else: st, a = 'none', 0
+        prev[p.id] = dict(player=p.name, status=st, aav=a)
+on = lambda d: d is not None and d['status'] != 'none'
+ids = sorted(set(cur) | set(prev))
+added = [i for i in ids if on(cur.get(i)) and not on(prev.get(i))]
+dropped = [i for i in ids if on(prev.get(i)) and not on(cur.get(i))]
+moved = sorted([i for i in ids if on(cur.get(i)) and on(prev.get(i)) and
+                (cur[i]['aav'] != prev[i]['aav'] or cur[i]['status'] != prev[i]['status'])],
+               key=lambda i: (-abs(cur[i]['aav'] - prev[i]['aav']), cur[i]['player']))
+pool_new = [i for i in cur if i not in prev]; pool_gone = [i for i in prev if i not in cur]
+nm = lambda i: (cur.get(i) or prev[i])['player']
+dmax = max([abs(cur[i]['aav'] - prev[i]['aav']) for i in moved], default=0)
+diff_line = (f"{len(moved)} moved (max ${dmax}), {len(added)} added, {len(dropped)} dropped vs {prev_label}"
+             + (f"; pool: +{len(pool_new)} / -{len(pool_gone)} players" if prev and (pool_new or pool_gone) and runs else ''))
 
-# ---------- keeper scenarios, 5-per-team cap only ----------
-html = (ROOT / 'index.html').read_text()
-K27 = json.loads(re.search(r'const KEEPERS2027 = (\{.*?\});', html).group(1))
-key = v2.inputs.key; bykey = {key(p.name): p for p in ps}
-room = list(csv.DictReader(open(Path(args.keepers) / 'keeper_split_2026-11-06_room.csv')))
-old42 = list(csv.DictReader(open(Path(args.keepers) / 'keeper_split_2026-11-06.csv')))
-own48 = {byname[r['player']].id: r['owner'] for r in room}
-set48 = {byname[r['player']].id: float(r['keeper_salary']) for r in room}; assert set48 == k48
-set42 = {byname[r['player']].id: float(r['keeper_salary']) for r in old42}
-own42 = {byname[r['player']].id: r['owner'] for r in old42}
-surplus = sorted((round(disp31[i]) - s, byid[i].name, i) for i, s in set48.items())
-set47 = {i: s for i, s in set48.items() if i != surplus[0][2]}
-cnt = Counter(own48.values()); add = []
-for c in sorted([dict(id=bykey[k].id, owner=e['team'], price=float(e['v']), surplus=int31[bykey[k].id] - e['v'])
-                 for k, e in K27.items() if not e.get('traded') and k in bykey and not bykey[k].keeper and bykey[k].id not in fixed],
-                key=lambda c: (-c['surplus'], -int31[c['id']], byid[c['id']].name)):
-    if len(add) == 2: break
-    if cnt[c['owner']] < CAP: add.append(c); cnt[c['owner']] += 1
-set50 = {**set48, **{c['id']: c['price'] for c in add}}
-own50 = {**own48, **{c['id']: c['owner'] for c in add}}
-scen = {}
-for name, ks, own in [('42', set42, own42), ('47', set47, own48), ('48', set48, own48), ('50', set50, own50)]:
-    per = Counter(own[i] for i in ks); assert max(per.values()) <= CAP, (name, per)
-    pots, sal = solve(ks); out, meta, ints = board(ks, pots, sal)
-    tot = cash_total(ks, out, ints); assert tot == BASIS, (name, tot)
-    scen[name] = dict(keepers=len(ks), keeper_salary=int(sum(ks.values())), max_per_team=max(per.values()),
-                      pot_H=pots['H'], pot_P=pots['P'], pot_total=sum(pots.values()),
-                      nonkeeper_total=tot - int(sum(ks.values())), cash_check=tot,
-                      added_vs_48=sorted(byid[i].name for i in set(ks) - set(set48)),
-                      dropped_vs_48=sorted(byid[i].name for i in set(set48) - set(ks)))
-
-R = dict(spec='specs/single-pass-aav-spec-2026-11-14.md', keepers=48, keeper_salary=467,
-         solved_pot=dict(H=pots48['H'], P=pots48['P'], total=sum(pots48.values())), prefinal_pot=prefinal,
-         nonkeeper_total=cash_total(k48, out48, int48) - 467, cash_check=cash_total(k48, out48, int48),
-         vs_v31=dict(compared=len(nk31), max_abs=dmax, moved=len(diffs), moved_players=diffs, unrounded_max_abs=unr_max),
-         keepers_vs_display=dict(changed=kdiffs, checks={n: int48[byname[n].id] for n in
-                                 ['Nick Kurtz', 'Julio Rodriguez', 'Cam Schlittler', 'Ben Rice', 'Logan Gilbert']}),
-         meta=meta48, scenarios=scen, scenarios_dropped={'50u': 'breaks the 5-per-team cap; not run'})
-
+# ---------- report ----------
 f = lambda x: f'${x:,.2f}'
-md = f"""# CTHL AAV single pass — report (2026-11-14)
+infl = pot_tot / BASIS
+pot_line = (f"Pot: solved {f(pot_tot)} (H {f(pots['H'])} / P {f(pots['P'])}) | reference 2570 x {RATE} = {f(potR_tot)} "
+            f"(H {f(potR['H'])} / P {f(potR['P'])}) | implied inflation {infl:.4f} (H {pots['H'] / POTS['H']:.4f} / "
+            f"P {pots['P'] / POTS['P']:.4f}) vs reference {RATE}")
+ranked = sorted((r for r in cur.values() if r['status'] != 'none'), key=lambda r: (-r['aav'], r['player']))
+st = lambda d: '-' if not on(d) else (f"${d['aav']}" + {'keeper': ' K', 'stash': ' S'}.get(d['status'], ''))
+stamp = now.strftime('%Y-%m-%d') + (f" {now.strftime('%H:%M')}" if args.write else '')
+md = f"""# CTHL AAV run — {stamp}
 
-Spec: `/workspace/db2027/{R['spec']}`. Generator: `tools/aav_single_pass.py`. Board: `AAV_2027` in `index.html`.
-One curve prices all 250 slots (keepers included). Keepers' price = keeper AAV, display only, never counted in cash.
+Generator: `tools/aav_single_pass.py{' --projections ' + args.projections if args.projections != 'steamer' else ''}` (one pass, all 250 slots, keepers included).
+Projections: {PROJ_LABEL}. Keepers: `{kpath}` ({len(keepers)} / ${ksal}; {'matches' if app_match else '**DOES NOT MATCH**'} the app's SEED2026.picks). Cutoff: {cutoff_note}.
 
-## Pot used
+## Pot / inflation
 
-| Pot | H | P | Total | Non-keeper AAVs | Keeper $ + non-keeper | Max diff vs v3.1 | Moved |
+{pot_line}
+
+Solved pot = the per-side pot at which non-keeper AAVs total exactly $2,570 - keeper salaries; it is what prices the board. The reference pot is the keeper-inflation estimate to use before keepers are final; implied inflation = solved pot / $2,570.
+
+## Cash check
+
+${ksal} keeper salaries ({len(keepers)}) + ${nonkeeper:,} non-keeper AAVs = **${cash:,}**; 250 slots (172H / 78P), {sum(1 for k, _ in out.values() if k == 'stash')} $1 stashes. Keeper AAVs are display only (never cash).
+
+## Diff vs previous
+
+{diff_line}.
+
+""" + (('| Player | Side | Was | Now | Change |\n|---|---|---:|---:|---:|\n' +
+        ''.join(f"| {nm(i)} | {cur[i]['side']} | {st(prev[i])} | {st(cur[i])} | {cur[i]['aav'] - prev[i]['aav']:+d} |\n" for i in moved) + '\n')
+       if moved else 'No price moved.\n\n') + \
+    f"Added (now in the 250): {', '.join(f'{nm(i)} {st(cur[i])}' for i in added) or 'none'}.\n\n" + \
+    f"Dropped (out of the 250): {', '.join(f'{nm(i)} (was {st(prev[i])})' for i in dropped) or 'none'}.\n\n" + \
+    (f"Pool changes: new {', '.join(nm(i) for i in pool_new) or 'none'}; gone {', '.join(nm(i) for i in pool_gone) or 'none'}.\n\n" if runs and (pool_new or pool_gone) else '') + \
+    (f"Projected on the other side (no line, unpriced): {', '.join(side_mismatch)}.\n\n" if side_mismatch else '') + \
+    "## Top 25 by AAV (K = keeper AAV, display only)\n\n| # | Player | Team | Side | AAV |\n|---:|---|---|---|---:|\n" + \
+    ''.join(f"| {n} | {r['player']} | {r['team']} | {r['side']} | ${r['aav']}{' K' if r['status'] == 'keeper' else ''} |\n" for n, r in enumerate(ranked[:25], 1)) + \
+    f"""
+## Curve
+
+| Side | Pot | Keepers | Keeper $ | Paid | Stashes | Replacement SGP | Scale |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| **Solved (keepers final, used for the board)** | {f(pots48['H'])} | {f(pots48['P'])} | **{f(R['solved_pot']['total'])}** | ${R['nonkeeper_total']:,} | **${R['cash_check']:,}** | ${dmax} | {len(diffs)} of {len(nk31)} |
-| Pre-final 2570 x {RATE} | {f(potsR['H'])} | {f(potsR['P'])} | **{f(prefinal['total'])}** | {f(prefinal['nonkeeper_total'])} | {f(prefinal['cash_check'])} | ${prefinal['vs_v31_max_abs']} | {prefinal['vs_v31_moved']} of {len(nk31)} |
-
-{RATE} = avg of 2025 {RATE_2025} / 2026 {RATE_2026} (consistent-form keeper inflation). It is the pot to use before keepers are final; once they are, the solved pot reconciles to $2,570 and is what the board uses.
-
-## Acceptance (48 keepers / $467)
-
-- Non-keeper prices vs v3.1 (`aav_2027_v3_1.csv`): max diff **${dmax}**, **{len(diffs)}** moved of {len(nk31)} (unrounded max {unr_max:.1e}).
-- Keeper values: {', '.join(f'{n} ${x}' for n, x in R['keepers_vs_display']['checks'].items())}; {len(kdiffs)} keepers differ from the current display.
-- Cash check: $467 keeper salaries + ${R['nonkeeper_total']:,} non-keeper AAVs = **${R['cash_check']:,}**.
-
-## Keeper scenarios (5-per-team cap only; 50u dropped)
-
-| Scenario | Keepers | Salary | Max/team | Solved pot (H / P) | Non-keeper | Cash check | Added vs 48 | Dropped vs 48 |
-|---|---:|---:|---:|---|---:|---:|---|---|
-""" + ''.join(f"| {n} | {s['keepers']} | ${s['keeper_salary']} | {s['max_per_team']} | {f(s['pot_total'])} ({f(s['pot_H'])} / {f(s['pot_P'])}) | ${s['nonkeeper_total']:,} | ${s['cash_check']:,} | {', '.join(s['added_vs_48']) or '-'} | {', '.join(s['dropped_vs_48']) or '-'} |\n" for n, s in scen.items())
+""" + ''.join(f"| {s} | {f(m['pot'])} | {m['keepers']} | ${m['keeper_salary']:.0f} | {m['paid']} | {m['stashes']} | {m['replacement_sgp']:.4f} | {m['scale']:.6f} |\n" for s, m in meta.items())
 print(md)
 
+# ---------- write ----------
 if args.write:
+    if not app_match:
+        die(f"refusing to write: keeper list {kpath.name} ({len(keepers)} / ${ksal}) differs from the app's "
+            f"SEED2026.picks ({len(app_k)} / ${sum(app_k.values()):.0f}). Update one to match the other first.")
     blk = {}
     for p in sorted(ps, key=lambda p: p.id):
-        k, _ = out48.get(p.id, ('none', 0.))
-        if k == 'keeper': blk[p.id] = {'k': int48[p.id]}
+        k = cur[p.id]['status']
+        if k == 'keeper': blk[p.id] = {'k': ints[p.id]}
         elif k == 'stash': blk[p.id] = {'a': 1, 's': 1}
-        else: blk[p.id] = {'a': int48.get(p.id, 0)}
-    js = json.dumps(blk, separators=(',', ':'))
-    head = ('/* ================= AAV 2027 — DATA BLOCK =================\n'
-            '   CTHL AAV = 2027 auction price, ONE pass (Eno single-pass spec, 11/14/2026;\n'
-            '   tools/aav_single_pass.py on the v3.1 engine). All 250 slots, keepers included,\n'
-            '   priced on one curve. Keyed by pool id.\n'
-            '   a = auction AAV, k = keeper AAV (what a kept player would fetch if not kept;\n'
-            '   display only, never cash), s = budgeted $1 prospect stash. Read at render time,\n'
-            '   never written into S.players, so replacing this block needs no SEED_VER bump.\n'
-            f"   Pot: solved ${R['solved_pot']['total']:,.2f} (H ${pots48['H']:,.2f} / P ${pots48['P']:,.2f}) vs\n"
-            f"   pre-final 2570 x {RATE} = ${prefinal['total']:,.2f}. Report: reports/single_pass_aav_2026-11-14.md.\n"
-            f"   Totals: $467 keepers/48 + ${R['nonkeeper_total']:,} auction = ${R['cash_check']:,} / 250 slots. */\n")
-    new, n = re.subn(r'/\* =+ AAV 2027 — DATA BLOCK =+\n.*?\*/\nconst AAV_2027 = \{.*?\};\n',
-                     lambda m: head + 'const AAV_2027 = ' + js + ';\n', html, count=1, flags=re.S)
-    assert n == 1
-    (ROOT / 'index.html').write_text(new)
-    (ROOT / 'reports').mkdir(exist_ok=True)
-    (ROOT / 'reports/single_pass_aav_2026-11-14.md').write_text(md)
-    (ROOT / 'reports/single_pass_aav_2026-11-14.json').write_text(json.dumps(R, indent=1, default=str) + '\n')
-    print('wrote index.html AAV_2027 block + reports/')
+        else: blk[p.id] = {'a': ints.get(p.id, 0)}
+    rep.mkdir(exist_ok=True)
+    stem = f"aav_run_{now:%Y-%m-%d}"
+    if (rep / f'{stem}.md').exists() or (rep / f'{stem}.csv').exists(): stem += f"_{now:%H%M}"
+    if (rep / f'{stem}.csv').exists(): die(f'reports/{stem}.csv already exists; wait a minute and rerun')
+    old = json.loads(re.search(r'const AAV_2027 = (\{.*?\});\n', html).group(1))
+    if old == blk:
+        html_note = 'index.html unchanged (no price changed)'
+    else:
+        js = json.dumps(blk, separators=(',', ':'))
+        head = ('/* ================= AAV 2027 — DATA BLOCK =================\n'
+                '   CTHL AAV = 2027 auction price, ONE pass (Eno single-pass spec, 11/14/2026;\n'
+                f'   tools/aav_single_pass.py, {args.projections}, run {now:%Y-%m-%d %H:%M}). All 250 slots,\n'
+                '   keepers included, priced on one curve. Keyed by pool id.\n'
+                '   a = auction AAV, k = keeper AAV (what a kept player would fetch if not kept;\n'
+                '   display only, never cash), s = budgeted $1 prospect stash. Read at render time,\n'
+                '   never written into S.players, so replacing this block needs no SEED_VER bump.\n'
+                f"   Pot: solved {f(pot_tot)} (H {f(pots['H'])} / P {f(pots['P'])}) vs\n"
+                f"   pre-final 2570 x {RATE} = {f(potR_tot)}. Report: reports/{stem}.md.\n"
+                f"   Totals: ${ksal} keepers/{len(keepers)} + ${nonkeeper:,} auction = ${cash:,} / 250 slots. */\n")
+        new, n = re.subn(r'/\* =+ AAV 2027 — DATA BLOCK =+\n.*?\*/\nconst AAV_2027 = \{.*?\};\n',
+                         lambda m: head + 'const AAV_2027 = ' + js + ';\n', html, count=1, flags=re.S)
+        assert n == 1
+        html_path.write_text(new)
+        html_note = f'index.html AAV_2027 block updated ({sum(old.get(i) != b for i, b in blk.items())} entries changed)'
+    md += f"\n## Written\n\n`reports/{stem}.md`, `reports/{stem}.csv`; {html_note}.\n"
+    (rep / f'{stem}.md').write_text(md)
+    cols = ['pool_id', 'player', 'team', 'side', 'status', 'aav', 'unrounded', 'keeper_salary', 'owner', 'rp', 'projections']
+    with (rep / f'{stem}.csv').open('w', newline='') as fh:
+        w = csv.DictWriter(fh, cols); w.writeheader()
+        w.writerows(sorted(cur.values(), key=lambda r: (r['status'] == 'none', -r['aav'], r['player'])))
+    print(f'wrote reports/{stem}.md + reports/{stem}.csv; {html_note}')
