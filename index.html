@@ -342,17 +342,18 @@ a{color:var(--link)}
 /* ---- Player Card — two-sided, 1987-style homage (2026-11-11) ----
    CTHL homage to the 1987 look (wood grain, team nameplate, gray back with a
    yellow stat grid). Not a Topps product: a CTHL mark sits where the
-   wordmark would. Pure CSS, no frame images. Front = sale entry; back = real
-   2025-26 lines, the 2027 Steamer row and the write-up. NO $ on the back. */
-#pickDlg{padding:0;border:none;border-radius:14px;width:min(570px,96vw);max-width:96vw;max-height:96vh;margin:auto;overflow:auto;background:#2b2118;box-shadow:0 22px 70px rgba(0,0,0,.5)}
+   wordmark would. Pure CSS, no frame images. Front = sale entry + the chosen
+   team's budget / slots / max bid; back = real 2025-26 lines, the 2027
+   projection row and the write-up. NO $ on the back.
+   2026-11-16 (Steven): no flip — both faces show at once, side by side on
+   desktop, stacked on a phone. */
+#pickDlg{padding:0;border:none;border-radius:14px;width:min(1160px,96vw);max-width:96vw;max-height:96vh;margin:auto;overflow:auto;background:#2b2118;box-shadow:0 22px 70px rgba(0,0,0,.5)}
 #pickDlg::backdrop{background:rgba(10,20,40,.6)}
 #pickDlg label{font-size:14px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-.cf{perspective:1600px;padding:10px 10px 0}
-.cf-inner{display:grid;transition:transform .55s ease;transform-style:preserve-3d}
-.cf.flipped .cf-inner{transform:rotateY(180deg)}
-.cf-face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;min-width:0}
-.cf-back{transform:rotateY(180deg)}
-@media (prefers-reduced-motion:reduce){.cf-inner{transition:none}}
+.cf{padding:10px 10px 0}
+.cf-inner{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.cf-face{border-radius:10px;min-width:0}
+@media(max-width:900px){.cf-inner{grid-template-columns:minmax(0,1fr)}}
 /* front: wood-grain border */
 .cf-front{--tc:#00259e;padding:16px 16px 14px;position:relative;
   background:
@@ -376,10 +377,22 @@ a{color:var(--link)}
 .cf-front.fs .cf-banner{font-family:'Brush Script MT','Segoe Script','Lucida Handwriting',cursive;font-style:italic;font-size:31px;color:#ffd200;text-shadow:2px 2px 0 #b3001b,-1px -1px 0 #111;line-height:1.1}
 .cf-front.as .cf-banner{display:none}
 .cf-sub2{font-size:13px;font-weight:700;color:#333;margin:0 0 0 76px;padding-right:118px;min-height:62px}
-.cf-stats{min-width:0;overflow-x:auto;margin-top:12px;background:rgba(255,255,255,.7);border-radius:4px;padding:5px 7px}
-.cf-stats .statline{font-size:14px;color:var(--text);margin:0;font-weight:600;white-space:nowrap;text-align:left}
 .cf-sale{background:rgba(255,255,255,.94);border:2px solid #111;border-radius:6px;padding:10px 12px;margin-top:10px}
 .cf-sale .pc-sec{margin-top:0}
+/* budget / slots / max bid for the chosen team; "after" column = after this
+   sale at the typed price (live preview, nothing saved until Sold) */
+.cf-bud{margin-top:10px;border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.cf-bud th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);font-weight:700;text-align:right;padding:2px 8px;border-bottom:2px solid #e8ebf0}
+.cf-bud th.l,.cf-bud td.l{text-align:left}
+.cf-bud td{text-align:right;padding:4px 8px;font-size:19px;font-weight:800;color:#111;white-space:nowrap}
+.cf-bud td.l{font-size:14px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.4px}
+.cf-bud td.ar{color:#999;font-weight:400;padding:4px 0}
+.cf-bud td.af{color:var(--navy)}
+.cf-bud td.af.none{color:#aaa;font-weight:400}
+.cf-bud tr.mx td{font-size:22px}
+.cf-bud tr.mx td.l{font-size:14px;color:#111}
+.cf-bud td.over{color:var(--red)}
+.cf-saleact{margin-top:10px}
 /* nameplate */
 .cf-plate{margin-top:12px;display:flex;align-items:stretch;gap:10px;position:relative}
 .cf-mark{flex:0 0 auto;align-self:center;width:62px;height:62px;border-radius:50%;background:#fff;border:3px solid #111;display:flex;align-items:center;justify-content:center;
@@ -417,7 +430,6 @@ a{color:var(--link)}
 .cb-grid tr.proj td{font-style:italic;background:rgba(255,255,255,.35);border-top:2px solid #4b2a7b}
 .cb-grid td.none{text-align:left;color:#555;font-style:italic}
 .cb-empty{margin-top:10px;font-style:italic;color:#444;font-size:14px}
-.cb-note{font-size:11.5px;color:#333;margin-top:4px}
 .cb-wu{margin-top:10px;font-style:italic;font-size:15px;line-height:1.45;background:rgba(255,255,255,.35);border-left:4px solid #4b2a7b;padding:8px 10px;min-height:2.9em}
 .cb-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:700;color:#3b3b3b}
 .cb-foot .mk{font:900 14px/1 Georgia,serif;color:#4b2a7b;border:2px solid #4b2a7b;border-radius:12px;padding:2px 8px}
@@ -430,7 +442,6 @@ a{color:var(--link)}
   .cf-name .pc-name{font-size:21px}
   .cf-mark{width:48px;height:48px;font-size:12px}
   .pc-aavbox{padding:2px 7px}.pc-aavbox .v{font-size:22px}
-  .cf-stats .statline{font-size:13px}
   .cb-grid table{font-size:10.5px}
   .cb-grid th,.cb-grid td{padding:2px 2px}
   .cb-ban .nm{font-size:18px}
@@ -694,10 +705,11 @@ a{color:var(--link)}
 </dialog>
 
 <!-- pick dialog — two-sided 1987-style card (2026-11-11). Front: sale
-     entry (Team, Price $ blank, Sold); back: 2025-26 real lines, 2027 Steamer
-     row, write-up. Flip with the button, Enter/Space on it, or F. -->
+     entry (Team, Price $ blank, Sold) + that team's budget / slots / max bid,
+     now -> after the typed price; back: 2025-26 real lines, 2027 projection
+     row, write-up. 2026-11-16: no flip, both sides show at once. -->
 <dialog id="pickDlg" aria-label="Player card">
-  <div class="cf" id="cardFlip">
+  <div class="cf" id="cardWrap">
    <div class="cf-inner">
     <section class="cf-face cf-front" id="cardFront" aria-label="Card front">
       <div class="cf-banner" id="cfBanner"></div>
@@ -705,10 +717,6 @@ a{color:var(--link)}
         <div class="cf-logo" id="dlgLogoWrap"></div>
         <div class="pc-aavbox"><div class="lab">CTHL AAV</div><div class="v" id="dlgAav">—</div></div>
         <div class="cf-sub2" id="cfTag"></div>
-        <div class="cf-stats">
-          <div class="statline" id="dlgStats"></div>
-          <div class="statline" id="dlgStats27" style="margin-top:4px"></div>
-        </div>
       </div>
       <div class="cf-sale">
         <div id="dlgSaleSection">
@@ -718,6 +726,7 @@ a{color:var(--link)}
             <div id="dlgPriceWrap"><label style="display:block;margin-bottom:3px">Price $</label><input type="number" id="dlgPrice" min="1" placeholder="—" autocomplete="off" style="font-size:30px;font-weight:800;padding:8px 14px;width:130px;text-align:center"></div>
           </div>
           <div class="muted" id="dlgMax" style="margin:6px 0 0;font-size:16px"></div>
+          <table class="cf-bud" id="dlgBud" aria-live="polite"></table>
         </div>
         <!-- shown instead of dlgSaleSection once a player is already drafted —
              2026-08-08, so the card is viewable (stats/news/ADP) for owned
@@ -727,6 +736,7 @@ a{color:var(--link)}
           <div class="pc-sec">Already drafted</div>
           <div class="statline" id="dlgOwnedLine" style="margin:4px 0 0"></div>
         </div>
+        <div class="cf-saleact"><button class="btn" id="dlgConfirmBtn" style="font-size:19px;padding:13px 28px"></button></div>
         <div id="dlgNews" style="margin-top:10px"></div>
       </div>
       <div class="cf-plate">
@@ -739,7 +749,7 @@ a{color:var(--link)}
       </div>
       <div class="cf-stars" aria-label="All-Star"><span class="r">★</span><span class="w">★</span><span class="b">★</span><span class="t">ALL STAR</span><span class="b">★</span><span class="w">★</span><span class="r">★</span></div>
     </section>
-    <section class="cf-face cf-back" id="cardBack" aria-label="Card back" inert>
+    <section class="cf-face cf-back" id="cardBack" aria-label="Card back">
       <div class="cb-top">
         <div class="cb-no">CTHL</div>
         <div class="cb-ban"><div class="nm" id="cbName"></div><div class="vt" id="cbVitals"></div></div>
@@ -751,8 +761,6 @@ a{color:var(--link)}
    </div>
   </div>
   <div class="pc-foot">
-    <button class="btn" id="dlgConfirmBtn" style="font-size:19px;padding:13px 28px"></button>
-    <button class="btn ghost" id="dlgFlipBtn" type="button" aria-pressed="false" title="Flip the card (F)">↻ Flip</button>
     <a class="pc-link" id="dlgRw" target="_blank" rel="noopener" href="#">Rotoworld</a>
     <button class="btn ghost sp" onclick="pickDlg.close()">Cancel</button>
   </div>
@@ -1086,51 +1094,46 @@ function cardFront(p){
   $('cfLg').textContent = CARDS.l[p.id]||'AL';
 }
 /* Card back. No $ anywhere on this side — values, AAV and salaries live on
-   the front only. 2027 row = the in-build Steamer line (p.p27). */
+   the front only.
+   2026-11-16: the 2027 line is its own row of exactly the Projections tab's
+   columns (POOL_COLS, minus GS) read through the same poolStat(), so the two
+   can't drift. It used to sit inside the 2025-26 grid, whose G/AB/H columns
+   Steamer doesn't have (blank) and which had no PA column (PA only made the
+   footnote). Footnotes are gone; GS is off the card entirely. */
 function cardBack(p){
   $('cbName').textContent = p.name;
   $('cbVitals').textContent = [p.team, dispElig(p), p.kind==='P'?'Pitcher':'Hitter'].filter(Boolean).join(' · ');
   const rows=CARDS.s[p.id]||[], q=p.p27;
   const qSide = q ? (('PA' in q)?'H':'P') : p.kind;
   const sides=[qSide]; rows.forEach(r=>{ if(!sides.includes(r[1])) sides.push(r[1]); });
-  const HH=['G','AB','R','H','HR','RBI','SB','AVG'], PH=['G','GS','IP','W','SV','ERA','K','BB','K/BB'];
-  const avg=v=>(+v).toFixed(3).replace(/^0/,'');
+  // CARDS.s pitching rows carry G GS IP ...; GS (index 6) is dropped on display
+  const HH=['G','AB','R','H','HR','RBI','SB','AVG'], PH=['G','IP','W','SV','ERA','K','BB','K/BB'];
+  const pf={AVG:v=>(+v||0).toFixed(3).replace(/^0/,''), ERA:v=>(+v||0).toFixed(2),
+            KBB:v=>(v==null||!isFinite(v)) ? '' : (+v).toFixed(2)};
   let html = rows.length ? '' : '<div class="cb-empty">No 2025–26 MLB or minor-league line on file.</div>';
   sides.forEach(sd=>{
-    const hd = sd==='H'?HH:PH;
-    let t = `<div class="cb-grid"><table><caption>${sd==='H'?'Batting':'Pitching'} record</caption><thead><tr><th class="l">Year</th><th class="l">Club</th><th class="l">Lvl</th>${hd.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
-    rows.filter(r=>r[1]===sd).forEach(r=>{
-      const cls = r[2] ? 'tot' : (r[3]==='MLB' ? 'mlb' : '');
-      t += `<tr class="${cls}"><td class="l">${r[0]}</td><td class="l">${cardEsc(r[4])}</td><td class="l">${cardEsc(r[3])}</td>${r.slice(5).map(v=>`<td>${cardEsc(v)}</td>`).join('')}</tr>`;
-    });
-    if(sd===qSide){
-      const lead=`<td class="l">2027</td><td class="l">${cardEsc(p.team)}</td><td class="l">Proj</td>`;
-      if(!q) t += `<tr class="proj">${lead}<td class="none" colspan="${hd.length}">no 2027 projection</td></tr>`;
-      else {
-        const v = sd==='H'
-          ? ['','',q.R,'',q.HR,q.RBI,q.SB,avg(q.AVG)]
-          : ['',q.GS==null?'':q.GS,q.IP,q.W,q.SV,(+q.ERA).toFixed(2),q.SO,q.BB,(+q.BB)>0?(q.SO/q.BB).toFixed(2):''];
-        t += `<tr class="proj">${lead}${v.map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
-      }
+    const hd = sd==='H'?HH:PH, sr = rows.filter(r=>r[1]===sd);
+    if(sr.length){
+      let t = `<div class="cb-grid"><table><caption>${sd==='H'?'Batting':'Pitching'} record</caption><thead><tr><th class="l">Year</th><th class="l">Club</th><th class="l">Lvl</th>${hd.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+      sr.forEach(r=>{
+        const cls = r[2] ? 'tot' : (r[3]==='MLB' ? 'mlb' : '');
+        const v = sd==='H' ? r.slice(5) : [r[5]].concat(r.slice(7));
+        t += `<tr class="${cls}"><td class="l">${r[0]}</td><td class="l">${cardEsc(r[4])}</td><td class="l">${cardEsc(r[3])}</td>${v.map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
+      });
+      html += t + '</tbody></table></div>';
     }
-    t += '</tbody></table></div>';
-    if(sd===qSide) t += `<div class="cb-note">2027 = Steamer projection (FanGraphs, pulled 11/4/2026)${q&&sd==='H'?' · '+q.PA+' PA':''}. 2025–26 = real MLB / MiLB lines; Tot rows only when a year has 2+ lines at that level.</div>`;
-    html += t;
+    if(sd===qSide){
+      const cols = POOL_COLS[sd].filter(c=>c[0]!=='GS');
+      let t = `<div class="cb-grid"><table><caption>2027 projection</caption><thead><tr><th class="l">Year</th><th class="l">Club</th>${cols.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>`;
+      const lead=`<td class="l">2027</td><td class="l">${cardEsc(p.team)}</td>`;
+      if(!q) t += `<tr class="proj">${lead}<td class="none" colspan="${cols.length}">no 2027 projection</td></tr>`;
+      else t += `<tr class="proj">${lead}${cols.map(([k])=>{ const v=poolStat(p,k); return `<td>${cardEsc(pf[k]?pf[k](v):v)}</td>`; }).join('')}</tr>`;
+      html += t + '</tbody></table></div>';
+    }
   });
   $('cbStats').innerHTML = html;
   $('cbWriteup').textContent = CARDS.w[p.id]||'';
 }
-function setFlip(on){
-  $('cardFlip').classList.toggle('flipped',on);
-  $('cardFront').inert=on; $('cardBack').inert=!on;
-  const b=$('dlgFlipBtn'); b.setAttribute('aria-pressed',String(on)); b.textContent = on?'↻ Front':'↻ Flip';
-}
-$('dlgFlipBtn').onclick=()=>{ setFlip(!$('cardFlip').classList.contains('flipped')); $('dlgFlipBtn').focus(); };
-$('pickDlg').addEventListener('keydown',e=>{
-  if((e.key==='f'||e.key==='F') && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)){
-    e.preventDefault(); $('dlgFlipBtn').click();
-  }
-});
 /* ================= DRAFTING ================= */
 let dlgPlayer=null;
 let dlgTaxiMode=false;
@@ -1169,24 +1172,8 @@ function openPick(id, mode){
   // 2026-08-16: was "LABR tier / proj" — internal jargon that read as an
   // error to anyone but us. Unpriced, un-ADP'd players just show a dash.
   else { ab.textContent='—'; ab.previousElementSibling.textContent='CTHL AAV'; }
-  /* 2026-11-04: two stat lines. 2026 = the actual line (and 2026 earned $);
-     2027 = Steamer projection (FanGraphs, pulled 11/4/2026). p.val is the
-     provisional 2027 Steamer $ (no 750-IP reliever adjustment), to be rebased
-     on LABR. No Steamer line -> blank, never $0. */
-  const lab=t=>`<span style="display:inline-block;min-width:100px;font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.03em">${t}</span>`;
-  /* 2026-11-11: a prospect with no 2026 MLB time (0 AB / 0 IP) gets text,
-     never a .000 AVG or 0.00 ERA built from an empty line. */
-  const no26 = p.kind==='H' ? !(+p.AB>0) : !(parseFloat(p.IP)>0);
-  $('dlgStats').innerHTML = lab('2026') + (no26
-    ? '<span style="color:var(--dim);font-weight:400">No 2026 MLB stats</span>'
-    : p.kind==='H'
-    ? `${p.AB} AB · ${p.R} R · ${p.HR} HR · ${p.RBI} RBI · ${p.SB} SB · ${(p.AB?(p.H/p.AB):0).toFixed(3).replace(/^0/,'')} AVG`
-    : `${p.IP} IP · ${p.W} W · ${p.SV} SV · ${p.SO} K · ${p.BB} BB · ${(+p.ERA||0).toFixed(2)} ERA · ${p.BB?(p.SO/p.BB).toFixed(2):'—'} K/BB`);
-  const q=p.p27;
-  $('dlgStats27').innerHTML = lab('2027 Steamer') + (!q ? '<span style="color:var(--dim);font-weight:400">no projection</span>'
-    : ('PA' in q)
-    ? `${q.PA} PA · ${q.R} R · ${q.HR} HR · ${q.RBI} RBI · ${q.SB} SB · ${(+q.AVG).toFixed(3).replace(/^0/,'')} AVG`
-    : `${q.IP} IP · ${q.W} W · ${q.SV} SV · ${q.SO} K · ${q.BB} BB · ${(+q.ERA).toFixed(2)} ERA · ${(+q.BB)>0?(q.SO/q.BB).toFixed(2):''} K/BB`);
+  /* 2026-11-16: no stat lines on the front any more (Steven) — the 2025-26
+     record and the 2027 projection live on the back, shown alongside. */
   const n=p.news;
   $('dlgNews').innerHTML = n
     ? `<div class="pc-news"><span class="tag">${esc(n.type||'News')}</span>${esc(n.headline)}<div class="src">${esc(n.date||'')}${n.source?' · '+esc(n.source):''}</div></div>`
@@ -1245,7 +1232,7 @@ function openPick(id, mode){
      a sale. Keeper cards and already-drafted cards still show it. */
   const liveSale = !p.pick && !dlgTaxiMode && !dlgKeepMode;
   $('dlgAav').parentElement.style.display = liveSale ? 'none' : '';
-  cardFront(p); cardBack(p); setFlip(false);
+  cardFront(p); cardBack(p);
   $('pickDlg').showModal();
   if(!p.pick && !dlgTaxiMode && !dlgKeepMode) $('dlgPrice').focus();
 }
@@ -1254,15 +1241,19 @@ function openPick(id, mode){
    snapshot baked in before draft day from Rotoworld (nbcsports.com/fantasy/
    baseball/player-news) — chosen over Rotowire because Rotoworld publishes the
    analyst's take for free, where Rotowire paywalls it. */
-function maxBid(team){
+/* addPrice (optional): treat one more purchase at that price as already made
+   — the card's live "after" preview. Same formula, nothing saved. */
+function maxBid(team, addPrice){
   const st=S.settings;
   const picks = S.picks.filter(k=>k.team===team && !k.taxi);
-  const spent = picks.reduce((s,k)=>s+k.price,0);
-  const slotsLeft = st.slots - picks.length;
+  const extra = addPrice==null ? 0 : 1;
+  const spent = picks.reduce((s,k)=>s+k.price,0) + (extra ? addPrice : 0);
+  const slotsLeft = st.slots - picks.length - extra;
   return { spent, slotsLeft, max: st.budget - spent - (slotsLeft-1), left: st.budget-spent };
 }
 function updateDlgMax(){
   const team=$('dlgTeam').value;
+  $('dlgBud').innerHTML=''; $('dlgMax').style.display='';
   if(dlgTaxiMode){
     const filled=S.taxi.filter(t=>t.team===team).length;
     $('dlgMax').textContent = `${team}: ${filled} of ${S.settings.taxiRounds} taxi picks used`;
@@ -1277,8 +1268,20 @@ function updateDlgMax(){
       `${team}: ${ks.length} of ${S.settings.maxKeep} keepers · $${spent} committed${listed}`;
     return;
   }
-  const m = maxBid(team);
-  $('dlgMax').textContent = `${team}: $${m.left} left · ${m.slotsLeft} slots · max bid $${m.max}`;
+  /* auction sale: the chosen team's budget left / open slots / max bid now,
+     and after this sale at the typed price — live as the price is typed. */
+  const m = maxBid(team), price = parseInt($('dlgPrice').value)||0;
+  const af = price>=1 ? maxBid(team, price) : null;
+  const over = af && (price>m.max || m.slotsLeft<=0);
+  $('dlgMax').style.display='none';
+  const cell = v => af ? `<td class="af${over?' over':''}">${v}</td>` : '<td class="af none">—</td>';
+  const d = v => (v<0?'-$':'$')+Math.abs(v);
+  const mx = x => x.slotsLeft>0 ? d(x.max) : '—';     // roster full: no next bid
+  $('dlgBud').innerHTML =
+    `<thead><tr><th class="l">${cardEsc(team)}</th><th>Now</th><th></th><th>${af?'After $'+price:'After'}</th></tr></thead><tbody>`
+    + `<tr><td class="l">Budget left</td><td>$${m.left}</td><td class="ar">→</td>${cell(af&&d(af.left))}</tr>`
+    + `<tr><td class="l">Open slots</td><td>${m.slotsLeft}</td><td class="ar">→</td>${cell(af&&af.slotsLeft)}</tr>`
+    + `<tr class="mx"><td class="l">Max bid</td><td>${mx(m)}</td><td class="ar">→</td>${cell(af&&mx(af))}</tr></tbody>`;
 }
 function confirmPick(){
   const team=$('dlgTeam').value, price=parseInt($('dlgPrice').value)||0;
@@ -2877,6 +2880,7 @@ $('search').oninput=renderPool;
 $('taxiBoardSearch').oninput=renderTaxiBoard;
 $('hideDrafted').onchange=renderPool;
 $('dlgTeam').onchange=updateDlgMax;
+$('dlgPrice').oninput=updateDlgMax;
 $('tsTeam').onchange=renderTeamSummary;
 $('addKind').onchange=renderEligBoxes; renderEligBoxes();
 $('keepBoardSearch').oninput=renderKeepers;
