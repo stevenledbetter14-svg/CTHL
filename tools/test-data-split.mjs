@@ -24,6 +24,14 @@ const REF = argv.includes('--ref') ? argv[argv.indexOf('--ref') + 1] : 'b5a63b7'
 const NONET = argv.includes('--no-net');
 const FILES = [['seed-2027.js', 'SEED2026'], ['aav-2027.js', 'AAV_2027'], ['cards-2027.js', 'CARDS'],
                ['keepers-2027.js', 'KEEPERS2027'], ['rotoid.js', 'ROTOID'], ['logos.js', 'LOGO']];
+/* 2026-11-16 card lines: tools/p27-card-fields.py appends G/AB/H (hitters) and
+   G/L/H/ER/WHIP (pitchers) to every SEED2026 p27. The baseline is the old
+   build minus exactly those keys; nothing else in SEED2026 may differ. */
+const CARD_ADD = { H: ['G', 'AB', 'H'], P: ['G', 'L', 'H', 'ER', 'WHIP'] };
+const p27Side = q => ('PA' in q) ? 'H' : 'P';
+const stripCardVal = (name, v) => { if(name === 'SEED2026') for(const p of v.players) if(p.p27) for(const k of CARD_ADD[p27Side(p.p27)]) delete p.p27[k]; return v; };
+const stripCardSrc = (name, l) => name !== 'SEED2026' ? l
+  : l.replace(/,"G":[-\d.e]+,"AB":[-\d.e]+,"H":[-\d.e]+\}/g, '}').replace(/,"G":[-\d.e]+,"L":[-\d.e]+,"H":[-\d.e]+,"ER":[-\d.e]+,"WHIP":[-\d.e]+\}/g, '}');
 let fails = 0;
 const ok = (c, msg, extra = '') => { if(!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}${extra ? '  — ' + extra : ''}`); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -41,13 +49,18 @@ for(const [f, name] of FILES){
   OLD[name] = structuredClone(vm.runInContext(name, ctx));   // into this realm, so deep-equal can compare
   OLDJSON[name] = JSON.stringify(OLD[name]);
   const src = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8');
-  ok(constLine(src, name).length === 1 && constLine(src, name)[0] === lines[0], `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
+  ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === lines[0], `data/${f}: ${name} source line byte-identical${name === 'SEED2026' ? ' minus the p27 card-line fields' : ''} (${lines[0].length} chars)`);
 }
 const NEW = vm.createContext({});
 for(const [f] of FILES) vm.runInContext(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8'), NEW, { filename: f });
 for(const [f, name] of FILES){
-  const v = structuredClone(vm.runInContext(name, NEW));
-  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)`);
+  const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
+  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields' : ''}`);
+}
+{
+  const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);
+  const bad = pl.filter(p => !CARD_ADD[p27Side(p.p27)].every(k => typeof p.p27[k] === 'number' && isFinite(p.p27[k])));
+  ok(pl.length > 600 && bad.length === 0, `SEED2026: all ${pl.length} p27 lines carry the card fields (H: G AB H · P: G L H ER WHIP)`, bad.slice(0, 5).map(p => p.name).join(', '));
 }
 for(const [f, name] of FILES){
   const bare = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8').replace(/\/\*[\s\S]*?\*\/|^\/\/.*$/gm, '').trim();
@@ -139,7 +152,7 @@ async function healthy(label, url){
   ok(st.ok && st.players > 600 && !st.bad, `${label}: app loads from data/*.js (${st.players} players, CTHL not red)`, JSON.stringify(st));
   ok(errs.length === 0, `${label}: 0 console errors`, errs.slice(0, 3).join(' | '));
   for(const [, name] of FILES){
-    const s = await ev(`JSON.stringify(${name})`);
+    const s = JSON.stringify(stripCardVal(name, JSON.parse(await ev(`JSON.stringify(${name})`))));
     ok(s === OLDJSON[name], `${label}: in-page ${name} equals the old embedded object (${s.length} chars)`);
   }
 }
