@@ -1022,14 +1022,45 @@ function load(){
         }
         return;
       }
-      // stale seed, nothing drafted yet → safe to refresh to the new pool
+      // stale seed, nothing drafted yet → refresh to the new pool, but carry
+      // every pick over (carryPicks): a SEED_VER bump never drops one
+      S = seedState(); carryPicks(saved);
+      migrate(); save();
+      return;
     }
   }catch(e){}
-  // no prior save in THIS browser (or a stale, unstarted one) — start from the
+  // no prior save in THIS browser — start from the
   // real 2027 seed instead of blank, so a fresh open (e.g. a peer clicking the
   // link for the first time) already has the full pool and the 2027 keeper list.
   S = seedState();
   migrate(); save();
+}
+/* 2026-11-16: picks always win over a seed change. S is a fresh seedState();
+   `saved` is the browser's stale-seed save. Declared keepers (t > 0), taxi
+   picks, the hat and added players come over as saved, in saved order. Only
+   baked keepers (keeper, t 0) are seed-owned: they take the new seed's entry,
+   or drop if the new seed no longer has them. New baked keepers are appended
+   only if that player is free and the team has keeper room.
+   tools/test-seed-safety.mjs covers this. */
+function carryPicks(saved){
+  const isBaked = k => k && k.keeper && !(Number(k.t)>0);
+  const seedBaked = (S.picks||[]).filter(isBaked);
+  const have = new Set(S.players.map(p=>String(p.id)));
+  (saved.players||[]).forEach(p=>{ if(p && p.added && !have.has(String(p.id))) S.players.push(p); });
+  const picks = [];
+  (saved.picks||[]).forEach(k=>{
+    if(!isBaked(k)){ picks.push(k); return; }
+    const b = seedBaked.find(x=>x.pid===String(k.pid) && x.team===k.team);
+    if(b) picks.push(b);
+  });
+  S.taxi = Array.isArray(saved.taxi) ? saved.taxi : [];
+  const max = (S.settings && S.settings.maxKeep) || 5;
+  seedBaked.forEach(b=>{
+    const taken = picks.some(k=>String(k.pid)===b.pid) || S.taxi.some(t=>String(t.pid)===b.pid);
+    if(!taken && picks.filter(k=>k.keeper && k.team===b.team).length < max) picks.push(b);
+  });
+  S.picks = picks;
+  if(saved.hat) S.hat = saved.hat;
 }
 function migrate(){
   // 2026-10-30: league rules, teams and pricing are fixed in code. The Settings
@@ -3133,6 +3164,10 @@ async function pushDelta(){
      Caught by the delta test on 2026-08-09; it is exactly the kind of failure
      that looks like nothing happened. */
   if(!SY.on || !SY.canWrite || SY.applying || SY.reconciling || !SY.ready) return;
+  /* never write from a device whose pool differs from the room's (2026-11-16:
+     refresh()/setOnline() used to flip canWrite back on, and the first save()
+     pushed this device's stale local picks over the room) */
+  if(SY.seedMismatch) return;
   const now = snapshot();
   try{
     const dp = diff(now.picks, mirror.picks);
@@ -3161,10 +3196,10 @@ function applyRemote(d){
   /* seedVer guard: a device whose baked-in pool differs from the room's pool
      must not operate. Mismatched pools would silently corrupt the draft —
      same player ids meaning different players. */
-  if(d.meta && d.meta.seedVer && d.meta.seedVer !== SEED_VER){
-    SY.seedMismatch = true; SY.canWrite = false; paint(); return;
-  }
-  SY.seedMismatch = false;
+  /* 2026-11-16: on a mismatch the room's board is still shown, read-only
+     (picks always win; a stale local board must never stay on screen). */
+  SY.seedMismatch = !!(d.meta && d.meta.seedVer && d.meta.seedVer !== SEED_VER);
+  if(SY.seedMismatch) SY.canWrite = false;
 
   SY.applying = true;
   try{
@@ -3175,13 +3210,22 @@ function applyRemote(d){
     if(remotePicks.length) S.picks = remotePicks;
     else {
       const seed = seedState();
-      if(!(S.picks||[]).some(k => k.keeper)) S.picks = (seed.picks||[]).filter(k => k.keeper);
+      // add the baked keepers alongside, never in place of, local picks
+      if(!(S.picks||[]).some(k => k.keeper)){
+        const taken = new Set((S.picks||[]).map(k => String(k.pid)));
+        S.picks = (S.picks||[]).concat((seed.picks||[]).filter(k => k.keeper && !taken.has(String(k.pid))));
+      }
     }
     S.taxi  = toArr(d.taxi);
     if(d.hat) S.hat = d.hat;
     rebuildPickRefs();
     try{ localStorage.setItem('cthl-auction', JSON.stringify(S)); }catch(e){}
     mirror = snapshot();
+    /* 2026-11-16: an empty room holds none of the picks shown here, so the
+       mirror must not claim it does. Otherwise a reconnect merge reads the
+       room as "all deleted" and wipes the local board; this way the next
+       save writes the board into the room instead. */
+    if(!remotePicks.length) mirror.picks = {};
     const last = (S.picks||[]).filter(k=>!k.keeper).sort((a,b)=>(b.t||0)-(a.t||0))[0];
     SY.lastPick = last ? `${last.name} → ${last.team} $${last.price}` : '—';
     renderAll();
@@ -3407,7 +3451,7 @@ function setOnline(v){
     }
     SY.canWrite = false;
   } else {
-    SY.canWrite = true;
+    SY.canWrite = !SY.seedMismatch;
   }
   SY.on = v;
   paint();
@@ -3442,7 +3486,7 @@ function onEvent(ev, isPut){
 }
 
 async function refresh(){
-  try{ await ingest(await rGet('')); SY.ready = true; SY.canWrite = true; setOnline(true); }
+  try{ await ingest(await rGet('')); SY.ready = true; SY.canWrite = !SY.seedMismatch; setOnline(true); }
   catch(e){ SY.err = e.message; setOnline(false); }
   paint();
 }
@@ -3519,6 +3563,10 @@ window.save = function(){
   const orig = window[fn];
   if(typeof orig !== 'function') return;
   window[fn] = function(){
+    if(SY.seedMismatch){
+      alert('This device has a different player pool than the room, so picks cannot be entered here. Reload the page.');
+      return;
+    }
     if(!SY.on || !SY.canWrite) return orig.apply(this, arguments);
     const pid = (window.dlgPlayer && window.dlgPlayer.id);
     if(pid == null) return orig.apply(this, arguments);
