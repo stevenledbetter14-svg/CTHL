@@ -6,7 +6,7 @@
    Run: node tests/single_pass_test.mjs [--v31 path/to/aav_2027_v3_1.csv]
    Needs node >= 22 (built-in WebSocket) and google-chrome. */
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync, readdirSync, existsSync, copyFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, copyFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,7 +35,7 @@ function parseCSV(text) {
 const v31 = parseCSV(readFileSync(V31, 'utf8'));
 const report = JSON.parse(readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.json'), 'utf8'));
 const reportMd = readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.md'), 'utf8');
-const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const aavJs = readFileSync(join(ROOT, 'data/aav-2027.js'), 'utf8');   // AAV_2027 lives in data/ since 2026-11-16
 
 /* ---------- winter rerun command: latest run report + CSV ---------- */
 const SCRIPT = join(ROOT, 'tools/aav_single_pass.py');
@@ -54,19 +54,20 @@ ok(!!lastRun, 'a dated run CSV + report exist in reports/', lastRun || 'none');
   ok(/\*\*\$2,570\*\*/.test(runMd) && /## Diff vs previous\n\n\d+ moved .*\d+ added, \d+ dropped vs /.test(runMd), 'run report shows cash $2,570 and the diff-vs-previous summary');
 }
 {
-  const blk = JSON.parse(html.match(/const AAV_2027 = (\{.*?\});\n/)[1]), bad = [];
+  const blk = JSON.parse(aavJs.match(/const AAV_2027 = (\{.*?\});\n/)[1]), bad = [];
   for (const r of runCsv) {
     const b = blk[r.pool_id], n = Number(r.aav);
     const good = b && (r.status === 'keeper' ? b.k === n && b.a == null : r.status === 'stash' ? b.a === 1 && b.s === 1 : b.a === n && b.k == null);
     if (!good) bad.push(`${r.player} ${r.status} ${n} vs ${JSON.stringify(b)}`);
   }
-  ok(bad.length === 0 && runCsv.length === Object.keys(blk).length, `index.html AAV_2027 = latest run CSV for all ${runCsv.length} pool players`, bad.slice(0, 5).join('; '));
+  ok(bad.length === 0 && runCsv.length === Object.keys(blk).length, `data/aav-2027.js AAV_2027 = latest run CSV for all ${runCsv.length} pool players`, bad.slice(0, 5).join('; '));
 }
 ok(/^CUTOFF_DATE = '2027-03-15'/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DATE default is 2027-03-15 (AAV lock after LABR 2027)');
 
 /* cutoff gate + write path, in a temp copy (repo files untouched) */
 {
-  const tmp = mkdtempSync(join(tmpdir(), 'cthl-run-')); copyFileSync(join(ROOT, 'index.html'), join(tmp, 'index.html'));
+  const tmp = mkdtempSync(join(tmpdir(), 'cthl-run-')); mkdirSync(join(tmp, 'data'));
+  for (const f of ['seed-2027.js', 'aav-2027.js']) copyFileSync(join(ROOT, 'data', f), join(tmp, 'data', f));
   const { CTHL_AAV_CUTOFF: _, ...baseEnv } = process.env;   // no env override unless a check sets one
   const py = (env, ...a) => spawnSync('python3', [SCRIPT, '--root', tmp, ...a],
     { env: { ...baseEnv, PYTHONDONTWRITEBYTECODE: '1', ...env }, encoding: 'utf8' });
@@ -76,8 +77,8 @@ ok(/^CUTOFF_DATE = '2027-03-15'/m.test(readFileSync(SCRIPT, 'utf8')), 'CUTOFF_DA
     'past cutoff: --write refused, nothing written', `exit ${r.status}`);
   r = py({ CTHL_AAV_CUTOFF: '2020-01-01' }, '--write', '--override');
   const w1 = written();
-  ok(r.status === 0 && w1.length === 2 && readFileSync(join(tmp, 'index.html'), 'utf8') === html && /index\.html unchanged/.test(r.stdout),
-    'past cutoff + --override: writes run .md/.csv; index.html byte-identical (no price changed)', `exit ${r.status}, ${w1.join(' ')}`);
+  ok(r.status === 0 && w1.length === 2 && readFileSync(join(tmp, 'data/aav-2027.js'), 'utf8') === aavJs && /data\/aav-2027\.js unchanged/.test(r.stdout),
+    'past cutoff + --override: writes run .md/.csv; data/aav-2027.js byte-identical (no price changed)', `exit ${r.status}, ${w1.join(' ')}`);
   const m1 = w1.length ? readFileSync(join(tmp, 'reports', w1.find(f => f.endsWith('.md'))), 'utf8') : '';
   ok(/vs v3\.1 baseline .* \(first run\)/.test(m1) && /PASSED, written with --override/.test(m1), 'first run diffs vs the v3.1 baseline; report notes the override');
   r = py({}, '--write');   // default CUTOFF_DATE, today before it
@@ -190,7 +191,7 @@ try {
     iR = lines.findIndex(l => l.includes('1.1689') && l.includes('$3,004.07'));
   ok(iS >= 0 && iR === iS + 1 && lines[iS].startsWith('|') && lines[iR].startsWith('|'),
     'report shows the 1.1689 pot next to the solved pot (adjacent rows, one table)');
-  ok(/Pot: solved \$3,041\.48.*\n.*pre-final 2570 x 1\.1689 = \$3,004\.07/.test(html), 'AAV_2027 block header names both pots');
+  ok(/Pot: solved \$3,041\.48.*\n.*pre-final 2570 x 1\.1689 = \$3,004\.07/.test(aavJs), 'AAV_2027 block header names both pots');
 
   /* 5. keeper scenarios: cap-respecting only, each reconciles */
   const sc = report.scenarios;

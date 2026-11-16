@@ -5,7 +5,7 @@
 // Firebase served through request interception: nothing touches the real
 // database. A "bump" is simulated by giving the saved state / room an older
 // seedVer than the build's SEED_VER.
-import { spawn } from 'child_process'; import fs from 'fs'; import http from 'http';
+import { spawn } from 'child_process'; import fs from 'fs'; import http from 'http'; import path from 'path';
 import { createRequire } from 'module';
 const require = createRequire('/home/box/.local/lib/node_modules/');
 const WebSocket = require('ws');
@@ -55,8 +55,14 @@ const dialogs = [];
 await send('Runtime.enable'); await send('Page.enable');
 await send('Fetch.enable', {patterns:[{urlPattern:'*'}]});
 
-/* serve the page over http so localStorage persists across navigations */
-const srv = http.createServer((q, r) => { r.writeHead(200, {'content-type':'text/html'}); r.end(fs.readFileSync(HTML)); }).listen(0);
+/* serve the page (and its data/*.js files) over http so localStorage persists across navigations */
+const ROOT = path.dirname(HTML);
+const srv = http.createServer((q, r) => {
+  const p = decodeURIComponent(new URL(q.url, 'http://x').pathname);
+  const f = p === '/index.html' ? HTML : path.join(ROOT, path.normalize(p));
+  if(!f.startsWith(ROOT) || !fs.existsSync(f)){ r.writeHead(404); r.end(); return; }
+  r.writeHead(200, {'content-type': f.endsWith('.js') ? 'text/javascript' : 'text/html'}); r.end(fs.readFileSync(f));
+}).listen(0);
 const BASE = `http://127.0.0.1:${srv.address().port}/index.html`;
 const go = async (qs, wait=3500) => { await send('Page.navigate', {url: BASE + qs}); await sleep(wait); };
 

@@ -6,8 +6,9 @@
   python3 tools/mlb-stats-pull.py --seasons 2025,2026 --out /tmp/stats.json
   python3 tools/mlb-stats-pull.py --compare             # diff against baked CARDS
 
-Read-only on index.html: the pool (SEED2026) and the baked CARDS block are read
-for ids and comparison, never written. Nothing here pushes anywhere.
+Read-only on data/: the pool (SEED2026, data/seed-2027.js) and the baked CARDS
+block (data/cards-2027.js) are read for ids and comparison, never written.
+Nothing here pushes anywhere.
 
 Source: statsapi.mlb.com only. Baseball-Reference is spot-check by hand only and
 is never requested by this tool. Regular season (gameType=R), yearByYear,
@@ -16,12 +17,12 @@ hitting + pitching, one request per level per batch of ids:
   N = 1 MLB, 11 AAA, 12 AA, 13 A+, 14 A, 16 Rookie (ACL/FCL/DSL)
 No AFL, winter ball or WBC (other sports / game types, never requested).
 
-MLBAM ids: the pool in index.html carries no MLBAM field (id is the pool hash,
+MLBAM ids: the pool (data/seed-2027.js) carries no MLBAM field (id is the pool hash,
 rwId is Rotoworld), so pool_id -> mlbam comes from --map CSVs (pool_id,mlbam
 columns; default: the db2027 card coverage + Steamer values files). Pool players
 with no mapped MLBAM are listed and skipped, never matched by name.
 
-Output rows are the card back's CARDS.s shape (see index.html PLAYER CARD DATA):
+Output rows are the card back's CARDS.s shape (see data/cards-2027.js PLAYER CARD DATA):
   [year, side, kind(0 team/1 mlb_tot/2 milb_tot), level, club, ...stats]
   H: G AB R H HR RBI SB AVG       P: G GS IP W SV ERA K BB K/BB
 Same conventions as db2027/cards/build_card_data.py: per-team rows, MiLB rows
@@ -38,7 +39,8 @@ from decimal import Decimal, ROUND_HALF_UP
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-INDEX = os.path.join(REPO, 'index.html')
+SEED_JS = os.path.join(REPO, 'data', 'seed-2027.js')
+CARDS_JS = os.path.join(REPO, 'data', 'cards-2027.js')
 CACHE = os.path.join(HERE, '.cache', 'mlb-stats')
 DEFAULT_OUT = os.path.join(HERE, 'out', 'mlb-stats')
 DEFAULT_MAPS = ['/workspace/db2027/cards/card_stats_coverage.csv',
@@ -67,11 +69,12 @@ CSV_COLS = ['pool_id', 'mlbam', 'name', 'year', 'side', 'kind', 'level', 'club',
             'G', 'AB', 'R', 'H', 'HR', 'RBI', 'SB', 'AVG', 'GS', 'IP', 'W', 'SV', 'ERA', 'K', 'BB', 'K/BB']
 
 
-# ------------------------------------------------------------------ index.html (read-only)
+# ------------------------------------------------------------- data/*.js (read-only)
 
-def read_index():
-    s = open(INDEX, encoding='utf-8').read()
+def read_data():
+    s = open(SEED_JS, encoding='utf-8').read()
     seed = json.loads(re.search(r'const SEED2026 = (\{.*?\});\n', s, re.S).group(1))
+    s = open(CARDS_JS, encoding='utf-8').read()
     m = re.search(r'/\*CARDS-BEGIN\*/\s*const CARDS=(\{.*?\});\s*/\*CARDS-END\*/', s, re.S)
     cards = json.loads(m.group(1))['s'] if m else {}
     return seed['players'], cards
@@ -352,16 +355,16 @@ def compare(result, cards):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--ids', help='comma list of MLBAM ids and/or pool ids, or @file (one per line); '
-                                  'default: every pool player in index.html with a mapped MLBAM')
+                                  'default: every pool player in data/seed-2027.js with a mapped MLBAM')
     ap.add_argument('--seasons', default='2025,2026')
     ap.add_argument('--out', default=DEFAULT_OUT, help='path.json, path.csv, or a base path (writes both)')
     ap.add_argument('--map', action='append', help='pool_id,mlbam CSV (repeatable); default: db2027 files')
     ap.add_argument('--refresh', action='store_true', help='ignore the cache and re-request everything')
-    ap.add_argument('--compare', action='store_true', help='print a diff against the CARDS rows baked in index.html')
+    ap.add_argument('--compare', action='store_true', help='print a diff against the CARDS rows baked in data/cards-2027.js')
     a = ap.parse_args()
 
     seasons = [s.strip() for s in a.seasons.split(',') if s.strip()]
-    pool, cards = read_index()
+    pool, cards = read_data()
     by_pid = {p['id']: p for p in pool}
     pmap = read_maps(a.map or DEFAULT_MAPS)
     by_mlbam = {v: k for k, v in pmap.items() if k in by_pid}

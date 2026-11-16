@@ -8,12 +8,12 @@ USAGE (from the repo root)
   (no flags)          rebuild values from the current pool + projections, print the
                       run report and the diff vs the previous run; writes nothing.
   --write             also write reports/aav_run_YYYY-MM-DD[_HHMM].md + .csv and, only
-                      if any price changed, the AAV_2027 block in index.html.
+                      if any price changed, the AAV_2027 block in data/aav-2027.js.
   --override          allow --write after CUTOFF_DATE (below; 2027-03-15, the AAV lock).
   --projections atc   use ATC 2027 instead of Steamer. Needs ATC_DIR/2027_bat.json and
                       2027_pit.json (FanGraphs JSON export, same format as the Steamer
                       pull). Missing -> the run stops; it never falls back to Steamer.
-  --root DIR          where index.html and reports/ live (default: this repo; tests use a copy).
+  --root DIR          where data/ and reports/ live (default: this repo; tests use a copy).
 
   Winter refresh order: drop new projection JSON in /workspace/db2027/steamer (or atc/),
   run steamer/match.py and steamer/valuation.py there, then this script. If the stored
@@ -23,7 +23,7 @@ WHERE TO EDIT
   * Likely keepers: KEEPERS_CSV below (today: Steven's keepers room, 11/6, 48 / $467;
     same set as the app's SEED2026.picks and the v3.1 engine). Columns used: pid,
     owner, keeper_salary, kind. If you change it, also change SEED2026.picks in
-    index.html (+ BAKED_KEEPER_SET); --write refuses while the two disagree.
+    data/seed-2027.js (+ BAKED_KEEPER_SET in index.html); --write refuses while the two disagree.
   * Cutoff: CUTOFF_DATE below, the AAV lock right after LABR 2027. Currently 2027-03-15,
     a placeholder until LABR publishes its date; move that one value. Env
     CTHL_AAV_CUTOFF overrides it (tests only).
@@ -64,13 +64,13 @@ CAP = 5                            # keepers per team
 
 ROOT = Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser(description='CTHL AAV single pass winter rerun (see the docstring for usage).')
-ap.add_argument('--write', action='store_true', help='write the run report/CSV and, if prices changed, index.html')
+ap.add_argument('--write', action='store_true', help='write the run report/CSV and, if prices changed, data/aav-2027.js')
 ap.add_argument('--override', action='store_true', help='allow --write after CUTOFF_DATE')
 ap.add_argument('--projections', choices=['steamer', 'atc'], default='steamer')
 ap.add_argument('--engine', default=str(DB / 'excel_method'), help='v3.1 engine dir')
 ap.add_argument('--keepers', default=str(KEEPERS_CSV), help='likely-keeper CSV')
 ap.add_argument('--atc-dir', default=str(ATC_DIR))
-ap.add_argument('--root', default=str(ROOT), help='dir holding index.html and reports/')
+ap.add_argument('--root', default=str(ROOT), help='dir holding data/ and reports/')
 args = ap.parse_args()
 OUT = Path(args.root)
 
@@ -180,9 +180,10 @@ ps = [replace(p, keeper=p.id in keepers, salary=keepers.get(p.id, 0.)) for p in 
 byname = {p.name: p for p in ps}; byid = {p.id: p for p in ps}
 
 # app's baked keeper set must be the same list (else the app's cash check can't total $2,570)
-html_path = OUT / 'index.html'
-html = html_path.read_text()
-seed = json.loads(re.search(r'const SEED2026 = (\{.*?\});\n', html).group(1))
+# (the baked data blocks live in data/*.js since 2026-11-16, not in index.html)
+seed_path, aav_path = OUT / 'data' / 'seed-2027.js', OUT / 'data' / 'aav-2027.js'
+seed = json.loads(re.search(r'const SEED2026 = (\{.*?\});\n', seed_path.read_text(encoding='utf-8')).group(1))
+aav_js = aav_path.read_text(encoding='utf-8')
 app_k = {k['pid']: float(k['price']) for k in seed.get('picks', []) if k.get('keeper')}
 app_match = app_k == keepers
 
@@ -368,9 +369,9 @@ if args.write:
     stem = f"aav_run_{now:%Y-%m-%d}"
     if (rep / f'{stem}.md').exists() or (rep / f'{stem}.csv').exists(): stem += f"_{now:%H%M}"
     if (rep / f'{stem}.csv').exists(): die(f'reports/{stem}.csv already exists; wait a minute and rerun')
-    old = json.loads(re.search(r'const AAV_2027 = (\{.*?\});\n', html).group(1))
+    old = json.loads(re.search(r'const AAV_2027 = (\{.*?\});\n', aav_js).group(1))
     if old == blk:
-        html_note = 'index.html unchanged (no price changed)'
+        data_note = 'data/aav-2027.js unchanged (no price changed)'
     else:
         js = json.dumps(blk, separators=(',', ':'))
         head = ('/* ================= AAV 2027 — DATA BLOCK =================\n'
@@ -384,14 +385,14 @@ if args.write:
                 f"   pre-final 2570 x {RATE} = {f(potR_tot)}. Report: reports/{stem}.md.\n"
                 f"   Totals: ${ksal} keepers/{len(keepers)} + ${nonkeeper:,} auction = ${cash:,} / 250 slots. */\n")
         new, n = re.subn(r'/\* =+ AAV 2027 — DATA BLOCK =+\n.*?\*/\nconst AAV_2027 = \{.*?\};\n',
-                         lambda m: head + 'const AAV_2027 = ' + js + ';\n', html, count=1, flags=re.S)
+                         lambda m: head + 'const AAV_2027 = ' + js + ';\n', aav_js, count=1, flags=re.S)
         assert n == 1
-        html_path.write_text(new)
-        html_note = f'index.html AAV_2027 block updated ({sum(old.get(i) != b for i, b in blk.items())} entries changed)'
-    md += f"\n## Written\n\n`reports/{stem}.md`, `reports/{stem}.csv`; {html_note}.\n"
+        aav_path.write_text(new, encoding='utf-8')
+        data_note = f'data/aav-2027.js AAV_2027 block updated ({sum(old.get(i) != b for i, b in blk.items())} entries changed)'
+    md += f"\n## Written\n\n`reports/{stem}.md`, `reports/{stem}.csv`; {data_note}.\n"
     (rep / f'{stem}.md').write_text(md)
     cols = ['pool_id', 'player', 'team', 'side', 'status', 'aav', 'unrounded', 'keeper_salary', 'owner', 'rp', 'projections']
     with (rep / f'{stem}.csv').open('w', newline='') as fh:
         w = csv.DictWriter(fh, cols); w.writeheader()
         w.writerows(sorted(cur.values(), key=lambda r: (r['status'] == 'none', -r['aav'], r['player'])))
-    print(f'wrote reports/{stem}.md + reports/{stem}.csv; {html_note}')
+    print(f'wrote reports/{stem}.md + reports/{stem}.csv; {data_note}')
