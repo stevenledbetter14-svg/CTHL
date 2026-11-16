@@ -23,11 +23,18 @@ header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
 header h1{grid-area:title;font-size:20px;color:#fff;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
 /* 2026-11-11: the #syncBar is gone for good. Room health shows in the title:
    "CTHL" turns red while connecting, offline or on a pool mismatch (title /
-   aria-label says which). DIAMOND sits under the title when a ?room= is set. */
+   aria-label says which). DIAMOND sits under the title when in a room (always,
+   since 2026-11-16: the plain URL opens OFFICIAL_ROOM). */
 #hdrMark{transition:color .2s}
 #hdrMark.bad{color:#ff3b3b;text-shadow:0 0 1px #fff}
 #hdrRoom{display:block;font-size:11px;letter-spacing:3px;font-weight:800;opacity:.9;line-height:1.1;margin-top:1px}
 #hdrRoom[hidden]{display:none}
+/* 2026-11-16: build stamp + "new version" banner (never reloads by itself) */
+#verStamp{text-align:center;font-size:11px;color:var(--dim);padding:14px 8px 18px}
+#verBanner{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:200;
+  background:var(--navy);color:#fff;border:2px solid #fff;border-radius:8px;padding:9px 16px;
+  font-weight:700;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer}
+#verBanner[hidden]{display:none}
 /* 2026-08-07: visible (not hidden) horizontal scrollbar — on a split/narrow
    screen the tab bar can run past the edge, and a hidden scrollbar gave no
    clue there was more to reach. A thin bar you can actually grab fixes it. */
@@ -672,6 +679,8 @@ a{color:var(--link)}
 </div>
 
 </main>
+<footer id="verStamp"></footer>
+<div id="verBanner" role="button" tabindex="0" hidden onclick="location.reload()">New version available. Tap to reload.</div>
 
 <!-- add player dialog -->
 <dialog id="addDlg">
@@ -984,6 +993,11 @@ function upgradeBakedKeepers(){
   S.bakedSet = BAKED_KEEPER_SET;
 }
 const SEED_VER = '2027-actuals.7';
+/* App build stamp (footer). Bump APP_VER on every deployed build: open pages
+   fetch index.html now and then, and a different APP_VER shows the "New
+   version" banner. Independent of SEED_VER, which is about the player pool. */
+const APP_VER = '2026.11.16-1';
+const APP_BUILT = '2026-11-16';
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();
   s.seedVer = SEED_VER;
@@ -2904,6 +2918,9 @@ $('keepBoardSearch').oninput=renderKeepers;
    checking a stale second copy). One file now; this block only "goes live"
    at all if the page URL has a ?room= query param, so plain local/offline
    use is unaffected except for the small status bar this always paints.
+   2026-11-16: no ?room= now means OFFICIAL_ROOM (one room for everyone).
+   ?room=local is the admin/test escape hatch: standalone, no sync. Opened
+   from file:// with no ?room=, the page also stays standalone.
    ========================================================================== */
 (function(){
 'use strict';
@@ -2919,8 +2936,13 @@ const DEAD_MS = 30000;          // stream silent this long => consider it dead
    Fragments are dropped by Gmail's google.com/url redirect wrapper, and a
    silently missing room code means someone runs a blank local draft that looks
    completely normal. Query params survive the wrapper. */
+const OFFICIAL_ROOM = 'cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551';
 const params = new URLSearchParams(location.search);
-const ROOM   = (params.get('room')||'').trim();
+const qRoom  = (params.get('room')||'').trim();
+/* file:// (admin box, headless tests) stays standalone unless ?room= is given,
+   so a local test can never write into the live draft room by accident. */
+const ROOM   = qRoom === 'local' ? ''
+             : (qRoom || (/^https?:$/.test(location.protocol) ? OFFICIAL_ROOM : ''));
 
 const SY = {
   room: ROOM, on:false, canWrite:false, mode:'local',
@@ -3535,6 +3557,34 @@ else boot();
    alert() with team/price for re-entry; the room's version is kept.
    Still not this file's job: publishing Firebase rules, deploying, phase 6
    two-device rehearsal. */
+})();
+
+/* ------------------------------------------------ build stamp + update -- */
+/* 2026-11-16. Footer shows APP_VER / SEED_VER / build date. On focus, tab
+   return, and every 5 min, re-fetch this page (cache-busted) and compare its
+   APP_VER. A different one shows a banner; reloading happens ONLY when the
+   user taps it, so nothing ever reloads mid-pick. */
+(function(){
+  const st = document.getElementById('verStamp');
+  if(st) st.textContent = 'v'+APP_VER+' · data '+SEED_VER+' · built '+APP_BUILT;
+  if(!/^https?:$/.test(location.protocol)) return;
+  let last = 0;
+  async function check(){
+    const now = Date.now();
+    if(now - last < 60000) return;
+    last = now;
+    try{
+      const r = await fetch(location.pathname+'?vcheck='+now, {cache:'no-store'});
+      if(!r.ok) return;
+      const m = (await r.text()).match(/const APP_VER = '([^']+)'/);
+      const b = document.getElementById('verBanner');
+      if(m && m[1] !== APP_VER && b) b.hidden = false;
+    }catch(e){}
+  }
+  window.addEventListener('focus', check);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) check(); });
+  setInterval(check, 5*60*1000);
+  setTimeout(check, 15000);
 })();
 </script>
 </body>
