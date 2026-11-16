@@ -779,18 +779,18 @@ a{color:var(--link)}
      club logos) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.16-2"></script>
-<script src="data/aav-2027.js?v=2026.11.16-2"></script>
-<script src="data/cards-2027.js?v=2026.11.16-2"></script>
-<script src="data/keepers-2027.js?v=2026.11.16-2"></script>
-<script src="data/rotoid.js?v=2026.11.16-2"></script>
-<script src="data/logos.js?v=2026.11.16-2"></script>
+<script src="data/seed-2027.js?v=2026.11.16-3"></script>
+<script src="data/aav-2027.js?v=2026.11.16-3"></script>
+<script src="data/cards-2027.js?v=2026.11.16-3"></script>
+<script src="data/keepers-2027.js?v=2026.11.16-3"></script>
+<script src="data/rotoid.js?v=2026.11.16-3"></script>
+<script src="data/logos.js?v=2026.11.16-3"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.16-2';
+const APP_VER = '2026.11.16-3';
 const APP_BUILT = '2026-11-16';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -989,6 +989,7 @@ const CLEARED_BAKED_KEEPERS = [
   {pid:'pa22738', team:'Fruitdaloom'},   // Trey Yesavage $2 (dropped 11/6, Steven's keepers room)
   {pid:'pab6286c', team:'BozOs'},   // Taylor Walls $2 (dropped 11/6, Steven's keepers room)
   {pid:'pf29d0da', team:'Fruitdaloom'},   // Coby Mayo $5 (dropped 11/6, Steven's keepers room)
+  {pid:'p4720771', team:'Birdland'},   // Angel Martinez $2 (dropped 11/16, Steven's keepers room)
 ];
 function dropClearedBaked(arr){
   if(!Array.isArray(arr)) return arr;
@@ -1003,8 +1004,9 @@ function dropClearedBaked(arr){
    (t 0) that aren't in the new set come off, new ones go on if that player is
    free and the team has room. Keepers someone declared (t > 0), sales and taxi
    picks are never touched. Not a SEED_VER change. */
-/* 2026-11-06: baked set = Steven's keepers room (steven-keepers-b442410a), 48 / $467. */
-const BAKED_KEEPER_SET = '2027-keeperval.2';
+/* 2026-11-06: baked set = Steven's keepers room (steven-keepers-b442410a), 48 / $467.
+   2026-11-16: synced again on Steven's "update the keepers": 48 / $485 (+McGonigle Birdland $20, -Martinez). */
+const BAKED_KEEPER_SET = '2027-keeperval.3';
 function upgradeBakedKeepers(){
   if(S.bakedSet === BAKED_KEEPER_SET) return;
   const baked = (SEED2026 && SEED2026.picks || []).filter(k=>k.keeper);
