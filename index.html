@@ -779,18 +779,18 @@ a{color:var(--link)}
      club logos) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.16-5"></script>
-<script src="data/aav-2027.js?v=2026.11.16-5"></script>
-<script src="data/cards-2027.js?v=2026.11.16-5"></script>
-<script src="data/keepers-2027.js?v=2026.11.16-5"></script>
-<script src="data/rotoid.js?v=2026.11.16-5"></script>
-<script src="data/logos.js?v=2026.11.16-5"></script>
+<script src="data/seed-2027.js?v=2026.11.16-6"></script>
+<script src="data/aav-2027.js?v=2026.11.16-6"></script>
+<script src="data/cards-2027.js?v=2026.11.16-6"></script>
+<script src="data/keepers-2027.js?v=2026.11.16-6"></script>
+<script src="data/rotoid.js?v=2026.11.16-6"></script>
+<script src="data/logos.js?v=2026.11.16-6"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.16-5';
+const APP_VER = '2026.11.16-6';
 const APP_BUILT = '2026-11-16';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -1151,24 +1151,36 @@ function cardFront(p){
 /* Card back. No $ anywhere on this side — values, AAV and salaries live on
    the front only.
    2026-11-16 (Steven): the 2027 projection row carries the full card line,
-   the same columns as the 2025-26 table above it. Hitters G AB R H HR RBI SB
-   AVG (no PA); pitchers G W L SV IP H ER BB K ERA WHIP K/BB (no GS). p27
-   G/AB/H and G/L/H/ER/WHIP come from the raw Steamer files
-   (tools/p27-card-fields.py). The 2025-26 pitching rows have no L, H, ER or
-   WHIP: those cells stay blank, never derived. */
+   the same columns as the 2025-26 rows. Hitters G AB R H HR RBI SB AVG (no
+   PA); pitchers G W L SV IP H ER BB K ERA WHIP K/BB (no GS). p27 G/AB/H and
+   G/L/H/ER/WHIP/KBB come from the raw Steamer files (tools/p27-card-fields.py).
+   The 2025-26 pitching rows have no L, H, ER or WHIP: those cells stay blank,
+   never derived.
+   2026-11-16-6 (Eno/Steven): one table per side; the 2027 projection is its
+   italic last row, under 2025 and 2026 (no separate projection box). 2027
+   K/BB = unrounded Steamer SO/BB (p27.KBB), "—" when the BB shown rounds to 0.
+   History K/BB = that row's SO/BB, "—" when SO or BB is missing or BB is 0.
+   No Steamer line: the 2027 row says "No 2027 projection", nothing filled. */
 /* CARDS.s rows: H [5..] G AB R H HR RBI SB AVG · P [5..] G GS IP W SV ERA K BB K/BB.
    CARD_COLS: [header, history row index (null = not in the history data), p27 key] */
 const CARD_COLS={
   H:[['G',5,'G'],['AB',6,'AB'],['R',7,'R'],['H',8,'H'],['HR',9,'HR'],['RBI',10,'RBI'],['SB',11,'SB'],['AVG',12,'AVG']],
   P:[['G',5,'G'],['W',8,'W'],['L',null,'L'],['SV',9,'SV'],['IP',7,'IP'],['H',null,'H'],['ER',null,'ER'],
-     ['BB',12,'BB'],['K',11,'SO'],['ERA',10,'ERA'],['WHIP',null,'WHIP'],['K/BB',13,'KBB']]
+     ['BB',12,'BB'],['K',11,'SO'],['ERA',10,'ERA'],['WHIP',null,'WHIP'],['K/BB','KBB','KBB']]
 };
+const CARD_NA='—';
+/* History K/BB from the row's own SO (r[11]) and BB (r[12]). */
+function cardHistKBB(r){
+  const so=r[11], bb=r[12];
+  if(so==null||so===''||bb==null||bb===''||!isFinite(+so)||!isFinite(+bb)||+bb===0) return CARD_NA;
+  return (so/bb).toFixed(2);
+}
 /* The 2027 row as shown on the card (also read by the card test / check CSV).
    A field p27 lacks shows blank, not 0. */
 function cardProjLine(p,sd){
   const q=p.p27; if(!q) return null;
   return CARD_COLS[sd].map(([,,k])=>{
-    if(k==='KBB'){ const v=poolStat(p,'KBB'); return (v==null||!isFinite(v)) ? '' : (+v).toFixed(2); }
+    if(k==='KBB') return (q.KBB==null||!isFinite(q.KBB)||!q.BB) ? CARD_NA : (+q.KBB).toFixed(2);
     const v=q[k];
     if(v==null) return '';
     if(k==='AVG') return (+v).toFixed(3).replace(/^0/,'');
@@ -1185,22 +1197,18 @@ function cardBack(p){
   let html = rows.length ? '' : '<div class="cb-empty">No 2025–26 MLB or minor-league line on file.</div>';
   sides.forEach(sd=>{
     const cc = CARD_COLS[sd], sr = rows.filter(r=>r[1]===sd);
-    if(sr.length){
-      let t = `<div class="cb-grid"><table><caption>${sd==='H'?'Batting':'Pitching'} record</caption><thead><tr><th class="l">Year</th><th class="l">Club</th><th class="l">Lvl</th>${cc.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>`;
-      sr.forEach(r=>{
-        const cls = r[2] ? 'tot' : (r[3]==='MLB' ? 'mlb' : '');
-        const v = cc.map(c=>c[1]==null ? '' : r[c[1]]);
-        t += `<tr class="${cls}"><td class="l">${r[0]}</td><td class="l">${cardEsc(r[4])}</td><td class="l">${cardEsc(r[3])}</td>${v.map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
-      });
-      html += t + '</tbody></table></div>';
-    }
+    let t = `<div class="cb-grid"><table><caption>${sd==='H'?'Batting':'Pitching'} record</caption><thead><tr><th class="l">Year</th><th class="l">Club</th><th class="l">Lvl</th>${cc.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>`;
+    sr.forEach(r=>{
+      const cls = r[2] ? 'tot' : (r[3]==='MLB' ? 'mlb' : '');
+      const v = cc.map(c=>c[1]==='KBB' ? cardHistKBB(r) : c[1]==null ? '' : r[c[1]]);
+      t += `<tr class="${cls}"><td class="l">${r[0]}</td><td class="l">${cardEsc(r[4])}</td><td class="l">${cardEsc(r[3])}</td>${v.map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
+    });
     if(sd===qSide){
-      let t = `<div class="cb-grid"><table><caption>2027 projection</caption><thead><tr><th class="l">Year</th><th class="l">Club</th>${cc.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>`;
-      const lead=`<td class="l">2027</td><td class="l">${cardEsc(p.team)}</td>`;
-      if(!q) t += `<tr class="proj">${lead}<td class="none" colspan="${cc.length}">no 2027 projection</td></tr>`;
+      const lead=`<td class="l">2027</td><td class="l">${cardEsc(p.team)}</td><td class="l">Proj</td>`;
+      if(!q) t += `<tr class="proj">${lead}<td class="none" colspan="${cc.length}">No 2027 projection</td></tr>`;
       else t += `<tr class="proj">${lead}${cardProjLine(p,sd).map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
-      html += t + '</tbody></table></div>';
     }
+    html += t + '</tbody></table></div>';
   });
   $('cbStats').innerHTML = html;
   $('cbWriteup').textContent = CARDS.w[p.id]||'';

@@ -2,11 +2,14 @@
 // Card-back 2027 line test (2026-11-16). Headless Chrome over http, room=local,
 // every Firebase call failed as offline. Checks:
 //   1. app loads, 0 console errors;
-//   2. every pool player's card back: 2027 row headers are exactly
+//   2. every pool player's card back: one table per side with headers exactly
 //      H: G AB R H HR RBI SB AVG · P: G W L SV IP H ER BB K ERA WHIP K/BB, the
-//      history tables use the same headers, and the 2027 cells equal SEED2026
-//      p27 (checked here from the data, not from the app's helper);
-//   3. 2025-26 pitching rows leave L/H/ER/WHIP blank (not in the history data);
+//      2027 projection is the italic last row of its side's table (no separate
+//      box), and its cells equal SEED2026 p27 (checked here from the data, not
+//      from the app's helper); K/BB = p27.KBB (unrounded SO/BB), — when BB
+//      rounds to 0; no p27 = "No 2027 projection" (11/16-6);
+//   3. 2025-26 pitching rows leave L/H/ER/WHIP blank (not in the history data)
+//      and K/BB = the row's SO/BB, — when SO or BB is missing or BB is 0;
 //   4. no $ anywhere on any card back;
 //   5. the Sold price box opens blank on every undrafted card;
 //   6. 0 console errors after all of it.
@@ -64,40 +67,56 @@ ok(await ev(`typeof S!=='undefined' && S.players.length>600 && DATA_FAIL===''`),
 ok(errs.length === 0, '0 console errors on load', errs.slice(0, 3).join(' | '));
 
 const res = await ev(`(()=>{
-  const HH=${JSON.stringify(HH)}, PH=${JSON.stringify(PH)};
+  const HH=${JSON.stringify(HH)}, PH=${JSON.stringify(PH)}, NA='—';
   const exp = q => { const H='PA' in q;
-    const f2=v=>(+v).toFixed(2), kbb=q.BB ? (q.SO/q.BB).toFixed(2) : '';
+    const f2=v=>(+v).toFixed(2), kbb=(q.BB && q.KBB!=null) ? (+q.KBB).toFixed(2) : NA;
     return H ? [q.G,q.AB,q.R,q.H,q.HR,q.RBI,q.SB,(+q.AVG).toFixed(3).replace(/^0/,'')].map(String)
              : [q.G,q.W,q.L,q.SV,q.IP,q.H,q.ER,q.BB,q.SO,f2(q.ERA),f2(q.WHIP),kbb].map(String); };
-  const out=[], bad=[], dollar=[], price=[], hist=[];
+  const hk = r => (r[11]===''||r[11]==null||r[12]===''||r[12]==null||+r[12]===0) ? NA : (r[11]/r[12]).toFixed(2);
+  const out=[], bad=[], dollar=[], price=[], hist=[], hkbb=[], nop=[];
   for(const p of S.players){
     openPick(p.id);
     const back=document.getElementById('cardBack'), q=p.p27;
     if(/\\$/.test(back.textContent)) dollar.push(p.name);
     if(!p.pick && document.getElementById('dlgPrice').value!=='') price.push(p.name+'='+document.getElementById('dlgPrice').value);
     const grids=[...back.querySelectorAll('.cb-grid')];
-    const proj=grids.find(g=>/2027/.test(g.querySelector('caption').textContent));
+    if(grids.some(g=>/2027/.test(g.querySelector('caption').textContent))) bad.push(p.name+' still has a separate 2027 box');
     const side = q ? (('PA' in q)?'H':'P') : p.kind;
     const want = side==='H'?HH:PH;
     const hdr = g=>[...g.querySelectorAll('thead th')].map(t=>t.textContent).filter(t=>!['Year','Club','Lvl'].includes(t));
+    const projRows=[...back.querySelectorAll('tr.proj')];
+    if(projRows.length!==1) bad.push(p.name+' has '+projRows.length+' 2027 rows');
+    const proj=projRows[0], pg=proj && proj.closest('.cb-grid');
+    if(pg && !new RegExp(side==='H'?'Batting':'Pitching').test(pg.querySelector('caption').textContent)) bad.push(p.name+' 2027 row in the wrong table');
+    if(pg && pg.querySelector('tbody tr:last-child')!==proj) bad.push(p.name+' 2027 row is not the last row');
+    if(proj && getComputedStyle(proj.children[0]).fontStyle!=='italic') bad.push(p.name+' 2027 row not italic');
+    const hrows=CARDS.s[p.id]||[];
     for(const g of grids){
-      const cap=g.querySelector('caption').textContent, w=/Batting/.test(cap)?HH:/Pitching/.test(cap)?PH:want;
+      const cap=g.querySelector('caption').textContent, w=/Batting/.test(cap)?HH:PH, sd=/Batting/.test(cap)?'H':'P';
       if(hdr(g).join()!==w.join()) bad.push(p.name+' header '+cap+' '+hdr(g).join(' '));
-      if(/Pitching/.test(cap)) for(const tr of g.querySelectorAll('tbody tr')){
+      if(g.querySelectorAll('thead').length!==1) bad.push(p.name+' '+cap+' header count');
+      const hr=hrows.filter(r=>r[1]===sd);
+      [...g.querySelectorAll('tbody tr:not(.proj)')].forEach((tr,i)=>{
+        if(sd!=='P') return;
         const c=[...tr.children].slice(3).map(td=>td.textContent);
         if(['L','H','ER','WHIP'].some(k=>c[PH.indexOf(k)]!=='')) hist.push(p.name);
-      }
+        const e=hk(hr[i]); if(c[PH.indexOf('K/BB')]!==e) hkbb.push(p.name+' '+hr[i][0]+' got '+c[PH.indexOf('K/BB')]+' want '+e);
+      });
     }
-    const cells=[...proj.querySelectorAll('tbody tr.proj td')].slice(2).map(td=>td.textContent);
+    const cells=proj ? [...proj.children].slice(3).map(td=>td.textContent) : [];
     if(q){ const e=exp(q); if(cells.join('|')!==e.join('|')) bad.push(p.name+' got '+cells.join(' ')+' want '+e.join(' ')); }
-    else if(!/no 2027 projection/.test(proj.textContent)) bad.push(p.name+' no p27 but row is not blank');
+    else { nop.push(p.name+' ('+p.team+')'); if(!(cells.length===1 && cells[0]==='No 2027 projection')) bad.push(p.name+' no p27 but row is '+cells.join(' ')); }
     out.push({id:p.id,name:p.name,team:p.team,type:side==='H'?'hitter':'pitcher',cols:want,cells:q?cells:null});
     pickDlg.close();
   }
-  return {out,bad,dollar,price,hist,undrafted:S.players.filter(p=>!p.pick).length};
+  return {out,bad,dollar,price,hist,hkbb,nop,undrafted:S.players.filter(p=>!p.pick).length};
 })()`);
-ok(res.bad.length === 0, `2027 row + history headers on all ${res.out.length} cards; 2027 cells = SEED2026 p27`, res.bad.slice(0, 5).join(' ; '));
+ok(res.bad.length === 0, `all ${res.out.length} cards: one table per side, one header, 2027 = italic last row; 2027 cells = SEED2026 p27 (K/BB from unrounded SO/BB)`, res.bad.slice(0, 5).join(' ; '));
 ok(res.hist.length === 0, '2025-26 pitching rows: L / H / ER / WHIP blank (not in the history data)', res.hist.slice(0, 5).join(', '));
+ok(res.hkbb.length === 0, '2025-26 pitching rows: K/BB = that row\'s SO/BB, — when missing', res.hkbb.slice(0, 5).join(' ; '));
+const dash = res.out.filter(r => r.type === 'pitcher' && r.cells && r.cells[PH.indexOf('K/BB')] === '\u2014');
+console.log(`2027 K/BB "—": ${dash.length} pitchers: ${dash.map(r => r.name).join(', ')}`);
+console.log(`"No 2027 projection": ${res.nop.length} cards: ${res.nop.join(', ')}`);
 ok(res.dollar.length === 0, `no $ on any card back (${res.out.length} cards)`, res.dollar.slice(0, 5).join(', '));
 ok(res.price.length === 0, `Sold price box opens blank on all ${res.undrafted} undrafted cards`, res.price.slice(0, 5).join(', '));
 
@@ -105,7 +124,7 @@ ok(res.price.length === 0, `Sold price box opens blank on all ${res.undrafted} u
 const q = s => /[",\n]/.test(s) ? '"' + String(s).replace(/"/g, '""') + '"' : String(s);
 const head = ['pool_id', 'player', 'team', 'type', 'line', ...HH.map(c => 'H_' + c), ...PH.map(c => 'P_' + c)];
 const rows = res.out.map(r => {
-  const line = r.cells ? r.cols.map((c, i) => `${c} ${r.cells[i]}`).join(' · ') : 'no 2027 projection';
+  const line = r.cells ? r.cols.map((c, i) => `${c} ${r.cells[i]}`).join(' · ') : 'No 2027 projection';
   const h = HH.map((c, i) => r.type === 'hitter' && r.cells ? r.cells[i] : '');
   const pc = PH.map((c, i) => r.type === 'pitcher' && r.cells ? r.cells[i] : '');
   return [r.id, r.name, r.team, r.type, line, ...h, ...pc].map(q).join(',');
@@ -115,7 +134,7 @@ console.log(`wrote ${CSV} (${rows.length} rows)`);
 console.log('spot list:');
 for(const n of ['Junior Caminero', 'Bobby Witt Jr.', 'Garrett Crochet', 'Paul Skenes', 'Bryan Baker']){
   const r = res.out.find(x => x.name === n);
-  console.log(`  ${n.padEnd(16)} ${r ? `${r.team} ${r.type}: ${r.cells ? r.cols.map((c, i) => `${c} ${r.cells[i]}`).join(' · ') : 'no 2027 projection'}` : 'not in the pool'}`);
+  console.log(`  ${n.padEnd(16)} ${r ? `${r.team} ${r.type}: ${r.cells ? r.cols.map((c, i) => `${c} ${r.cells[i]}`).join(' · ') : 'No 2027 projection'}` : 'not in the pool'}`);
 }
 
 // screenshots: hitter and pitcher cards (whole dialog, both faces)

@@ -9,13 +9,16 @@ The seed p27 already holds PA HR R RBI SB AVG / IP ERA SO BB SV W GS. This adds
 only the missing fields, read from the raw Steamer 2027 files:
   hitters   G AB H          (/workspace/db2027/steamer/2027_bat.json)
   pitchers  G L H ER WHIP   (/workspace/db2027/steamer/2027_pit.json)
+            KBB             (2026-11-16 Eno: unrounded Steamer SO / BB, so the
+                            card's K/BB is not a ratio of the rounded SO and BB)
 Existing p27 values are never changed; new keys go on the end of each p27.
 
 Players are matched the way the existing p27 was built: pool_id -> mlbam from
 /workspace/db2027/steamer/values_2027_steamer.csv (else fg_mlbam in
 match_report.csv, the Steamer match step), then xMLBAMID in the Steamer file.
 The side (bat/pit) is the side the p27 already carries ('PA' in p27 = hitter), so a card-only pitcher line (Jose Fermin) stays pitching.
-Rounding: counts as the existing p27 counts (1 dp, then whole); WHIP 2 dp.
+Rounding: counts as the existing p27 counts (1 dp, then whole); WHIP 2 dp;
+KBB 6 dp (the card shows 2), absent when the raw BB is 0.
 
   python3 tools/p27-card-fields.py            report only
   python3 tools/p27-card-fields.py --write    rewrite the SEED2026 line
@@ -25,7 +28,7 @@ Rerunning --write is a no-op once the fields are there.
 import argparse, csv, json, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ADD = {'bat': ['G', 'AB', 'H'], 'pit': ['G', 'L', 'H', 'ER', 'WHIP']}
+ADD = {'bat': ['G', 'AB', 'H'], 'pit': ['G', 'L', 'H', 'ER', 'WHIP', 'KBB']}
 PREFIX = 'const SEED2026 = '
 
 
@@ -34,6 +37,9 @@ def cnt(x):
 
 
 def conv(k, x):
+    if k == 'KBB':
+        return round(float(x['SO']) / float(x['BB']), 6) if x.get('SO') is not None and x.get('BB') else None
+    x = x.get(k)
     if x is None:
         return None
     return round(float(x), 2) if k == 'WHIP' else cnt(x)
@@ -75,7 +81,7 @@ def main():
             unmatched.append((p['id'], p['name'], p['team'], side, mid or ''))
             continue
         for k in ADD[side]:
-            v = conv(k, row.get(k))
+            v = conv(k, row)
             if v is None:
                 missing.append((p['name'], k))
                 continue
@@ -91,7 +97,7 @@ def main():
     print(f'unmatched {len(unmatched)}' + ''.join(f'\n  {u}' for u in unmatched))
     print(f'missing in Steamer {len(missing)}' + ''.join(f'\n  {m}' for m in missing))
     nop = [(p['id'], p['name'], p['team'], p['kind']) for p in seed['players'] if not p.get('p27')]
-    print(f'no p27 at all (left as is, card says "no 2027 projection") {len(nop)}')
+    print(f'no p27 at all (left as is, card says "No 2027 projection") {len(nop)}')
     if a.write and added:
         lines[idx[0]] = PREFIX + json.dumps(seed, separators=(',', ':'), ensure_ascii=False) + ';'
         open(a.seed, 'w', encoding='utf8').write('\n'.join(lines))
