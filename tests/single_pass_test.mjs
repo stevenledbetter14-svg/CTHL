@@ -149,14 +149,20 @@ try {
     if (r.kept) continue;
     const want = Number(r['CTHL AAV'] || 0); if (!(want > 0)) continue;
     const p = find(r); if (!p) { missing.push(r.player); continue; }
+    if (p.kept) continue;   // kept since v3.1 (11/16 keeper sync: Kevin McGonigle): priced as a keeper now
     const got = p.a.a || 0; compared++;
     const d = Math.abs(got - want); if (d) { moved++; movedList.push(`${r.player} ${want}->${got}`); }
     maxDiff = Math.max(maxDiff, d);
   }
   ok(missing.length === 0, 'every v3.1 priced non-keeper is on the board', missing.join(', '));
-  ok(compared === 202 && maxDiff <= 1, `non-keeper prices vs v3.1: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
-  ok(report.vs_v31.moved === moved && report.vs_v31.max_abs === maxDiff, 'report diff vs v3.1 matches the app board',
-    `report max $${report.vs_v31.max_abs}, moved ${report.vs_v31.moved}`);
+  ok(compared === 201 && maxDiff <= 1, `non-keeper prices vs v3.1: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
+  /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
+     run CSV, diffed vs v3.1 the same way, must match the app board */
+  { const run = new Map(runCsv.map(r => [r.pool_id, r])); let rm = 0, rx = 0;
+    for (const r of v31) { if (r.kept) continue; const want = Number(r['CTHL AAV'] || 0); if (!(want > 0)) continue;
+      const p = find(r); if (!p || p.kept) continue; const x = run.get(p.id); const d = Math.abs((x && x.status !== 'keeper' ? Number(x.aav) : 0) - want);
+      if (d) rm++; rx = Math.max(rx, d); }
+    ok(rm === moved && rx === maxDiff, `latest run (${lastRun}) diff vs v3.1 matches the app board`, `run max $${rx}, moved ${rm}`); }
 
   /* 2. keeper values (board k and the app's rank $) */
   const want = { 'Nick Kurtz': 48, 'Julio Rodriguez': 39, 'Cam Schlittler': 37, 'Ben Rice': 37, 'Logan Gilbert': 37 };
@@ -176,7 +182,7 @@ try {
   const sal = kept.reduce((s, p) => s + p.salary, 0);
   const auction = app.players.filter(p => !p.kept && p.a).reduce((s, p) => s + (p.a.a || 0), 0);
   const slots = kept.length + app.players.filter(p => !p.kept && p.a && p.a.a > 0).length;
-  ok(kept.length === 48 && sal === 467, `48 keepers / $467 salary in the app`, `${kept.length} / $${sal}`);
+  ok(kept.length === 48 && sal === 485, `48 keepers / $485 salary in the app (11/16 room)`, `${kept.length} / $${sal}`);
   ok(kept.every(p => p.a && p.a.k != null && p.a.a == null), 'every keeper carries only its keeper AAV (never cash)');
   ok(sal + auction === 2570, `cash check: $${sal} keepers + $${auction} non-keeper AAVs = $${sal + auction}`, 'must be exactly $2,570');
   ok(slots === 250, `250 slots priced on the board`, String(slots));
@@ -191,7 +197,10 @@ try {
     iR = lines.findIndex(l => l.includes('1.1689') && l.includes('$3,004.07'));
   ok(iS >= 0 && iR === iS + 1 && lines[iS].startsWith('|') && lines[iR].startsWith('|'),
     'report shows the 1.1689 pot next to the solved pot (adjacent rows, one table)');
-  ok(/Pot: solved \$3,041\.48.*\n.*pre-final 2570 x 1\.1689 = \$3,004\.07/.test(aavJs), 'AAV_2027 block header names both pots');
+  const runPot = (runMd.match(/^Pot: solved (\$[\d,.]+)/m) || [])[1];   // header is rewritten by each --write run
+  const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  ok(!!runPot && new RegExp('Pot: solved ' + esc(runPot) + '.*\\n.*pre-final 2570 x 1\\.1689 = \\$3,004\\.07').test(aavJs),
+    'AAV_2027 block header names both pots (solved = latest run report)', runPot);
 
   /* 5. keeper scenarios: cap-respecting only, each reconciles */
   const sc = report.scenarios;

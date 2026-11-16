@@ -32,6 +32,19 @@ const p27Side = q => ('PA' in q) ? 'H' : 'P';
 const stripCardVal = (name, v) => { if(name === 'SEED2026') for(const p of v.players) if(p.p27) for(const k of CARD_ADD[p27Side(p.p27)]) delete p.p27[k]; return v; };
 const stripCardSrc = (name, l) => name !== 'SEED2026' ? l
   : l.replace(/,"G":[-\d.e]+,"AB":[-\d.e]+,"H":[-\d.e]+\}/g, '}').replace(/,"G":[-\d.e]+,"L":[-\d.e]+,"H":[-\d.e]+,"ER":[-\d.e]+,"WHIP":[-\d.e]+\}/g, '}');
+/* 2026-11-16 keeper sync (b7bed24, Steven's room 48 / $485: +Kevin McGonigle Birdland $20,
+   -Angel Martinez) and the AAV rerun on it (reports/aav_run_2026-11-16.md). Keeper-owned data
+   is not part of the split: the baseline takes SEED2026.picks + every players[].pick, and the
+   AAV_2027 entries of exactly the 16 players that rerun moved, from the current files. Those
+   fields are checked on their own below; everything else must still equal the old build. */
+const KEEPER_AAV_MOVED = ['p1038f0b', 'p176e0ac', 'p2020362', 'p4720771', 'p4cdd205', 'p67ec326', 'p6b44680', 'p6b4cb24',
+                          'p7ebff20', 'p930d6ea', 'p9ccea09', 'p9d1de2a', 'pa72991b', 'pbd0561e', 'pd726c86', 'pdd27a6'];
+const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
+const keeperBase = (name, old, cur) => {
+  if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
+  if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
+  return old;
+};
 let fails = 0;
 const ok = (c, msg, extra = '') => { if(!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}${extra ? '  — ' + extra : ''}`); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -47,15 +60,26 @@ for(const [f, name] of FILES){
   const ctx = vm.createContext({});
   vm.runInContext(lines[0], ctx);
   OLD[name] = structuredClone(vm.runInContext(name, ctx));   // into this realm, so deep-equal can compare
-  OLDJSON[name] = JSON.stringify(OLD[name]);
   const src = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8');
-  ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === lines[0], `data/${f}: ${name} source line byte-identical${name === 'SEED2026' ? ' minus the p27 card-line fields' : ''} (${lines[0].length} chars)`);
+  if(KEEPER_OWNED.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (keeper-owned fields differ by design: compared by value below)`);
+  else ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === lines[0], `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
 }
 const NEW = vm.createContext({});
 for(const [f] of FILES) vm.runInContext(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8'), NEW, { filename: f });
+for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInContext(name, NEW)); OLDJSON[name] = JSON.stringify(OLD[name]); }
 for(const [f, name] of FILES){
   const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
-  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields' : ''}`);
+  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields and the 11/16 keeper sync' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : ''}`);
+}
+{
+  const sd = vm.runInContext('SEED2026', NEW), aav = vm.runInContext('AAV_2027', NEW);
+  const kp = sd.picks.filter(k => k.keeper), has = id => kp.some(k => k.pid === id);
+  ok(kp.length === 48 && kp.reduce((t, k) => t + k.price, 0) === 485 && has('p2020362') && !has('p4720771'),
+    'SEED2026 keepers: 48 / $485, McGonigle in, Angel Martinez out', `${kp.length} / $${kp.reduce((t, k) => t + k.price, 0)}`);
+  const pk = new Map(sd.picks.map(k => [k.pid, k]));
+  const badPick = sd.players.filter(p => { const k = pk.get(p.id); return k ? !(p.pick && p.pick.team === k.team && p.pick.price === k.price && p.pick.keeper === !!k.keeper) : !!p.pick; });
+  ok(badPick.length === 0, 'SEED2026 players[].pick matches picks (one per pick, none extra)', badPick.slice(0, 5).map(p => p.name).join(', '));
+  ok(aav.p2020362.k !== undefined && aav.p4720771.k === undefined, 'AAV_2027: McGonigle carries a keeper AAV, Angel Martinez does not');
 }
 {
   const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);

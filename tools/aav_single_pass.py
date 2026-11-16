@@ -20,7 +20,7 @@ USAGE (from the repo root)
   pool values don't match the JSON, the run stops and says so.
 
 WHERE TO EDIT
-  * Likely keepers: KEEPERS_CSV below (today: Steven's keepers room, 11/6, 48 / $467;
+  * Likely keepers: KEEPERS_CSV below (today: Steven's keepers room, 11/16, 48 / $485;
     same set as the app's SEED2026.picks and the v3.1 engine). Columns used: pid,
     owner, keeper_salary, kind. If you change it, also change SEED2026.picks in
     data/seed-2027.js (+ BAKED_KEEPER_SET in index.html); --write refuses while the two disagree.
@@ -52,7 +52,7 @@ warnings.filterwarnings('ignore')
 # one value then (it is the only place the date lives). After it, --write needs --override.
 CUTOFF_DATE = '2027-03-15'
 DB = Path('/workspace/db2027')
-KEEPERS_CSV = DB / 'keepers/keeper_split_2026-11-06_room.csv'   # the likely-keeper list
+KEEPERS_CSV = DB / 'keepers/keeper_split_2026-11-16_room.csv'   # the likely-keeper list
 ATC_DIR = DB / 'atc'               # expects 2027_bat.json + 2027_pit.json
 V31_BASELINE = DB / 'excel_method/aav_2027_v3_1.csv'
 STASH_SWAP_IN = 'Ike Irish'        # Steven 11/6 (AFL): replaces the lowest-ranked of the 12 stashes
