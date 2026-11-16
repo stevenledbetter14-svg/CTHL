@@ -779,18 +779,18 @@ a{color:var(--link)}
      club logos) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.16-6"></script>
-<script src="data/aav-2027.js?v=2026.11.16-6"></script>
-<script src="data/cards-2027.js?v=2026.11.16-6"></script>
-<script src="data/keepers-2027.js?v=2026.11.16-6"></script>
-<script src="data/rotoid.js?v=2026.11.16-6"></script>
-<script src="data/logos.js?v=2026.11.16-6"></script>
+<script src="data/seed-2027.js?v=2026.11.16-7"></script>
+<script src="data/aav-2027.js?v=2026.11.16-7"></script>
+<script src="data/cards-2027.js?v=2026.11.16-7"></script>
+<script src="data/keepers-2027.js?v=2026.11.16-7"></script>
+<script src="data/rotoid.js?v=2026.11.16-7"></script>
+<script src="data/logos.js?v=2026.11.16-7"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.16-6';
+const APP_VER = '2026.11.16-7';
 const APP_BUILT = '2026-11-16';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -1154,19 +1154,20 @@ function cardFront(p){
    the same columns as the 2025-26 rows. Hitters G AB R H HR RBI SB AVG (no
    PA); pitchers G W L SV IP H ER BB K ERA WHIP K/BB (no GS). p27 G/AB/H and
    G/L/H/ER/WHIP/KBB come from the raw Steamer files (tools/p27-card-fields.py).
-   The 2025-26 pitching rows have no L, H, ER or WHIP: those cells stay blank,
-   never derived.
+   2026-11-16-7 (Eno): the 2025-26 pitching rows carry L, H, ER and WHIP
+   (CARDS.s P [14..17], statsapi MLB + MiLB, tools/pitch-hist-backfill.py);
+   WHIP = (BB+H)/IP from the pull, blank at 0 IP.
    2026-11-16-6 (Eno/Steven): one table per side; the 2027 projection is its
    italic last row, under 2025 and 2026 (no separate projection box). 2027
    K/BB = unrounded Steamer SO/BB (p27.KBB), "—" when the BB shown rounds to 0.
    History K/BB = that row's SO/BB, "—" when SO or BB is missing or BB is 0.
    No Steamer line: the 2027 row says "No 2027 projection", nothing filled. */
-/* CARDS.s rows: H [5..] G AB R H HR RBI SB AVG · P [5..] G GS IP W SV ERA K BB K/BB.
+/* CARDS.s rows: H [5..] G AB R H HR RBI SB AVG · P [5..] G GS IP W SV ERA K BB K/BB L H ER WHIP.
    CARD_COLS: [header, history row index (null = not in the history data), p27 key] */
 const CARD_COLS={
   H:[['G',5,'G'],['AB',6,'AB'],['R',7,'R'],['H',8,'H'],['HR',9,'HR'],['RBI',10,'RBI'],['SB',11,'SB'],['AVG',12,'AVG']],
-  P:[['G',5,'G'],['W',8,'W'],['L',null,'L'],['SV',9,'SV'],['IP',7,'IP'],['H',null,'H'],['ER',null,'ER'],
-     ['BB',12,'BB'],['K',11,'SO'],['ERA',10,'ERA'],['WHIP',null,'WHIP'],['K/BB','KBB','KBB']]
+  P:[['G',5,'G'],['W',8,'W'],['L',14,'L'],['SV',9,'SV'],['IP',7,'IP'],['H',15,'H'],['ER',16,'ER'],
+     ['BB',12,'BB'],['K',11,'SO'],['ERA',10,'ERA'],['WHIP',17,'WHIP'],['K/BB','KBB','KBB']]
 };
 const CARD_NA='—';
 /* History K/BB from the row's own SO (r[11]) and BB (r[12]). */
@@ -1200,7 +1201,7 @@ function cardBack(p){
     let t = `<div class="cb-grid"><table><caption>${sd==='H'?'Batting':'Pitching'} record</caption><thead><tr><th class="l">Year</th><th class="l">Club</th><th class="l">Lvl</th>${cc.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>`;
     sr.forEach(r=>{
       const cls = r[2] ? 'tot' : (r[3]==='MLB' ? 'mlb' : '');
-      const v = cc.map(c=>c[1]==='KBB' ? cardHistKBB(r) : c[1]==null ? '' : r[c[1]]);
+      const v = cc.map(c=>c[1]==='KBB' ? cardHistKBB(r) : c[1]==null ? '' : (r[c[1]] ?? ''));
       t += `<tr class="${cls}"><td class="l">${r[0]}</td><td class="l">${cardEsc(r[4])}</td><td class="l">${cardEsc(r[3])}</td>${v.map(x=>`<td>${cardEsc(x)}</td>`).join('')}</tr>`;
     });
     if(sd===qSide){
@@ -1900,7 +1901,9 @@ function toggleProspectOnly(){ poolProspectOnly=!poolProspectOnly; renderPool();
 // stat columns per mode — each one is clickable, CBS-style
 /* 2026-11-05: Projections tab shows 2027 Steamer (p27) by default. No year
    toggle existed; 2026 lines stay on the player card. Columns match the
-   Steamer fields (PA for hitters, GS for pitchers; no H / no KBB column). */
+   Steamer fields (PA for hitters, GS for pitchers; no H / no KBB column).
+   2026-11-16-7 (Eno): K/BB = p27.KBB, the unrounded Steamer SO/BB (same as
+   the card back: Crochet 4.23, not 209/49 = 4.27); blank when BB is 0. */
 const POOL_COLS={
   H:[['PA','PA'],['R','R'],['HR','HR'],['RBI','RBI'],['SB','SB'],['AVG','AVG']],
   P:[['IP','IP'],['W','W'],['SV','SV'],['ERA','ERA'],['SO','K'],['BB','BB'],['KBB','K/BB'],['GS','GS']]
@@ -1931,6 +1934,7 @@ function poolStat(p,k){
   /* Prefer 2027 Steamer (p27); fall back to 2026 fields only when no projection. */
   const s=p.p27;
   if(k==='KBB'){
+    if(s && s.KBB!=null) return (s.BB && isFinite(s.KBB)) ? +s.KBB : null;
     const so=s?s.SO:p.SO, bb=s?s.BB:p.BB;
     if(!bb) return null;                 // blank when BB is 0 or missing
     return so/bb;

@@ -24,15 +24,17 @@ with no mapped MLBAM are listed and skipped, never matched by name.
 
 Output rows are the card back's CARDS.s shape (see data/cards-2027.js PLAYER CARD DATA):
   [year, side, kind(0 team/1 mlb_tot/2 milb_tot), level, club, ...stats]
-  H: G AB R H HR RBI SB AVG       P: G GS IP W SV ERA K BB K/BB
+  H: G AB R H HR RBI SB AVG       P: G GS IP W SV ERA K BB K/BB L H ER WHIP
 Same conventions as db2027/cards/build_card_data.py: per-team rows, MiLB rows
 (by level) then "MiLB Tot" when 2+, MLB rows then "MLB Tot" when 2+; AVG/ERA
-recomputed half-up, K/BB blank when BB is 0; primary side from the pool's kind,
+recomputed half-up, K/BB blank when BB is 0; L/H/ER straight from the API and
+WHIP = (BB+H)/IP from the outs, half-up, blank at 0 IP (2026-11-16); primary side from the pool's kind,
 the other side kept only at >=30 PA / >=10 IP across the requested seasons.
 
 Cache: tools/.cache/mlb-stats/ holds one raw file per (level, player) plus the
-team tables. A rerun only requests what is missing, so an interrupted run just
-resumes. --refresh ignores (and overwrites) the cache.
+team tables (--cache DIR to keep it elsewhere). A rerun only requests what is
+missing, so an interrupted run just resumes. --refresh ignores (and overwrites)
+the cache.
 """
 import argparse, csv, json, os, re, sys, time, urllib.error, urllib.request
 from decimal import Decimal, ROUND_HALF_UP
@@ -64,9 +66,10 @@ LVL_ORDER = {'MLB': 0, 'AAA': 1, 'AA': 2, 'A+': 3, 'A': 4, 'Rk': 6, 'FCL': 7, 'A
 H_MAP = dict(g='gamesPlayed', pa='plateAppearances', ab='atBats', r='runs', h='hits', hr='homeRuns',
              rbi='rbi', sb='stolenBases')
 P_MAP = dict(g='gamesPitched', gs='gamesStarted', w='wins', sv='saves', er='earnedRuns', so='strikeOuts',
-             bb='baseOnBalls')
+             bb='baseOnBalls', l='losses', ha='hits')
 CSV_COLS = ['pool_id', 'mlbam', 'name', 'year', 'side', 'kind', 'level', 'club',
-            'G', 'AB', 'R', 'H', 'HR', 'RBI', 'SB', 'AVG', 'GS', 'IP', 'W', 'SV', 'ERA', 'K', 'BB', 'K/BB']
+            'G', 'AB', 'R', 'H', 'HR', 'RBI', 'SB', 'AVG', 'GS', 'IP', 'W', 'SV', 'ERA', 'K', 'BB', 'K/BB',
+            'L', 'HA', 'ER', 'WHIP']
 
 
 # ------------------------------------------------------------- data/*.js (read-only)
@@ -274,13 +277,15 @@ def card_row(l, kind, level, club):
     else:
         o = l['outs']
         v = [l['g'], l['gs'], f'{o // 3}.{o % 3}' if o is not None else '', l['w'], l['sv'],
-             rate(l['er'], o, 27, 2) if o else '', l['so'], l['bb'], rate(l['so'], l['bb'], 1, 2, False)]
+             rate(l['er'], o, 27, 2) if o else '', l['so'], l['bb'], rate(l['so'], l['bb'], 1, 2, False),
+             l['l'], l['ha'], l['er'],
+             rate(l['bb'] + l['ha'], o, 3, 2) if o and l['bb'] is not None and l['ha'] is not None else '']
     return [l['year'], l['side'], kind, level, club] + ['' if x is None else x for x in v]
 
 
 def card_rows(lines):
     out = []
-    keys = ('g', 'ab', 'r', 'h_', 'hr', 'rbi', 'sb', 'pa', 'gs', 'w', 'sv', 'er', 'so', 'bb', 'outs')
+    keys = ('g', 'ab', 'r', 'h_', 'hr', 'rbi', 'sb', 'pa', 'gs', 'w', 'sv', 'er', 'so', 'bb', 'outs', 'l', 'ha')
     for yr in sorted({l['year'] for l in lines}):
         for side in 'HP':
             for mlb in (False, True):
@@ -322,8 +327,8 @@ def write_outputs(out, result, meta):
                         head = [p['pool_id'], p['mlbam'], p['name'], r[0], r[1], r[2], r[3], r[4]]
                         if r[1] == 'H':
                             w.writerow(head + r[5:13] + [''] * 8)
-                        else:  # G GS IP W SV ERA K BB K/BB
-                            w.writerow(head + [r[5]] + [''] * 7 + r[6:14])
+                        else:  # G GS IP W SV ERA K BB K/BB L H ER WHIP
+                            w.writerow(head + [r[5]] + [''] * 7 + r[6:18])
         os.replace(tmp, t)
         print(f'wrote {t}', file=sys.stderr)
 
@@ -353,17 +358,21 @@ def compare(result, cards):
 
 
 def main():
+    global CACHE
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--ids', help='comma list of MLBAM ids and/or pool ids, or @file (one per line); '
                                   'default: every pool player in data/seed-2027.js with a mapped MLBAM')
     ap.add_argument('--seasons', default='2025,2026')
     ap.add_argument('--out', default=DEFAULT_OUT, help='path.json, path.csv, or a base path (writes both)')
     ap.add_argument('--map', action='append', help='pool_id,mlbam CSV (repeatable); default: db2027 files')
+    ap.add_argument('--cache', help=f'raw-response cache directory (default {CACHE})')
     ap.add_argument('--refresh', action='store_true', help='ignore the cache and re-request everything')
     ap.add_argument('--compare', action='store_true', help='print a diff against the CARDS rows baked in data/cards-2027.js')
     a = ap.parse_args()
 
     seasons = [s.strip() for s in a.seasons.split(',') if s.strip()]
+    if a.cache:
+        CACHE = os.path.abspath(a.cache)
     pool, cards = read_data()
     by_pid = {p['id']: p for p in pool}
     pmap = read_maps(a.map or DEFAULT_MAPS)
@@ -405,7 +414,7 @@ def main():
     meta = dict(source='MLB Stats API (statsapi.mlb.com), yearByYear, gameType=R, sportId ' +
                        ','.join(map(str, SPORTS)), seasons=seasons, pulled=time.strftime('%Y-%m-%d %H:%M:%S'),
                 row_shape='[year, side, kind(0 team/1 mlb_tot/2 milb_tot), level, club, ...] '
-                          'H: G AB R H HR RBI SB AVG · P: G GS IP W SV ERA K BB K/BB',
+                          'H: G AB R H HR RBI SB AVG · P: G GS IP W SV ERA K BB K/BB L H ER WHIP',
                 players=len(result), no_lines=sum(1 for p in result.values() if not p['rows']),
                 unknown_ids=sorted(unknown), api_calls=api.calls)
     write_outputs(a.out, result, meta)

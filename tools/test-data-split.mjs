@@ -29,8 +29,15 @@ const FILES = [['seed-2027.js', 'SEED2026'], ['aav-2027.js', 'AAV_2027'], ['card
    build minus exactly those keys; nothing else in SEED2026 may differ. */
 const CARD_ADD = { H: ['G', 'AB', 'H'], P: ['G', 'L', 'H', 'ER', 'WHIP', 'KBB'] };
 const p27Side = q => ('PA' in q) ? 'H' : 'P';
-const stripCardVal = (name, v) => { if(name === 'SEED2026') for(const p of v.players) if(p.p27) for(const k of CARD_ADD[p27Side(p.p27)]) delete p.p27[k]; return v; };
-const stripCardSrc = (name, l) => name !== 'SEED2026' ? l
+/* 2026-11-16-7 pitching history backfill: tools/pitch-hist-backfill.py appends L H ER WHIP
+   (statsapi) to every CARDS.s pitching row as [14..17]. The baseline is the old build
+   minus exactly those 4 cells; nothing else in CARDS may differ. */
+const stripHist = v => { for(const rows of Object.values(v.s)) for(const r of rows) if(r[1] === 'P') r.splice(14); return v; };
+const stripCardVal = (name, v) => { if(name === 'CARDS') return stripHist(v);
+  if(name === 'SEED2026') for(const p of v.players) if(p.p27) for(const k of CARD_ADD[p27Side(p.p27)]) delete p.p27[k]; return v; };
+const stripCardSrc = (name, l) => name === 'CARDS'
+  ? l.replace(/\[\d{4},"P",[^\[\]]*\]/g, r => r.replace(/,-?\d+,-?\d+,-?\d+,"[\d.]*"\]$/, ']'))
+  : name !== 'SEED2026' ? l
   : l.replace(/,"G":[-\d.e]+,"AB":[-\d.e]+,"H":[-\d.e]+\}/g, '}').replace(/,"G":[-\d.e]+,"L":[-\d.e]+,"H":[-\d.e]+,"ER":[-\d.e]+,"WHIP":[-\d.e]+,"KBB":[-\d.e]+\}/g, '}');
 /* 2026-11-16 keeper sync (b7bed24, Steven's room 48 / $485: +Kevin McGonigle Birdland $20,
    -Angel Martinez) and the AAV rerun on it (reports/aav_run_2026-11-16.md). Keeper-owned data

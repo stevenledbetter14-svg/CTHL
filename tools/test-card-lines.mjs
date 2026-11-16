@@ -8,8 +8,12 @@
 //      box), and its cells equal SEED2026 p27 (checked here from the data, not
 //      from the app's helper); K/BB = p27.KBB (unrounded SO/BB), — when BB
 //      rounds to 0; no p27 = "No 2027 projection" (11/16-6);
-//   3. 2025-26 pitching rows leave L/H/ER/WHIP blank (not in the history data)
-//      and K/BB = the row's SO/BB, — when SO or BB is missing or BB is 0;
+//   3. 2025-26 pitching rows show L/H/ER/WHIP = CARDS.s P [14..17] (statsapi
+//      backfill, 11/16-7), every row filled, WHIP = (BB+H)/IP re-derived here
+//      from the row (blank at 0 IP, ERA blank there too), and K/BB = the row's
+//      SO/BB, — when SO or BB is missing or BB is 0;
+//   3b. Projections tab K/BB = p27.KBB (unrounded Steamer SO/BB) for every
+//      pitcher, Crochet 4.23;
 //   4. no $ anywhere on any card back;
 //   5. the Sold price box opens blank on every undrafted card;
 //   6. 0 console errors after all of it.
@@ -73,7 +77,9 @@ const res = await ev(`(()=>{
     return H ? [q.G,q.AB,q.R,q.H,q.HR,q.RBI,q.SB,(+q.AVG).toFixed(3).replace(/^0/,'')].map(String)
              : [q.G,q.W,q.L,q.SV,q.IP,q.H,q.ER,q.BB,q.SO,f2(q.ERA),f2(q.WHIP),kbb].map(String); };
   const hk = r => (r[11]===''||r[11]==null||r[12]===''||r[12]==null||+r[12]===0) ? NA : (r[11]/r[12]).toFixed(2);
-  const out=[], bad=[], dollar=[], price=[], hist=[], hkbb=[], nop=[];
+  const wh = r => { const [w,f]=String(r[7]).split('.'), o=(+w)*3+(+(f||0)); if(!o) return '';
+    return (Math.round((r[12]+r[15])*3/o*100+1e-9)/100).toFixed(2); };
+  const out=[], bad=[], dollar=[], price=[], hist=[], hkbb=[], nop=[]; let hrowsN=0;
   for(const p of S.players){
     openPick(p.id);
     const back=document.getElementById('cardBack'), q=p.p27;
@@ -99,7 +105,11 @@ const res = await ev(`(()=>{
       [...g.querySelectorAll('tbody tr:not(.proj)')].forEach((tr,i)=>{
         if(sd!=='P') return;
         const c=[...tr.children].slice(3).map(td=>td.textContent);
-        if(['L','H','ER','WHIP'].some(k=>c[PH.indexOf(k)]!=='')) hist.push(p.name);
+        hrowsN++;
+        const r=hr[i], want={L:r[14],H:r[15],ER:r[16],WHIP:r[17]};
+        if(r.length!==18 || [r[14],r[15],r[16]].some(x=>x===''||x==null)) hist.push(p.name+' '+r[0]+' '+r[4]+' unfilled');
+        else if(['L','H','ER','WHIP'].some(k=>c[PH.indexOf(k)]!==String(want[k]))) hist.push(p.name+' '+r[0]+' '+r[4]+' shows '+['L','H','ER','WHIP'].map(k=>c[PH.indexOf(k)]).join('/'));
+        else if(String(r[17])!==wh(r) || (wh(r)==='' && c[PH.indexOf('ERA')]!=='')) hist.push(p.name+' '+r[0]+' '+r[4]+' WHIP '+r[17]+' want '+wh(r));
         const e=hk(hr[i]); if(c[PH.indexOf('K/BB')]!==e) hkbb.push(p.name+' '+hr[i][0]+' got '+c[PH.indexOf('K/BB')]+' want '+e);
       });
     }
@@ -109,10 +119,17 @@ const res = await ev(`(()=>{
     out.push({id:p.id,name:p.name,team:p.team,type:side==='H'?'hitter':'pitcher',cols:want,cells:q?cells:null});
     pickDlg.close();
   }
-  return {out,bad,dollar,price,hist,hkbb,nop,undrafted:S.players.filter(p=>!p.pick).length};
+  const pool=[];
+  for(const p of S.players){ if(!p.p27 || ('PA' in p.p27)) continue;
+    const e=(p.p27.BB && p.p27.KBB!=null) ? (+p.p27.KBB).toFixed(2) : '', v=poolStat(p,'KBB');
+    const g=(v==null||!isFinite(v)) ? '' : (+v).toFixed(2);
+    if(g!==e) pool.push(p.name+' got '+g+' want '+e); }
+  const cro=S.players.find(p=>p.name==='Garrett Crochet');
+  return {out,bad,dollar,price,hist,hkbb,nop,hrowsN,pool,cro:(+poolStat(cro,'KBB')).toFixed(2),undrafted:S.players.filter(p=>!p.pick).length};
 })()`);
 ok(res.bad.length === 0, `all ${res.out.length} cards: one table per side, one header, 2027 = italic last row; 2027 cells = SEED2026 p27 (K/BB from unrounded SO/BB)`, res.bad.slice(0, 5).join(' ; '));
-ok(res.hist.length === 0, '2025-26 pitching rows: L / H / ER / WHIP blank (not in the history data)', res.hist.slice(0, 5).join(', '));
+ok(res.hist.length === 0, `2025-26 pitching rows (${res.hrowsN}): L / H / ER / WHIP filled from the statsapi backfill, WHIP = (BB+H)/IP`, res.hist.slice(0, 5).join(', '));
+ok(res.pool.length === 0 && res.cro === '4.23', `Projections tab K/BB = p27.KBB (unrounded) for every pitcher; Crochet ${res.cro}`, res.pool.slice(0, 5).join(' ; '));
 ok(res.hkbb.length === 0, '2025-26 pitching rows: K/BB = that row\'s SO/BB, — when missing', res.hkbb.slice(0, 5).join(' ; '));
 const dash = res.out.filter(r => r.type === 'pitcher' && r.cells && r.cells[PH.indexOf('K/BB')] === '\u2014');
 console.log(`2027 K/BB "—": ${dash.length} pitchers: ${dash.map(r => r.name).join(', ')}`);
