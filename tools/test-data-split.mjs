@@ -47,6 +47,12 @@ const stripCardSrc = (name, l) => name === 'CARDS'
 const KEEPER_AAV_MOVED = ['p1038f0b', 'p176e0ac', 'p2020362', 'p4720771', 'p4cdd205', 'p67ec326', 'p6b44680', 'p6b4cb24',
                           'p7ebff20', 'p930d6ea', 'p9ccea09', 'p9d1de2a', 'pa72991b', 'pbd0561e', 'pd726c86', 'pdd27a6'];
 const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
+/* 2026-11-18 pool refresh (e5e9a1d, SEED_VER 2027-actuals.8): overrides + 34 adds re-projected
+   482 SEED2026 players, the AAV rerun moved 109 AAV_2027 entries, CARDS.s +36. For these three
+   the baseline is the refresh build's data file (same card strips on both sides); the other
+   consts still equal the old single-file build. */
+const REFRESH_REF = 'e5e9a1d', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+const SEED_VER_BASE = '2027-actuals.8';   // 11/18 refresh (the old build's was 2027-actuals.7)
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
   if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
@@ -62,14 +68,16 @@ const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const constLine = (text, name) => text.split('\n').filter(l => l.startsWith(`const ${name} =`) || l.startsWith(`const ${name}=`));
 const OLD = {}, OLDJSON = {};
 for(const [f, name] of FILES){
-  const lines = constLine(oldHtml, name);
-  ok(lines.length === 1, `old build (${REF}) has one ${name} line`);
+  const refd = REFRESHED.has(name), rev = refd ? REFRESH_REF : REF;
+  const lines = constLine(refd ? execFileSync('git', ['-C', ROOT, 'show', `${REFRESH_REF}:data/${f}`], { encoding: 'utf8', maxBuffer: 1 << 26 }) : oldHtml, name);
+  ok(lines.length === 1, `old build (${rev}) has one ${name} line`);
   const ctx = vm.createContext({});
   vm.runInContext(lines[0], ctx);
   OLD[name] = structuredClone(vm.runInContext(name, ctx));   // into this realm, so deep-equal can compare
+  if(refd) OLD[name] = stripCardVal(name, OLD[name]);
   const src = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8');
   if(KEEPER_OWNED.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (keeper-owned fields differ by design: compared by value below)`);
-  else ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === lines[0], `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
+  else ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === (refd ? stripCardSrc(name, lines[0]) : lines[0]), `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
 }
 const NEW = vm.createContext({});
 for(const [f] of FILES) vm.runInContext(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8'), NEW, { filename: f });
@@ -109,7 +117,7 @@ ok(tags.every(t => html.indexOf(t) < firstApp) && html.indexOf('const DATA_FAIL'
 ok(FILES.every(([f, n]) => html.includes(`'${f}': typeof ${n} !== 'undefined'`)), 'guard checks every data global');
 ok((html.match(/if\(DATA_FAIL\) throw new Error\(DATA_FAIL\);/g) || []).length === 2, 'both app scripts stop on DATA_FAIL');
 ok(fs.readFileSync(path.join(ROOT, 'index.html')).length < 300000, `index.html is markup/CSS/code only (${fs.statSync(path.join(ROOT, 'index.html')).size} bytes)`);
-ok((oldHtml.match(/const SEED_VER = '([^']+)'/) || [])[1] === (html.match(/const SEED_VER = '([^']+)'/) || [])[1], 'SEED_VER unchanged');
+ok(SEED_VER_BASE === (html.match(/const SEED_VER = '([^']+)'/) || [])[1], `SEED_VER unchanged (${SEED_VER_BASE})`);
 
 /* ---------------- 3. data-writing tools, on temp copies ---------------- */
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cthl-split-'));

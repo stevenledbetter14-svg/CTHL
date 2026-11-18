@@ -136,7 +136,7 @@ try {
       blockIds: Object.keys(AAV_2027).length,
       keeperCount: kept.length,
     };`);
-  ok(app.seedVer === '2027-actuals.7', 'SEED_VER stays 2027-actuals.7', app.seedVer);
+  ok(app.seedVer === '2027-actuals.8', 'SEED_VER stays 2027-actuals.8', app.seedVer);   // 11/18 pool refresh (was .7)
 
   const byName = new Map();
   for (const p of app.players) { if (!byName.has(p.name)) byName.set(p.name, []); byName.get(p.name).push(p); }
@@ -155,7 +155,8 @@ try {
     maxDiff = Math.max(maxDiff, d);
   }
   ok(missing.length === 0, 'every v3.1 priced non-keeper is on the board', missing.join(', '));
-  ok(compared === 201 && maxDiff <= 1, `non-keeper prices vs v3.1: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
+  /* 11/18 pool refresh (overrides + 34 adds, AAV rerun) moved the board off v3.1: max $11, 51 of 201 (was <= $1) */
+  ok(compared === 201 && maxDiff <= 11, `non-keeper prices vs v3.1: max diff $${maxDiff} (<= $11), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
   /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
      run CSV, diffed vs v3.1 the same way, must match the app board */
   { const run = new Map(runCsv.map(r => [r.pool_id, r])); let rm = 0, rx = 0;
@@ -175,7 +176,7 @@ try {
     const p = (byName.get(r.player) || []).find(p => p.kept);
     if (p) kMax = Math.max(kMax, Math.abs(p.a.k - Number(r['keeper display $'])));
   }
-  ok(kMax <= 1, `all 48 keeper values within $1 of the v3.1 display`, `max diff $${kMax}`);
+  ok(kMax <= 13, `all 48 keeper values within $13 of the v3.1 display (11/18 refresh; was $1)`, `max diff $${kMax}`);
 
   /* 3. cash check: keeper salaries + non-keeper AAVs = $2,570 exactly; 250 slots */
   const kept = app.players.filter(p => p.kept);
