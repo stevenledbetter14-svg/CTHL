@@ -15,7 +15,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 tools/aav_single_pass.py [--write] [--override
 - Cutoff: `CUTOFF_DATE` at the top of the script (the only place the date lives) is the AAV lock, set right after LABR 2027: `2027-03-15`, a placeholder until LABR publishes its date. After that date `--write` refuses unless `--override` is given.
 - `--projections atc` needs `/workspace/db2027/atc/2027_bat.json` and `2027_pit.json` (FanGraphs JSON export). Until those exist, it stops with an error. It never falls back to Steamer.
 - New Steamer pull: refresh `/workspace/db2027/steamer` (`match.py`, then `valuation.py`) first. If the stored pool values don't match the projection JSON, the run stops and says so.
-- Check: `node tests/single_pass_test.mjs`.
+- Check: `node tests/single_pass_test.mjs`. It compares the app against the committed reference board `tests/fixtures/ref_board_<date>.csv`; on every pool refresh, after sign-off and before merge, rebuild it with `node tools/build-ref-board.mjs` (verify: `node tools/build-ref-board.mjs --check`). See `tests/README.md`.
 
 ## Frozen
 

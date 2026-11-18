@@ -3,7 +3,9 @@
    (/workspace/db2027/specs/single-pass-aav-spec-2026-11-14.md).
    Loads index.html in headless Chrome (fresh profile, file://) over the
    DevTools protocol and checks every acceptance item against the app itself.
-   Run: node tests/single_pass_test.mjs [--v31 path/to/aav_2027_v3_1.csv]
+   Run: node tests/single_pass_test.mjs [--ref path/to/ref_board.csv]
+   The reference board is the latest tests/fixtures/ref_board_*.csv, a committed
+   snapshot built by tools/build-ref-board.mjs (see tests/README.md).
    Needs node >= 22 (built-in WebSocket) and google-chrome. */
 import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync, readdirSync, existsSync, copyFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
@@ -13,7 +15,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
-const V31 = argv.includes('--v31') ? argv[argv.indexOf('--v31') + 1] : '/workspace/db2027/excel_method/aav_2027_v3_1.csv';
+const FIX = join(ROOT, 'tests/fixtures');
+const REF = argv.includes('--ref') ? argv[argv.indexOf('--ref') + 1]
+  : join(FIX, readdirSync(FIX).filter(f => /^ref_board_.*\.csv$/.test(f)).sort().at(-1));
 const CHROME = process.env.CHROME || 'google-chrome';
 
 let pass = 0, fail = 0;
@@ -22,9 +26,9 @@ const ok = (cond, label, detail = '') => {
   console.log(`${cond ? 'PASS' : 'FAIL'}  ${label}${detail ? '  — ' + detail : ''}`);
 };
 
-/* ---------- v3.1 reference board ---------- */
+/* ---------- reference board (tests/fixtures, '#' lines = provenance header) ---------- */
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/), out = [];
+  const lines = text.trim().split(/\r?\n/).filter(l => !l.startsWith('#')), out = [];
   const split = l => { const r = []; let cur = '', q = false;
     for (const c of l) { if (c === '"') q = !q; else if (c === ',' && !q) { r.push(cur); cur = ''; } else cur += c; }
     r.push(cur); return r; };
@@ -32,7 +36,8 @@ function parseCSV(text) {
   for (const l of lines.slice(1)) { const c = split(l); out.push(Object.fromEntries(head.map((h, i) => [h, c[i]]))); }
   return out;
 }
-const v31 = parseCSV(readFileSync(V31, 'utf8'));
+const ref = parseCSV(readFileSync(REF, 'utf8'));
+console.log(`reference board: ${REF.replace(ROOT + '/', '')}`);
 const report = JSON.parse(readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.json'), 'utf8'));
 const reportMd = readFileSync(join(ROOT, 'reports/single_pass_aav_2026-11-14.md'), 'utf8');
 const aavJs = readFileSync(join(ROOT, 'data/aav-2027.js'), 'utf8');   // AAV_2027 lives in data/ since 2026-11-16
@@ -127,7 +132,7 @@ try {
   /* ---------- pull the board as the app sees it ---------- */
   const app = await evaluate(`
     const kept = S.players.filter(p=>p.pick && p.pick.keeper);
-    const seedName = Object.fromEntries(SEED2026.players.map(p=>[p.id,p.name]));   // v3.1 CSV uses seed names (pre-PRENAME)
+    const seedName = Object.fromEntries(SEED2026.players.map(p=>[p.id,p.name]));   // ref board uses seed names (pre-PRENAME)
     return {
       seedVer: SEED_VER,
       players: S.players.map(p=>({id:p.id, name:seedName[p.id]||p.name, team:p.team, a:AAV_2027[p.id]||null,
@@ -142,28 +147,28 @@ try {
   for (const p of app.players) { if (!byName.has(p.name)) byName.set(p.name, []); byName.get(p.name).push(p); }
   const find = r => { const c = (byName.get(r.player) || []).filter(p => p.a); return c.length === 1 ? c[0] : c.find(p => p.team === r.team) || c[0]; };
 
-  /* 1. non-keeper prices vs v3.1 */
+  /* 1. non-keeper prices vs the reference board */
   let maxDiff = 0, moved = 0, compared = 0, missing = [];
   const movedList = [];
-  for (const r of v31) {
+  for (const r of ref) {
     if (r.kept) continue;
     const want = Number(r['CTHL AAV'] || 0); if (!(want > 0)) continue;
     const p = find(r); if (!p) { missing.push(r.player); continue; }
-    if (p.kept) continue;   // kept since v3.1 (11/16 keeper sync: Kevin McGonigle): priced as a keeper now
+    if (p.kept) continue;   // kept since the reference was built: priced as a keeper now
     const got = p.a.a || 0; compared++;
     const d = Math.abs(got - want); if (d) { moved++; movedList.push(`${r.player} ${want}->${got}`); }
     maxDiff = Math.max(maxDiff, d);
   }
-  ok(missing.length === 0, 'every v3.1 priced non-keeper is on the board', missing.join(', '));
-  /* 11/18 pool refresh (overrides + 34 adds, AAV rerun) moved the board off v3.1: max $11, 51 of 201 (was <= $1) */
-  ok(compared === 201 && maxDiff <= 11, `non-keeper prices vs v3.1: max diff $${maxDiff} (<= $11), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
+  ok(missing.length === 0, 'every reference-board priced non-keeper is on the board', missing.join(', '));
+  /* ref_board_2026-11-18 (11/18 pool refresh): 202 priced non-keepers; update with each rebuild */
+  ok(compared === 202 && maxDiff <= 1, `non-keeper prices vs reference board: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
   /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
-     run CSV, diffed vs v3.1 the same way, must match the app board */
+     run CSV, diffed vs the reference board the same way, must match the app board */
   { const run = new Map(runCsv.map(r => [r.pool_id, r])); let rm = 0, rx = 0;
-    for (const r of v31) { if (r.kept) continue; const want = Number(r['CTHL AAV'] || 0); if (!(want > 0)) continue;
+    for (const r of ref) { if (r.kept) continue; const want = Number(r['CTHL AAV'] || 0); if (!(want > 0)) continue;
       const p = find(r); if (!p || p.kept) continue; const x = run.get(p.id); const d = Math.abs((x && x.status !== 'keeper' ? Number(x.aav) : 0) - want);
       if (d) rm++; rx = Math.max(rx, d); }
-    ok(rm === moved && rx === maxDiff, `latest run (${lastRun}) diff vs v3.1 matches the app board`, `run max $${rx}, moved ${rm}`); }
+    ok(rm === moved && rx === maxDiff, `latest run (${lastRun}) diff vs reference board matches the app board`, `run max $${rx}, moved ${rm}`); }
 
   /* 2. keeper values (board k and the app's rank $) */
   const want = { 'Nick Kurtz': 48, 'Julio Rodriguez': 39, 'Cam Schlittler': 37, 'Ben Rice': 37, 'Logan Gilbert': 37 };
@@ -172,11 +177,11 @@ try {
     ok(p && Math.abs(p.a.k - w) <= 1 && Math.abs(p.rank$ - w) <= 1, `keeper value ${n} = $${w} (±$1)`, p ? `board k $${p.a.k}, app rank $${p.rank$}` : 'not kept');
   }
   let kMax = 0;
-  for (const r of v31) if (r.kept) {
+  for (const r of ref) if (r.kept) {
     const p = (byName.get(r.player) || []).find(p => p.kept);
     if (p) kMax = Math.max(kMax, Math.abs(p.a.k - Number(r['keeper display $'])));
   }
-  ok(kMax <= 13, `all 48 keeper values within $13 of the v3.1 display (11/18 refresh; was $1)`, `max diff $${kMax}`);
+  ok(kMax <= 1, `all 48 keeper values within $1 of the reference-board display`, `max diff $${kMax}`);
 
   /* 3. cash check: keeper salaries + non-keeper AAVs = $2,570 exactly; 250 slots */
   const kept = app.players.filter(p => p.kept);
