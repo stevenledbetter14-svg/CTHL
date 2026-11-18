@@ -30,6 +30,7 @@ node tools/build-ref-board.mjs --check   # exits 1 if the fixture is missing or 
   also fails if the data files have uncommitted changes or a newer fixture date is due.
 - After a rebuild, update the compared count in `single_pass_test.mjs` (`compared === N`) to the
   header's "priced non-keepers" count, delete the superseded fixture, and commit both together.
+- Then rebuild the printed Draft List PDF (pool refresh checklist in `reports/README.md`).
 
 ## Other self-tests (in `tools/`)
 
