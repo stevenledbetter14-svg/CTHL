@@ -40,4 +40,5 @@ node tools/test-seed-safety.mjs
 node tools/test-data-split.mjs
 node tools/test-no-ranks-writeups.mjs   # no prospect ranks + card write-ups (2026-11-20)
 node tools/test-rotoworld-links.mjs [--expect 616/701]   # Rotoworld link coverage via the app's rotoUrl() (2026-11-20)
+node tools/test-keeper-aav-fallback.mjs   # un-kept keeper shows curve k, display only (3.6, 2026-11-20)
 ```

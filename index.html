@@ -1277,9 +1277,8 @@ function openPick(id, mode){
   // have ADP, otherwise a dash (2026-11-20: the prospect-rank branch is gone,
   // no prospect rank is shown anywhere)
   const ab=$('dlgAav');
-  const a27=aavOf(p);
   if(p.pick && p.pick.keeper){ ab.textContent='🔒 '+fmt$(p.pick.price); ab.previousElementSibling.textContent='Keeper'; }
-  else if(a27 && a27.a>0){ ab.textContent=fmt$(a27.a); ab.previousElementSibling.textContent='CTHL AAV 2027'; }
+  else if(aav27Shown(p)>0){ ab.textContent=fmt$(aav27Shown(p)); ab.previousElementSibling.textContent='CTHL AAV 2027'; }
   else if(prBadge){ ab.textContent=prBadge; ab.previousElementSibling.textContent='ADP'; }
   // 2026-08-16: was "LABR tier / proj" — internal jargon that read as an
   // error to anyone but us. Unpriced, un-ADP'd players just show a dash.
@@ -1735,8 +1734,14 @@ function aav27CellHTML(p){
   if(p.pick && p.pick.keeper) return `<b title="Keeper salary. Ranked by AAV ${fmt$(aav27Num(p))}.">🔒 ${fmt$(p.pick.price)}</b>`;
   const a=aavOf(p); if(!a) return '—';
   if(a.s) return `<b class="pfloor" title="Budgeted $1 prospect stash">${fmt$(a.a||1)}</b>`;
-  return a.a>0 ? `<b>${fmt$(a.a)}</b>` : '—';
+  const v=aav27Shown(p);
+  return v>0 ? `<b${a.a>0?'':' title="Keeper-list curve AAV (not kept). Display only: not in the pot until the next AAV run."'}>${fmt$(v)}</b>` : '—';
 }
+/* 11/19: the AAV $ painted for a player who is not currently kept — the
+   auction/stash a when priced, else the keeper-list curve k (aavOf floors it
+   to $1). Display only: pot/inflation never read this. Shared by the pool
+   column and the card box so they cannot drift. */
+function aav27Shown(p){ const a=aavOf(p); return !a ? 0 : (a.a>0 ? a.a : (a.k!=null ? a.k : 0)); }
 function aav27Num(p){ const a=aavOf(p); return a ? (a.k!=null ? a.k : (a.a||0)) : 0; }
 function posRankBadge(p){
   const tags=realPositions(p).map(pos=>{const r=posRankFor(p,pos); return r?`${pos}-${r}`:null;}).filter(Boolean);

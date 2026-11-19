@@ -69,6 +69,17 @@ No re-crawl this phase (0 fetches): Eno's prototype mapping merged with `--from-
 - reports/: `rotoid_harvest_2026-11-20.csv` (prototype mapping, verbatim), `rotoid_harvest_2026-11-20_spotcheck.csv` (10/10 pass, verbatim), `rotoworld_unresolved_2026-11-20.csv` (85: 42 ambiguous_sitemap, 2 ambiguous_team_pages, 41 unmatched). Candidate ids column is empty for all 85: the prototype run did not record them (the adopted script does now); getting them needs a re-crawl.
 - Tests: new `tools/test-rotoworld-links.mjs` (`--expect 616/701` ALL PASS); `tools/test-data-split.mjs` ROTOID baseline = old + exactly the 229 csv keys, old entries a byte-identical prefix (64/64). Docs: harvest step in the `reports/README.md` refresh checklist; test listed in `tests/README.md`.
 
+## Phase B2 — section 3.6 (keeper-AAV fallback) — DONE (2026-11-20)
+
+Released by Steven 12:21 PM ET 2026-11-20 ("send it with these changes"). Cherry-picked 658b277 from `keeper-aav-fallback` (`-x`; that branch untouched).
+- Conflicts: only the 6 data `<script>` `?v=` tags and `APP_VER` (source had 2026.11.19-1). Kept HEAD: APP_VER **2026.11.20-1**, all **7** data tags `?v=2026.11.20-1` (writeups-2027.js kept). The section 1 removal of the prospect-rank card-box branch did not come back. Net change: 9+/4- in index.html (`aav27Shown()` helper used by the pool column `aav27CellHTML()` and the card box in `openPick()`).
+- Display-only verified: `aav27Shown()` has exactly 3 call sites (openPick x2, aav27CellHTML); `inflationFactors()`, `fullPoolVal()`, `maxBid()`, `renderMeter()`, `renderMoney()` never read AAV_2027 / aavOf / aav27*. Setting all 48 keeper k to 999 leaves inflation, every maxBid, every p.val, the meter and the money board byte-identical while the cell follows k. SEED_VER unchanged (2027-actuals.8); no data file changed.
+- Source commit had no test. New `tools/test-keeper-aav-fallback.mjs` (headless Chrome, room=local, Firebase failed offline): Walker Jenkins (p6377140, AAV {k:8}, kept $5): kept = lock $5; after `removePick` = $8 in pool cell (titled display-only) and card box, not "—"; Caminero (a=54) unchanged; no-entry players still "—". Mutation check: reverting the k fallback makes 3 checks fail.
+
+### Test results (after Phase B2)
+test-keeper-aav-fallback ALL PASS · test-rotoworld-links --expect 616/701 ALL PASS · test-no-ranks-writeups ALL PASS · test-card-lines ALL PASS · test-seed-safety ALL PASS · test-data-split 64/64 · single_pass_test 36/36.
+
 ### Next step
-- Phase B: section 2 (Rotoworld harvest), section 3 (pool refresh + AAV rerun + PDF), then 3.6 keeper-AAV fallback (Steven released the hold 12:21 PM ET 2026-11-20; do it as its own later phase, not merged/pushed without his go).
+- Sections 1, 2, 4 and 3.6 are committed on pkg-2026-11-20. Remaining: section 3 (re-pull Steamer, keepers from the room read-only, pool changes, SEED_VER bump, AAV rerun, cards + pitch-hist backfill, Draft List PDF; the operator uploads it to OneDrive). Note for section 3: the AAV rerun will re-price Jenkins once he is out of the room's keeper list; the 3.6 test pins him as a kept {k:8}, so update its fixture ids/values then.
+- Section 2 follow-up: 85 names in `reports/rotoworld_unresolved_2026-11-20.csv` need a hand review (or a `--sitemap-years all` re-crawl, which also records candidate ids).
 - Still no push / PR / preview until Steven says so in his own words.
