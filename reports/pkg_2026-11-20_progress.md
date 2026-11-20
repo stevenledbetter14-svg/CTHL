@@ -244,5 +244,13 @@ Team `fs = min(12, lh*0.74)` recomputed from each log's section counts (`lh = mi
 
 PDF and builder stay outside the repo (same as 11/18). Operator uploads `CTHL 2027 Draft List.pdf` to OneDrive. This phase does not touch OneDrive.
 
+## Phase F — final verification — DONE (2026-11-20)
+
+Recorded in `reports/pkg_2026-11-20_verify.md`. App bytes are still the PDF ref `08e8f6f`.
+
+- `APP_VER` `2026.11.20-1`. `SEED_VER` `2027-actuals.9`. All 7 data `?v=` tags match `APP_VER`.
+- Tests, all exit 0: `single_pass_test` 36/36, `test-card-lines`, `test-data-split`, `test-keeper-aav-fallback`, `test-no-ranks-writeups`, `test-rotoworld-links --expect 616/708`, `test-seed-safety`, `build-ref-board.mjs --check`.
+- Headless `file://` `?room=local`: 655 players, 48 keepers / $512, 0 console errors, 0 Firebase requests. 51 Future Stars cards have an empty `cfTag` and no `Provisional` / `Top 100 prospect` / `PR`+digits. `★ Top Prospects` is present (tooltip `Show only top prospects`) and filters to 31 hitters and 11 pitchers. All 10 write-ups match; the only `$` in a write-up is Caminero's `$87,500` signing bonus. The 7 adds are in the pool (May `$3`; five `{a:0}` and Rose with no AAV row display `—`). Caminero kept, box `🔒 $32`, `{k:56}`. Jenkins not kept, box `$8`, `{a:8}`. Setting all 48 `k` values to 999 leaves inflation (H 1.155074 / P 1.206047), the meter (**In the pot $2,043**), maxBid, and `p.val` unchanged.
+
 ### Next
-Final verification: every test, `build-ref-board.mjs --check`, `?v=` / `APP_VER` / `SEED_VER`, and a file:// `?room=local` headless pass written to `reports/pkg_2026-11-20_verify.md`. Still no push.
+Section 3.5 and the final checks are done. The operator uploads `/workspace/db2027/rosters/upload_2026-11-20/CTHL 2027 Draft List.pdf` to OneDrive. Still no push until Steven says so.
