@@ -173,5 +173,11 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - `test-no-ranks-writeups`: rank and write-up checks pass (no `t`, button kept, tooltip "Show only top prospects", 10 write-ups exact, no CTHL $, no Provisional / Top 100). One pin fails: the $1 floor now shows 9 names because Ryan Sloan's `val` is 1, so the flag drops. `PROSPECT_FLOOR_IDS` still lists him. Rebaseline with the other pins.
 - `test-card-lines`: every card's 2027 row matches `p27`, pitch-hist L/H/ER/WHIP filled, no CTHL $ on 655 cards. Rose shows "No 2027 projection". The Crochet projections pin still expects K/BB 4.23; the tab shows **4.29**, which is `p27.KBB` 4.294589. Rebaseline that pin. Not a card defect.
 
+### Keeper-AAV fallback fixture — DONE
+- Jenkins is `{a:8}` and not kept, so he is the priced control ($8, no curve title).
+- The un-kept subject is Caminero: kept lock $32, ranked by AAV $56, `AAV_2027` `{k:56}`. After `removePick`, the pool cell and card box show $56 with the display-only title.
+- Setting all 48 `k` values to 999 leaves inflation, every maxBid, every `p.val`, the meter, and the money board unchanged. Caminero's cell and card box follow $999. `k` stays out of the pot.
+- `node tools/test-keeper-aav-fallback.mjs`: ALL PASS.
+
 ### Next
-Update `tools/test-keeper-aav-fallback.mjs`: Jenkins is `{a:8}`. Use a real `{k}`-only keeper (un-keep Caminero, expect his k) and keep the fallback-out-of-the-pot checks.
+`node tools/build-ref-board.mjs`, update `compared ===` in `tests/single_pass_test.mjs`, `git rm` the 11/18 board fixture, rebaseline pinned SEED_VER / AAV / keeper checks the way `c7ce2c9` did.
