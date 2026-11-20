@@ -202,4 +202,47 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - Draft List PDF not built. Nothing pushed.
 
 ### Next
-Nothing left in section 3 except the Draft List PDF, which this phase skips. Operator uploads it to OneDrive when it is built. Still no push until Steven says so.
+Section 3.5 (Draft List PDF) is the remaining piece of section 3. Final app verification follows that PDF.
+
+## Phase E — section 3.5 Draft List PDF — DONE (2026-11-20)
+
+Copied `/workspace/db2027/rosters/build_pdf_2026-11-18.py` to `build_pdf_2026-11-20.py`. The 11/18 file was not modified (sha256 `da8495649a9e37b8e284879adffcb10b46ff8c41af06aae86aded86758ce0ee3` before and after). The new file differs by exactly two constants: `DATE='11/20/2026'`, `STAMP='2026-11-20'`. Layout, Carlito, sizes, team blocks, sections (Pitchers / Catchers / Infielders / Outfielders / DH), and the blank `$$$` / Owner handwriting headers are the 11/18 builder. Header text is `DRAFT 11/20/2026`.
+
+Ran `python3 build_pdf_2026-11-20.py 08e8f6fa532e87465a9f2e09858101ab82b3b473` (HEAD of `pkg-2026-11-20`, not `origin/main`). Headless Draft List read: seedVer `2027-actuals.9`, appVer `2026.11.20-1`, **655** players, 15 clubs, notes empty.
+
+### Font size vs the 11/18 log
+Team `fs = min(12, lh*0.74)` recomputed from each log's section counts (`lh = min(18, (792-120)/nrows)`). Every club is **12.000** on both runs. Largest 11/20 row budget is BAL / ATH / CHW at 23 rows (shrink starts at 42). No club was shrunk. Per-name fitting (long names only, same loop as 11/18) did not drop any club's minimum below its 11/18 minimum. Christian Encarnacion-Strand stays 7.75 pt, the 11/18 size for that name.
+
+| team | 11/18 n | 11/20 n | nrows | fs |
+|---|---:|---:|---:|---:|
+| BAL | 45 | 48 | 23 | 12 |
+| BOS | 42 | 43 | 22 | 12 |
+| CHW | 45 | 45 | 23 | 12 |
+| CLE | 44 | 44 | 21 | 12 |
+| DET | 47 | 46 | 22 | 12 |
+| HOU | 43 | 43 | 21 | 12 |
+| KCR | 43 | 46 | 22 | 12 |
+| LAA | 42 | 43 | 21 | 12 |
+| MIN | 41 | 43 | 21 | 12 |
+| NYY | 39 | 39 | 20 | 12 |
+| ATH | 46 | 45 | 23 | 12 |
+| SEA | 43 | 42 | 20 | 12 |
+| TBR | 46 | 44 | 22 | 12 |
+| TEX | 42 | 41 | 21 | 12 |
+| TOR | 42 | 43 | 21 | 12 |
+
+### PDF check
+- Path: `/workspace/db2027/rosters/CTHL 2027 Rosters DRAFT 2026-11-20.pdf`
+- Upload copy (identical): `/workspace/db2027/rosters/upload_2026-11-20/CTHL 2027 Draft List.pdf`
+- pdfinfo: **15 pages**, letter, title `CTHL 2027 Rosters - DRAFT 11/20/2026`
+- Size: **79,033 bytes** (under 1 MB). 11/18 file was 78,930 bytes.
+- Embedded text fonts: Carlito Regular and Carlito Bold. Helvetica is the unused ReportLab base font, same as the 11/18 PDF.
+- Player count **655** equals the app Draft List count in the log (`draft_list` 655).
+- pdftotext: `$`+digits 0, `Provisional` 0, `Top 100` 0, `PR`+digits 0. The only `$` characters are the 225 `$$$` handwriting headers (675 `$` signs). `DRAFT 11/20/2026` on all 15 pages. `Owner` 225 times.
+- Struck names absent: Luis Castillo, Davis Martin, Jesse Scholtens. The 7 adds are on the list (May, Sullivan CHW; Cairo TOR; Rose, Lamkin KCR; Honeycutt BAL; DeBarge MIN). Sonny Gray is MIN. Jenkins (MIN OF) and Caminero (TBR IF) are on the list with no keeper mark and no price.
+- Page 1 rendered to PNG and checked: Baltimore Orioles, `DRAFT 11/20/2026`, three columns, grey `$$$` / Owner / section bars, blank price and owner lines, footer `BAL - 48 players`. Vance Honeycutt is in the OF block. No prices, ranks, or tags.
+
+PDF and builder stay outside the repo (same as 11/18). Operator uploads `CTHL 2027 Draft List.pdf` to OneDrive. This phase does not touch OneDrive.
+
+### Next
+Final verification: every test, `build-ref-board.mjs --check`, `?v=` / `APP_VER` / `SEED_VER`, and a file:// `?room=local` headless pass written to `reports/pkg_2026-11-20_verify.md`. Still no push.
