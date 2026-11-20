@@ -254,3 +254,16 @@ Recorded in `reports/pkg_2026-11-20_verify.md`. App bytes are still the PDF ref 
 
 ### Next
 Section 3.5 and the final checks are done. The operator uploads `/workspace/db2027/rosters/upload_2026-11-20/CTHL 2027 Draft List.pdf` to OneDrive. Still no push until Steven says so.
+
+## Money meter index leak — DONE (2026-11-20)
+
+`renderMeter` used `S.settings.teams.map(maxBid)`. `Array.map` passes the index as `maxBid`'s optional `addPrice`, so team i was charged a phantom $i ($45 across 10 teams) and the header pot read $2,043. It now calls `maxBid(t)` with the team only. `renderMoney` already did that and was left alone. Per-team budget stays $260 ($2,600 across 10 teams).
+
+Repo scan (`index.html`, `tools/`, `tests/`): the only `.map(fn)` whose callee has an optional second parameter was `.map(maxBid)`. Other bare map callbacks (`row`, `lostLine`, `String`, `Number`, `key`, `q`) take one argument and ignore the index.
+
+- `APP_VER` `2026.11.20-1` → `2026.11.20-2`. `APP_BUILT` `2026-11-16` → `2026-11-20`. All 7 data `?v=` tags match. `SEED_VER` stays `2027-actuals.9`.
+- `tools/test-no-ranks-writeups.mjs` pinned `APP_VER` updated to `2026.11.20-2`.
+- Headless `file:///workspace/CTHL-v2/index.html?room=local`: meter `innerText` is `PICKS LEFT / 202 / DRAFT COMPLETE / 19% / IN THE POT / $2088`. Pot value text `$2088` (10 × $260 − 48 keepers at $512). 0 console errors, 0 Firebase requests. Footer `v2026.11.20-2 · data 2027-actuals.9 · built 2026-11-20`.
+- Tests, all exit 0: `single_pass_test` 36/36, `test-card-lines`, `test-data-split`, `test-keeper-aav-fallback`, `test-no-ranks-writeups`, `test-rotoworld-links --expect 616/708`, `test-seed-safety`, `build-ref-board.mjs --check`.
+
+No push. `main` and `landing-preview` not touched.

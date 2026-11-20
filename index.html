@@ -800,20 +800,20 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.20-1"></script>
-<script src="data/aav-2027.js?v=2026.11.20-1"></script>
-<script src="data/cards-2027.js?v=2026.11.20-1"></script>
-<script src="data/keepers-2027.js?v=2026.11.20-1"></script>
-<script src="data/rotoid.js?v=2026.11.20-1"></script>
-<script src="data/logos.js?v=2026.11.20-1"></script>
-<script src="data/writeups-2027.js?v=2026.11.20-1"></script>
+<script src="data/seed-2027.js?v=2026.11.20-2"></script>
+<script src="data/aav-2027.js?v=2026.11.20-2"></script>
+<script src="data/cards-2027.js?v=2026.11.20-2"></script>
+<script src="data/keepers-2027.js?v=2026.11.20-2"></script>
+<script src="data/rotoid.js?v=2026.11.20-2"></script>
+<script src="data/logos.js?v=2026.11.20-2"></script>
+<script src="data/writeups-2027.js?v=2026.11.20-2"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.20-1';
-const APP_BUILT = '2026-11-16';
+const APP_VER = '2026.11.20-2';
+const APP_BUILT = '2026-11-20';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
    header turns red and a red box says what failed. Both app scripts below
@@ -1922,7 +1922,9 @@ function renderMeter(){
   // AAVs are a ranking guide, not a price model — the league-wide over/under and
   // the per-team Gain columns were removed 2026-07-24. Header shows pace only.
   const auc=S.picks.filter(k=>!k.taxi);
-  const onTable=S.settings.teams.map(maxBid).filter(m=>m.slotsLeft>0).reduce((s,m)=>s+m.left,0);
+  // 2026-11-20: call maxBid(team) only. .map(maxBid) feeds the index in as
+  // addPrice, so team i was charged a phantom $i ($45 across 10 teams).
+  const onTable=S.settings.teams.map(t=>maxBid(t)).filter(m=>m.slotsLeft>0).reduce((s,m)=>s+m.left,0);
   const totalPicks=S.settings.teams.length*S.settings.slots;
   const made=auc.length;
   const left=Math.max(totalPicks-made,0);
