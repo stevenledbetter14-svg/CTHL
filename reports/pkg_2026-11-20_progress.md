@@ -108,3 +108,28 @@ Keeper room re-pull, read-only (anonymous GET `drafts/steven-keepers-b442410a.js
 
 ### Next step
 - Steven needs to make the Caminero-for-Jenkins swap in the keeper room (or confirm another room id). Then rerun Phase D from step 1. If Jenkins's salary is really $5, the expected keeper total is 485 + 32 - 5 = **$512**, not ~$509.
+
+## Phase D2 (Grok Build) — keeper gate passes; continuing section 3 (2026-11-20)
+
+Claude stopped at the 13:31 ET keeper gate. Grok Build resumed after Steven's swap. Verified before any new write:
+
+### Keepers — GATE PASSES
+- Saved pull `/workspace/db2027/keepers/room_steven-keepers-b442410a_2026-11-20.json` and `keeper_split_2026-11-20_room.csv` (48 rows).
+- Live read-only GET of `drafts/steven-keepers-b442410a.json` is **identical** to the saved room json (picks and meta).
+- meta.t **2026-11-20 13:39:24 ET**, lastWriter `admin-swap`, seedVer still `2027-actuals.7` (not written back; no Firebase write).
+- **48 keepers / $512**. Junior Caminero `pabd0d7f` kept, Money Bags, **$32**. Walker Jenkins `p6377140` is **not** in the room.
+- Money Bags now: Caminero $32, Gavin Williams $8, Nick Kurtz $5, Chase DeLauter $3, Spencer Jones $3.
+
+### Steamer archive + re-pull — verified, already done (13:45 ET)
+- `steamer/archive_2026-11-18/SHA256SUMS` checks OK for `2027_bat.json`, `2027_pit.json`, `match_report.csv`, `values_2027_steamer.csv`.
+- Current `2027_bat.json` / `2027_pit.json` differ from that archive. Counts: bat 4,165, pit 5,170 (same counts as 11/18, contents changed). No duplicate xMLBAMID.
+- `METHOD.md` and `valuation.py` source column already say **pulled 11/20/2026**. `values_2027_steamer.csv` is still the 11/18 file (valuation not re-run yet).
+- `match.py` was not edited.
+
+### Stats API re-check (this session, not yet applied)
+- 3.2 moves are in transactions 11/17–11/21: Garcia/McArthur to SEA; Miller/Evans/Ferrer to KCR; Gray signed MIN; Fortes to BOS; Jung to LAA; Nett claimed BAL; Baumler returned BAL; Castillo + Martin to COL; Sullivan to CHW; Cairo claimed TOR; Scholtens released. May signed CHW (transaction text has **no** contract dollars; $52.5M not confirmed, not invented).
+- 3.3: Meyers has no 11/17–11/21 transaction; current team Sugar Land, parent HOU. **Do not set fa.** The other open DFAs (Vierling, Bart, Mears, Juenger, Tur, J. Miller, Sweeney, Isbel, Leasure, Wong, Lee) show designation only — no claim, outright, or release. **No status change.**
+- Steamer 11/20 lines: May CHW AL 159.8 IP SP; Sullivan CHW AL 30.0 IP (was COL 108.1); Cairo TOR AL 51.4 PA (was LAD 11.0); Rose **no line**; Lamkin KCR 1.0 IP; Honeycutt BAL 1.0 PA; DeBarge MIN 11.6 PA; Gray MIN AL 175.3 IP (was Team=None).
+
+### Next
+Match wrapper + valuation on the current pool, then overrides + 7 adds, then a second match/valuation so the adds are in the values file (11/18 did new players in the same match). Then sync-keepers, SEED_VER `2027-actuals.9`, val/p27, AAV.
