@@ -95,3 +95,16 @@ test-no-ranks-writeups ALL PASS · test-keeper-aav-fallback ALL PASS · test-rot
 - Sections 1 (incl. the 1:08 PM Top Prospects button correction), 2, 4 and 3.6 are committed on pkg-2026-11-20. Remaining: section 3 (re-pull Steamer, keepers from the room read-only, pool changes, SEED_VER bump, AAV rerun, cards + pitch-hist backfill, Draft List PDF; the operator uploads it to OneDrive). Note for section 3: the AAV rerun will re-price Jenkins once he is out of the room's keeper list; the 3.6 test pins him as a kept {k:8}, so update its fixture ids/values then.
 - Section 2 follow-up: 85 names in `reports/rotoworld_unresolved_2026-11-20.csv` need a hand review (or a `--sitemap-years all` re-crawl, which also records candidate ids).
 - Still no push / PR / preview until Steven says so in his own words.
+
+## Phase D — section 3 (pool refresh + AAV rerun) — STOPPED at step 1 (2026-11-20 13:31 ET)
+
+Keeper room re-pull, read-only (anonymous GET `drafts/steven-keepers-b442410a.json`, 2026-11-20 13:31:15 ET). Saved as-is: `/workspace/db2027/keepers/room_steven-keepers-b442410a_2026-11-20.json`. No keeper_split csv written (the pull fails the gate).
+- Room: **48 keepers / $485**, meta.t **2026-11-17 17:47:18 ET** (lastWriter device-itkav, seedVer 2027-actuals.7).
+- Picks are **identical** (pid, name, team, price) to the 11/16 pull `room_steven-keepers-b442410a_2026-11-16.json`; only meta.t moved (11/16 14:40 -> 11/17 17:47).
+- **Junior Caminero is NOT kept** (not in the room at all). **Walker Jenkins IS kept**: Money Bags, **$5** (spec's "$8" is his AAV curve k:8, not his salary).
+- Money Bags in the room: Jenkins $5, Spencer Jones $3, Chase DeLauter $3, Gavin Williams $8, Nick Kurtz $5.
+- `node tools/sync-keepers.mjs --check`: MATCH with data/seed-2027.js (48 / $485).
+- Per the hard rule ("if the room does not show that, STOP and report") nothing else in section 3 was done: no Steamer archive/re-pull, no overrides, no SEED_VER bump, no AAV rerun, no cards, no tests rebaselined. No repo data file changed.
+
+### Next step
+- Steven needs to make the Caminero-for-Jenkins swap in the keeper room (or confirm another room id). Then rerun Phase D from step 1. If Jenkins's salary is really $5, the expected keeper total is 485 + 32 - 5 = **$512**, not ~$509.
