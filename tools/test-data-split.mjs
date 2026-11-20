@@ -61,10 +61,21 @@ const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
    the baseline is the refresh build's data file (same card strips on both sides); the other
    consts still equal the old single-file build. */
 const REFRESH_REF = 'e5e9a1d', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+/* 2026-11-20 Rotoworld harvest (spec zuck_2026-11-20_package.md section 2, tools/rotoworld-harvest.py
+   --from-csv): ROTOID gained exactly the matched rows of reports/rotoid_harvest_2026-11-20.csv, appended
+   after the stored keys, none replaced. The baseline is the old ROTOID plus those keys. */
+const RW_CSV = 'reports/rotoid_harvest_2026-11-20.csv';
+const knormJs = n => String(n).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/\b(Jr\.?|Sr\.?|II|III|IV)\b/gi, '').toLowerCase().replace(/[^a-z]/g, '');
+const RW_ADD = {};
+{ const [hd, ...rows] = fs.readFileSync(path.join(ROOT, RW_CSV), 'utf8').trim().split('\n').map(l => l.split(','));
+  const c = Object.fromEntries(hd.map((h, i) => [h, i]));
+  for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
 const SEED_VER_BASE = '2027-actuals.8';   // 11/18 refresh (the old build's was 2027-actuals.7)
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
   if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
+  if(name === 'ROTOID') Object.assign(old, RW_ADD);
   if(name === 'CARDS'){ delete old.t; for(const id in old.w) if(RANK_RE.test(old.w[id])) old.w[id] = cur.w[id]; }
   return old;
 };
@@ -87,6 +98,11 @@ for(const [f, name] of FILES){
   if(refd) OLD[name] = stripCardVal(name, OLD[name]);
   const src = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8');
   if(RANK_DROP.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (2026-11-20 rank removal: compared by value below)`);
+  else if(name === 'ROTOID'){
+    const cur = constLine(src, name), oldPre = lines[0].replace(/\};$/, '');
+    ok(cur.length === 1 && cur[0].startsWith(oldPre + ',') && Object.keys(RW_ADD).length === 229 && Object.keys(RW_ADD).every(k => !(k in OLD.ROTOID)),
+      `data/${f}: old ROTOID entries kept byte-identical as a prefix; +${Object.keys(RW_ADD).length} harvest keys (${RW_CSV}), none replaced`);
+  }
   else if(KEEPER_OWNED.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (keeper-owned fields differ by design: compared by value below)`);
   else ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === (refd ? stripCardSrc(name, lines[0]) : lines[0]), `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
 }
@@ -103,7 +119,7 @@ for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInCo
 }
 for(const [f, name] of FILES){
   const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
-  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields and the 11/16 keeper sync' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : ''}`);
+  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields and the 11/16 keeper sync' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : name === 'ROTOID' ? ', plus the 11/20 harvest keys' : ''}`);
 }
 {
   const sd = vm.runInContext('SEED2026', NEW), aav = vm.runInContext('AAV_2027', NEW);

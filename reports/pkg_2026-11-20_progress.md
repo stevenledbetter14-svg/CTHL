@@ -58,6 +58,17 @@ The app now carries these 10 ids as a fixed list (`PROSPECT_FLOOR_IDS`); no rank
 ### Test results (after Phase A)
 test-no-ranks-writeups 29/29 · test-card-lines ALL PASS · test-seed-safety ALL PASS · test-data-split 64/64 · single_pass_test 36/36.
 
+## Phase B1 — section 2 (Rotoworld link harvest) — DONE (2026-11-20)
+
+No re-crawl this phase (0 fetches): Eno's prototype mapping merged with `--from-csv`.
+- `tools/rotoworld-harvest.py`: the prototype, adopted. Changes: repo default paths (`data/rotoid.js`, `data/seed-2027.js`); `--missing` optional (derived from the seed = players `rotoUrl()` cannot link); refuses robots-disallowed paths (`/api/`, `/cms/`, `/delivery/graphql/`, `/graphql/delivery/`); crawl-delay 10 kept (raised to robots.txt if higher); ambiguous rows now record candidate ids; writes `<out>_unresolved.csv`; `--from-csv` (merge an earlier run, no fetches; refuses rows for players who already have a link); `--write-rotoid` (adds keys, never replaces a stored one; refuses a knorm shared by two pool players -> needs a seed rwId/rwSlug override); `--prev-seed` team-changed rule (replace a ROTOID id only when the club changed and the new club's team page shows a different id; seed rwId rows are listed for a hand edit). Offline checks of refuse / team-changed paths done with synthetic data.
+- `data/rotoid.js`: 478 -> 707 keys (+229: 166 numeric, 63 UUID), appended, all 478 stored keys byte-identical. Header comment notes the 11/20 harvest. `?v=2026.11.20-1` unchanged (APP_VER already bumped in Phase A).
+- knorm collisions: **none** (no two pool players share a knorm; none of the 229 keys existed). No per-player rwId/rwSlug override needed.
+- Coverage via the app's own `knorm()`+`rotoUrl()`: **387 -> 616 / 701** (85 seed rw + 531 ROTOID); 85 on the generic fallback.
+- 7 of the 229 came from a *different club's* team page (unique slug): Tayler Saucedo LAA, Josh Walker BAL, Garrett Acton MIN, Carlos Duran KCR, Gabriel Arias NL, Chase Hampton BAL, James McArthur KCR. Taken per spec 2.3's 229; worth a look in review.
+- reports/: `rotoid_harvest_2026-11-20.csv` (prototype mapping, verbatim), `rotoid_harvest_2026-11-20_spotcheck.csv` (10/10 pass, verbatim), `rotoworld_unresolved_2026-11-20.csv` (85: 42 ambiguous_sitemap, 2 ambiguous_team_pages, 41 unmatched). Candidate ids column is empty for all 85: the prototype run did not record them (the adopted script does now); getting them needs a re-crawl.
+- Tests: new `tools/test-rotoworld-links.mjs` (`--expect 616/701` ALL PASS); `tools/test-data-split.mjs` ROTOID baseline = old + exactly the 229 csv keys, old entries a byte-identical prefix (64/64). Docs: harvest step in the `reports/README.md` refresh checklist; test listed in `tests/README.md`.
+
 ### Next step
 - Phase B: section 2 (Rotoworld harvest), section 3 (pool refresh + AAV rerun + PDF), then 3.6 keeper-AAV fallback (Steven released the hold 12:21 PM ET 2026-11-20; do it as its own later phase, not merged/pushed without his go).
 - Still no push / PR / preview until Steven says so in his own words.

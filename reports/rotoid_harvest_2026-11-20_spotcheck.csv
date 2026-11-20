@@ -1,0 +1,11 @@
+pool_id,name,team,slug,id,source_url,match_method,http,name_ok,team_ok,pass
+pe7b3e25,Joseph Dzierwa,BAL,joseph-dzierwa,0000019f-dc26-de18-afdf-fc6e70270000,https://www.nbcsports.com/mlb/joseph-dzierwa/0000019f-dc26-de18-afdf-fc6e70270000/news,provided_example_verified,200,True,True,True
+p1ff2347,Bryan Hudson,CHW,bryan-hudson,50356,https://www.nbcsports.com/mlb/bryan-hudson/50356/news,team_stats,200,True,True,True
+p95f3b22,Jonathan Cannon,CHW,jonathan-cannon,00000188-9cf1-da6b-abd8-fcfdeb4f0344,https://www.nbcsports.com/mlb/jonathan-cannon/00000188-9cf1-da6b-abd8-fcfdeb4f0344/news,team_stats,200,True,True,True
+p70f3d72,Gustavo Campero,LAA,gustavo-campero,69399,https://www.nbcsports.com/mlb/gustavo-campero/69399/news,team_stats,200,True,True,True
+p2020362,Kevin McGonigle,DET,kevin-mcgonigle,272120,https://www.nbcsports.com/mlb/kevin-mcgonigle/272120/news,team_player_news,200,True,True,True
+p6f15b6a,Ryan Weathers,NYY,ryan-weathers,48207,https://www.nbcsports.com/mlb/ryan-weathers/48207/news,team_player_news,200,True,True,True
+pe225715,Chase DeLauter,CLE,chase-delauter,00000188-9cf2-da6b-abd8-fcff1973023b,https://www.nbcsports.com/mlb/chase-delauter/00000188-9cf2-da6b-abd8-fcff1973023b/news,sitemap_unique_slug,200,True,True,True
+pae97ba9,Jake Bennett,BOS,jake-bennett,00000188-9cf2-da6b-abd8-fcff1973032e,https://www.nbcsports.com/mlb/jake-bennett/00000188-9cf2-da6b-abd8-fcff1973032e/news,sitemap_unique_slug,200,True,True,True
+p9c3a23c,Josh Bell,MIN,josh-bell,49383,https://www.nbcsports.com/mlb/josh-bell/49383/news,sitemap_unique_slug,200,True,True,True
+pc717c06,Liam Hicks,TBR,liam-hicks,242745,https://www.nbcsports.com/mlb/liam-hicks/242745/news,sitemap_unique_slug,200,True,True,True
