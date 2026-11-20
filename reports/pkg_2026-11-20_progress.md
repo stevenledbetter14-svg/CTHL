@@ -163,5 +163,15 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - Report `reports/aav_run_2026-11-20.md` / `.csv` (Projections line stamped pulled 11/20/2026). CSV columns `aav_1118`, `aav_change`, `proj_change_vs_1118`. 164 rounded PA/IP changes vs the 11/18 JSON. `data/aav-2027.js` updated (89 entries changed).
 - Pool checkpoint committed as `42bc827` before this run. This log entry is committed with the AAV report and `data/aav-2027.js`.
 
+### Cards — DONE
+- `pending_adds.py scan`: 7 queued (Sonny Gray, who had no 2025-26 card row, plus May, Sullivan, Cairo, Lamkin, Honeycutt, DeBarge). Rose is not in the values file, so she was queued with a one-row `--values` scan, same as Ace Reese.
+- Rose's seed team is **KCR**. Statsapi `people/805799?hydrate=currentTeam(parent)`: Surprise Saguaros, parentOrgId **118** (KCR). The AAV report had said BAL; that cell is corrected. No contract dollars added.
+- `pull_adds_statsapi.py`: 8 pulled, 28 stat rows, 8 coverage rows, 3 QA rows, 50 Stats API calls, 0 errors. QA: Sullivan 2025 A Fresno K/BB blank (BB=0, the existing rule); Lamkin and Rose have no 2025 line. Lamkin's AA club was `NW Arkansas` in the adds pull and `Northwest Arkansas` in `mlb-stats-pull`; renamed so the pitch-hist match works (same reason as the 11/18 Scranton rename). Fresno and Hartford are new clubs and were left as the API spelled them.
+- `build_card_data.py --inject`: 661 players, 3,126 rows, 618 write-ups. CARDS keys are `f`, `l`, `rk`, `s`, `w`. **No `t`.**
+- `tools/mlb-stats-pull.py --cache /workspace/db2027/statsapi_cache` (the 11/18 cache): 662 ids, **6 API calls**, 5.7s. 46 pool players still have no MLBAM and were skipped, not guessed.
+- `tools/pitch-hist-backfill.py --write`: 342 pitchers, **1,657 / 1,657** pitching rows filled, 0 unmatched, 0 G/GS/IP/W/SV/ERA/K/BB differences. The prior 653 players' `s`, `w`, `f`, `l`, and `rk` are unchanged. Only the 8 new ids were added.
+- `test-no-ranks-writeups`: rank and write-up checks pass (no `t`, button kept, tooltip "Show only top prospects", 10 write-ups exact, no CTHL $, no Provisional / Top 100). One pin fails: the $1 floor now shows 9 names because Ryan Sloan's `val` is 1, so the flag drops. `PROSPECT_FLOOR_IDS` still lists him. Rebaseline with the other pins.
+- `test-card-lines`: every card's 2027 row matches `p27`, pitch-hist L/H/ER/WHIP filled, no CTHL $ on 655 cards. Rose shows "No 2027 projection". The Crochet projections pin still expects K/BB 4.23; the tab shows **4.29**, which is `p27.KBB` 4.294589. Rebaseline that pin. Not a card defect.
+
 ### Next
-Cards: `pending_adds.py` / `pull_adds_statsapi.py` for the 7 adds including Rose (she is not in the values file), `build_card_data.py --inject`, `tools/mlb-stats-pull.py`, then `tools/pitch-hist-backfill.py --write`. Confirm `CARDS` has no `t`. Then Jenkins fixture in `tools/test-keeper-aav-fallback.mjs`, ref board, test rebaseline, summary.
+Update `tools/test-keeper-aav-fallback.mjs`: Jenkins is `{a:8}`. Use a real `{k}`-only keeper (un-keep Caminero, expect his k) and keep the fallback-out-of-the-pot checks.
