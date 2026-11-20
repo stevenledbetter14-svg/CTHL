@@ -197,5 +197,9 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - `tools/test-seed-safety.mjs` ALL PASS
 - `node tools/build-ref-board.mjs --check` OK
 
+### Summary — DONE
+- `reports/pool_refresh_2026-11-20_summary.md` written in the 11/18 format: pool 701 → 708 seed, app 650 → 655, keepers 48 / $512, pot $3,051.18 / inflation 1.1872 vs 11/18 $3,033.93 / 1.1805, top 15 movers with PA/IP, the 7 adds with MLBAM and AAV, flags, card counts, test results.
+- Draft List PDF not built. Nothing pushed.
+
 ### Next
-Write `reports/pool_refresh_2026-11-20_summary.md` in the 11/18 format.
+Nothing left in section 3 except the Draft List PDF, which this phase skips. Operator uploads it to OneDrive when it is built. Still no push until Steven says so.
