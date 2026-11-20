@@ -131,5 +131,26 @@ Claude stopped at the 13:31 ET keeper gate. Grok Build resumed after Steven's sw
 - 3.3: Meyers has no 11/17–11/21 transaction; current team Sugar Land, parent HOU. **Do not set fa.** The other open DFAs (Vierling, Bart, Mears, Juenger, Tur, J. Miller, Sweeney, Isbel, Leasure, Wong, Lee) show designation only — no claim, outright, or release. **No status change.**
 - Steamer 11/20 lines: May CHW AL 159.8 IP SP; Sullivan CHW AL 30.0 IP (was COL 108.1); Cairo TOR AL 51.4 PA (was LAD 11.0); Rose **no line**; Lamkin KCR 1.0 IP; Honeycutt BAL 1.0 PA; DeBarge MIN 11.6 PA; Gray MIN AL 175.3 IP (was Team=None).
 
+### Match + valuation, pre-add pool — DONE
+Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_2026-11-18/match_report.csv`. **0 fg_mlbam flips.** 649 rows (id 642, name 3, unmatched 4). Ace Reese left out (no line). Struck 51, including Gray (still fa) and not yet the 3.2 NL/FA moves.
+`valuation.py`: replacement SGP H 3.45 / P 1.51, team BB 302, drafted-250 sum **$2,600.00**. Source column stamped pulled 11/20/2026. Gray ($15) and May ($5) are in the drafted 250 but not in this pool yet — second match after the adds.
+
+### Pool changes + second match — DONE
+- Backup: `/workspace/cthl-backup/overrides-2027.pre-2026-11-20.json`.
+- `overrides-2027.json` then `pool_overrides.py --apply`: section 37, team 17, status 53, exclude 0, all names matched. No warnings.
+- Team: Garcia + McArthur SEA; Miller, Evans, Ferrer KCR; Gray MIN (fa status removed); Fortes BOS; Jung LAA; Nett BAL; Baumler BAL.
+- Status: Castillo nl:COL, Davis Martin nl:COL, Scholtens fa. Meyers and the open DFAs unchanged.
+- Seed 701 → **708** (+7). Ids `p`+md5("mlb"+MLBAM)[:7]: May pba6785e, Sullivan pd57810d, Cairo pece81c2, Rose p18b962a, Lamkin p86b38f3, Honeycutt pf977fae, DeBarge p7c99a58. No `pr`. Rose val null, no p27 yet.
+- Second match: **653** rows (id 646, name 3, unmatched 4). **0 fg_mlbam flips.** New matches: Gray, May, Sullivan, Cairo, Lamkin, Honeycutt, DeBarge. Left out: Ace Reese, Zion Rose (no Steamer line). Struck 53.
+- valuation.py again: drafted-250 sum **$2,600.00**, repl H 3.45 / P 1.51, team BB 302. Only drafted name outside the pool: Ramón Urías ($2). Groups: hitter 312, RP 235, SP 102, blank 4.
+
+### Keepers, SEED_VER, val/p27 — DONE
+- `node tools/sync-keepers.mjs --write`: before 48/$485 (Caminero missing, Jenkins still baked); after re-read **MATCH 48 / $512**. Caminero Money Bags $32, Jenkins pick cleared. Live room was not written.
+- `SEED_VER` `2027-actuals.8` → **`2027-actuals.9`**. `APP_VER` stays `2026.11.20-1`.
+- `BAKED_KEEPER_SET` `2027-keeperval.3` → **`2027-keeperval.4`**. Jenkins `p6377140` added to `CLEARED_BAKED_KEEPERS` (Money Bags), same path as the 11/16 Martinez drop.
+- val/p27 rebuilt from `values_2027_steamer.csv` (`cthl_$_no750adj`). **val26 untouched** (Gray still 29, Caminero still 40). 649 valued, 4 blank (Booth, Rojas, Emerson, Cholowsky), 649 p27 lines, 46 vals changed. Rose and Reese have no values row (val null, no p27).
+- Spot: Gray $13 / 175 IP, May $3 / 160 IP, Sullivan $0 / 30 IP, Cairo $0 / 51 PA, Lamkin $0 / 1 IP, Honeycutt $0 / 1 PA, DeBarge $0 / 12 PA, Jenkins $8 / 379 PA (not kept), Fermin still the pitcher line (56 IP).
+- `tools/p27-card-fields.py --write`: 2,958 card fields added on the 649. Exit 1 only because 7 struck players (Castillo, Martin, Scholtens, Foster, Abner, Hinds, Valera) still hold an old p27 and are no longer in the match file. Their lines were not rewritten. Live pool cards are the 649.
+
 ### Next
-Match wrapper + valuation on the current pool, then overrides + 7 adds, then a second match/valuation so the adds are in the values file (11/18 did new players in the same match). Then sync-keepers, SEED_VER `2027-actuals.9`, val/p27, AAV.
+AAV single pass `--write` with `keeper_split_2026-11-20_room.csv`, then the movers / PA-IP report.

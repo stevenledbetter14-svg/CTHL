@@ -932,7 +932,17 @@ const POOL_OVERRIDES = {
     "p9fc2d0a": "MIN",   // Ryan Jeffers (was MIN)
     "peed5bc8": "ATH",   // Raymond Burgos (was BOS)
     "p09d023e": "NYY",   // Chase Hampton (was BAL)
-    "p35ea002": "TEX"   // Josh White (was BAL)
+    "p35ea002": "TEX",   // Josh White (was BAL)
+    "p873be07": "SEA",   // Maikel Garcia (was KCR)
+    "paf9ba99": "SEA",   // James McArthur (was KCR)
+    "p84b2805": "KCR",   // Bryce Miller (was SEA)
+    "p39a6646": "KCR",   // Logan Evans (was SEA)
+    "p56a25dc": "KCR",   // José A. Ferrer (was SEA)
+    "pb64ce42": "MIN",   // Sonny Gray (was BOS)
+    "pd70a39d": "BOS",   // Nick Fortes (was TBR)
+    "pf341e07": "LAA",   // Jace Jung (was DET)
+    "pc250f03": "BAL",   // Braden Nett (was ATH)
+    "p23231e1": "BAL"   // Carter Baumler (was TEX)
   },
   "status": {
     "p18f135d": "nl:WSH",   // Connelly Early (NL) - Traded to NL (WSH)
@@ -950,7 +960,6 @@ const POOL_OVERRIDES = {
     "p6513270": "fa",   // Chris Bassitt (BAL) - FA
     "p269e0d3": "fa",   // Trevor Rogers (BAL) - FA
     "p11e20b8": "fa",   // Zach Eflin (BAL) - FA
-    "pb64ce42": "fa",   // Sonny Gray (BOS) - FA
     "p72fdf20": "fa",   // Rhys Hoskins (CLE) - FA
     "pb0c4312": "fa",   // Gleyber Torres (DET) - FA
     "p153e7c2": "fa",   // Jack Flaherty (DET) - FA
@@ -985,7 +994,10 @@ const POOL_OVERRIDES = {
     "pf2a74de": "nl:ATL",   // Cameron Foster (BAL) - Traded to NL (ATL)
     "pa84e7a9": "nl:WSH",   // Philip Abner (BAL) - Traded to NL (WSH)
     "p19e9619": "fa",   // Rece Hinds (BAL) - FA
-    "pb4d66a3": "fa"   // George Valera (CLE) - FA
+    "pb4d66a3": "fa",   // George Valera (CLE) - FA
+    "p2c1eea1": "nl:COL",   // Luis Castillo (CHW) - Traded to NL (COL)
+    "peeeacbe": "nl:COL",   // Davis Martin (CHW) - Traded to NL (COL)
+    "p4274a3e": "fa"   // Jesse Scholtens (TBR) - FA
   },
   "exclude": [
 
@@ -1020,6 +1032,7 @@ const CLEARED_BAKED_KEEPERS = [
   {pid:'pab6286c', team:'BozOs'},   // Taylor Walls $2 (dropped 11/6, Steven's keepers room)
   {pid:'pf29d0da', team:'Fruitdaloom'},   // Coby Mayo $5 (dropped 11/6, Steven's keepers room)
   {pid:'p4720771', team:'Birdland'},   // Angel Martinez $2 (dropped 11/16, Steven's keepers room)
+  {pid:'p6377140', team:'Money Bags'},   // Walker Jenkins $5 (dropped 11/20, Steven's keepers room)
 ];
 function dropClearedBaked(arr){
   if(!Array.isArray(arr)) return arr;
@@ -1035,8 +1048,9 @@ function dropClearedBaked(arr){
    free and the team has room. Keepers someone declared (t > 0), sales and taxi
    picks are never touched. Not a SEED_VER change. */
 /* 2026-11-06: baked set = Steven's keepers room (steven-keepers-b442410a), 48 / $467.
-   2026-11-16: synced again on Steven's "update the keepers": 48 / $485 (+McGonigle Birdland $20, -Martinez). */
-const BAKED_KEEPER_SET = '2027-keeperval.3';
+   2026-11-16: synced again on Steven's "update the keepers": 48 / $485 (+McGonigle Birdland $20, -Martinez).
+   2026-11-20: synced again on Steven's swap: 48 / $512 (+Junior Caminero Money Bags $32, -Walker Jenkins). */
+const BAKED_KEEPER_SET = '2027-keeperval.4';
 function upgradeBakedKeepers(){
   if(S.bakedSet === BAKED_KEEPER_SET) return;
   const baked = (SEED2026 && SEED2026.picks || []).filter(k=>k.keeper);
@@ -1050,7 +1064,7 @@ function upgradeBakedKeepers(){
   });
   S.bakedSet = BAKED_KEEPER_SET;
 }
-const SEED_VER = '2027-actuals.8';
+const SEED_VER = '2027-actuals.9';
 /* APP_VER / APP_BUILT: defined in the data-file guard script above. */
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();
