@@ -56,11 +56,12 @@ const stripCardSrc = (name, l) => name === 'CARDS'
 const KEEPER_AAV_MOVED = ['p1038f0b', 'p176e0ac', 'p2020362', 'p4720771', 'p4cdd205', 'p67ec326', 'p6b44680', 'p6b4cb24',
                           'p7ebff20', 'p930d6ea', 'p9ccea09', 'p9d1de2a', 'pa72991b', 'pbd0561e', 'pd726c86', 'pdd27a6'];
 const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
-/* 2026-11-18 pool refresh (e5e9a1d, SEED_VER 2027-actuals.8): overrides + 34 adds re-projected
-   482 SEED2026 players, the AAV rerun moved 109 AAV_2027 entries, CARDS.s +36. For these three
-   the baseline is the refresh build's data file (same card strips on both sides); the other
-   consts still equal the old single-file build. */
-const REFRESH_REF = 'e5e9a1d', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+/* 2026-11-20 pool refresh (b4f19a6, SEED_VER 2027-actuals.9): retags, 7 adds, keepers 48/$512,
+   the AAV rerun, and the statsapi card inject. For these three the baseline is that refresh
+   build (same card strips on both sides); the other consts still equal the old single-file build.
+   The 11/18 baseline was e5e9a1d. Ranks were already gone by b4f19a6, so the CARDS check below
+   only asserts no t and no provisional / Top 100 text. */
+const REFRESH_REF = 'b4f19a6', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
 /* 2026-11-20 Rotoworld harvest (spec zuck_2026-11-20_package.md section 2, tools/rotoworld-harvest.py
    --from-csv): ROTOID gained exactly the matched rows of reports/rotoid_harvest_2026-11-20.csv, appended
    after the stored keys, none replaced. The baseline is the old ROTOID plus those keys. */
@@ -71,7 +72,7 @@ const RW_ADD = {};
 { const [hd, ...rows] = fs.readFileSync(path.join(ROOT, RW_CSV), 'utf8').trim().split('\n').map(l => l.split(','));
   const c = Object.fromEntries(hd.map((h, i) => [h, i]));
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
-const SEED_VER_BASE = '2027-actuals.8';   // 11/18 refresh (the old build's was 2027-actuals.7)
+const SEED_VER_BASE = '2027-actuals.9';   // 11/20 refresh (the 11/18 build's was 2027-actuals.8)
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
   if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
@@ -112,9 +113,9 @@ const OLDCARDS = structuredClone(OLD.CARDS);
 for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInContext(name, NEW)); OLDJSON[name] = JSON.stringify(OLD[name]); }
 {
   const cur = vm.runInContext('CARDS', NEW), ch = Object.keys(OLDCARDS.w).filter(k => OLDCARDS.w[k] !== cur.w[k]);
-  ok(!('t' in cur) && 't' in OLDCARDS, 'CARDS: t (provisional Top 100 rank) dropped');
-  ok(ch.length === 51 && ch.every(k => RANK_RE.test(OLDCARDS.w[k]) && cur.w[k] && !RANK_RE.test(cur.w[k])) && Object.keys(cur.w).length === Object.keys(OLDCARDS.w).length,
-    'CARDS.w: exactly the 51 provisional Top 100 recaps changed, none mentions it now', `${ch.length} changed`);
+  ok(!('t' in cur) && !('t' in OLDCARDS), 'CARDS: no t (provisional Top 100 rank) in the 11/20 baseline or now');
+  ok(ch.length === 0 && Object.keys(cur.w).length === Object.keys(OLDCARDS.w).length,
+    'CARDS.w: unchanged vs the 11/20 baseline (ranks already removed)', `${ch.length} changed`);
   ok(Object.values(cur.w).every(t => !RANK_RE.test(t)), 'CARDS.w: no recap mentions "provisional" or "Top 100"');
 }
 for(const [f, name] of FILES){
@@ -124,12 +125,13 @@ for(const [f, name] of FILES){
 {
   const sd = vm.runInContext('SEED2026', NEW), aav = vm.runInContext('AAV_2027', NEW);
   const kp = sd.picks.filter(k => k.keeper), has = id => kp.some(k => k.pid === id);
-  ok(kp.length === 48 && kp.reduce((t, k) => t + k.price, 0) === 485 && has('p2020362') && !has('p4720771'),
-    'SEED2026 keepers: 48 / $485, McGonigle in, Angel Martinez out', `${kp.length} / $${kp.reduce((t, k) => t + k.price, 0)}`);
+  ok(kp.length === 48 && kp.reduce((t, k) => t + k.price, 0) === 512 && has('pabd0d7f') && !has('p6377140') && has('p2020362') && !has('p4720771'),
+    'SEED2026 keepers: 48 / $512, Caminero in, Jenkins out (McGonigle still in, Martinez still out)', `${kp.length} / $${kp.reduce((t, k) => t + k.price, 0)}`);
   const pk = new Map(sd.picks.map(k => [k.pid, k]));
   const badPick = sd.players.filter(p => { const k = pk.get(p.id); return k ? !(p.pick && p.pick.team === k.team && p.pick.price === k.price && p.pick.keeper === !!k.keeper) : !!p.pick; });
   ok(badPick.length === 0, 'SEED2026 players[].pick matches picks (one per pick, none extra)', badPick.slice(0, 5).map(p => p.name).join(', '));
-  ok(aav.p2020362.k !== undefined && aav.p4720771.k === undefined, 'AAV_2027: McGonigle carries a keeper AAV, Angel Martinez does not');
+  ok(aav.pabd0d7f.k === 56 && aav.p6377140.a === 8 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
+    'AAV_2027: Caminero {k:56}, Jenkins {a:8} (not k); McGonigle still k, Martinez still not');
 }
 {
   const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);

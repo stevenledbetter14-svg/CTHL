@@ -9,7 +9,7 @@
 //   5. every ROTOID / seed rw id is numeric or UUID-style, every slug is lower-case-hyphen;
 //   6. no ROTOID entry stored at --base (default f8aca68, live main) was changed or dropped;
 //   7. index.html loads data/rotoid.js with ?v=APP_VER.
-//   node tools/test-rotoworld-links.mjs [--expect 616/701] [--base <rev>]
+//   node tools/test-rotoworld-links.mjs [--expect 616/708] [--base <rev>]
 //        [--csv reports/rotoid_harvest_2026-11-20.csv] [--unresolved reports/rotoworld_unresolved_2026-11-20.csv]
 import fs from 'fs'; import path from 'path'; import vm from 'vm'; import { execFileSync } from 'child_process';
 

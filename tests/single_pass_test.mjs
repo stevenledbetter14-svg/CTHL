@@ -141,7 +141,7 @@ try {
       blockIds: Object.keys(AAV_2027).length,
       keeperCount: kept.length,
     };`);
-  ok(app.seedVer === '2027-actuals.8', 'SEED_VER stays 2027-actuals.8', app.seedVer);   // 11/18 pool refresh (was .7)
+  ok(app.seedVer === '2027-actuals.9', 'SEED_VER stays 2027-actuals.9', app.seedVer);   // 11/20 pool refresh (was .8)
 
   const byName = new Map();
   for (const p of app.players) { if (!byName.has(p.name)) byName.set(p.name, []); byName.get(p.name).push(p); }
@@ -160,7 +160,7 @@ try {
     maxDiff = Math.max(maxDiff, d);
   }
   ok(missing.length === 0, 'every reference-board priced non-keeper is on the board', missing.join(', '));
-  /* ref_board_2026-11-18 (11/18 pool refresh): 202 priced non-keepers; update with each rebuild */
+  /* ref_board_2026-11-20 (11/20 pool refresh): 202 priced non-keepers; update with each rebuild */
   ok(compared === 202 && maxDiff <= 1, `non-keeper prices vs reference board: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
   /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
      run CSV, diffed vs the reference board the same way, must match the app board */
@@ -171,7 +171,7 @@ try {
     ok(rm === moved && rx === maxDiff, `latest run (${lastRun}) diff vs reference board matches the app board`, `run max $${rx}, moved ${rm}`); }
 
   /* 2. keeper values (board k and the app's rank $) */
-  const want = { 'Nick Kurtz': 48, 'Julio Rodriguez': 39, 'Cam Schlittler': 37, 'Ben Rice': 37, 'Logan Gilbert': 37 };
+  const want = { 'Nick Kurtz': 50, 'Julio Rodriguez': 41, 'Cam Schlittler': 35, 'Ben Rice': 38, 'Logan Gilbert': 35 };   // 11/20 curve (was 48/39/37/37/37)
   for (const [n, w] of Object.entries(want)) {
     const p = (byName.get(n) || []).find(p => p.kept);
     ok(p && Math.abs(p.a.k - w) <= 1 && Math.abs(p.rank$ - w) <= 1, `keeper value ${n} = $${w} (±$1)`, p ? `board k $${p.a.k}, app rank $${p.rank$}` : 'not kept');
@@ -188,7 +188,7 @@ try {
   const sal = kept.reduce((s, p) => s + p.salary, 0);
   const auction = app.players.filter(p => !p.kept && p.a).reduce((s, p) => s + (p.a.a || 0), 0);
   const slots = kept.length + app.players.filter(p => !p.kept && p.a && p.a.a > 0).length;
-  ok(kept.length === 48 && sal === 485, `48 keepers / $485 salary in the app (11/16 room)`, `${kept.length} / $${sal}`);
+  ok(kept.length === 48 && sal === 512, `48 keepers / $512 salary in the app (11/20 room)`, `${kept.length} / $${sal}`);
   ok(kept.every(p => p.a && p.a.k != null && p.a.a == null), 'every keeper carries only its keeper AAV (never cash)');
   ok(sal + auction === 2570, `cash check: $${sal} keepers + $${auction} non-keeper AAVs = $${sal + auction}`, 'must be exactly $2,570');
   ok(slots === 250, `250 slots priced on the board`, String(slots));

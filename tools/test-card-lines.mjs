@@ -13,7 +13,7 @@
 //      from the row (blank at 0 IP, ERA blank there too), and K/BB = the row's
 //      SO/BB, — when SO or BB is missing or BB is 0;
 //   3b. Projections tab K/BB = p27.KBB (unrounded Steamer SO/BB) for every
-//      pitcher, Crochet 4.23;
+//      pitcher, Crochet 4.29;
 //   4. no $ anywhere on any card back, except real contract / bonus money inside an
 //      Eno-approved write-up (#cbWriteup = WRITEUPS2027[id].text, e.g. $87,500; 2026-11-20
 //      spec 4.1) - never a bare $N auction-sized figure;
@@ -133,7 +133,7 @@ const res = await ev(`(()=>{
 })()`);
 ok(res.bad.length === 0, `all ${res.out.length} cards: one table per side, one header, 2027 = italic last row; 2027 cells = SEED2026 p27 (K/BB from unrounded SO/BB)`, res.bad.slice(0, 5).join(' ; '));
 ok(res.hist.length === 0, `2025-26 pitching rows (${res.hrowsN}): L / H / ER / WHIP filled from the statsapi backfill, WHIP = (BB+H)/IP`, res.hist.slice(0, 5).join(', '));
-ok(res.pool.length === 0 && res.cro === '4.23', `Projections tab K/BB = p27.KBB (unrounded) for every pitcher; Crochet ${res.cro}`, res.pool.slice(0, 5).join(' ; '));
+ok(res.pool.length === 0 && res.cro === '4.29', `Projections tab K/BB = p27.KBB (unrounded) for every pitcher; Crochet ${res.cro}`, res.pool.slice(0, 5).join(' ; '));
 ok(res.hkbb.length === 0, '2025-26 pitching rows: K/BB = that row\'s SO/BB, — when missing', res.hkbb.slice(0, 5).join(' ; '));
 const dash = res.out.filter(r => r.type === 'pitcher' && r.cells && r.cells[PH.indexOf('K/BB')] === '\u2014');
 console.log(`2027 K/BB "—": ${dash.length} pitchers: ${dash.map(r => r.name).join(', ')}`);

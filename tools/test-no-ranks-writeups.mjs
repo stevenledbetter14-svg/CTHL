@@ -12,7 +12,8 @@
 //      (0 < count < full pool, hitters and pitchers); the tab text and every title/tooltip,
 //      filter on and off, has no "Provisional", "Top 100", PR+digits or "#N" rank (the
 //      overall-rank column is checked to be the whole-pool rank, not a prospect rank);
-//   5. $1 prospect floor: PFLOOR is exactly the 10 names the rank rule picked on 11/18,
+//   5. $1 prospect floor: PROSPECT_FLOOR_IDS is still the 10 names from 11/18. A name with
+//      val > 0 drops the flag (Ryan Sloan, val 1, after the 11/20 re-pull).
 //      and its cell shows $1 with no rank;
 //   6. write-ups: the 10 seed ids each show WRITEUPS2027[id].text exactly in #cbWriteup
 //      (and, when /workspace/db2027 is present, that text is a block of the approved
@@ -145,9 +146,14 @@ for(const m of ['H', 'P']){
 ok(proj.hits.length === 0, 'Projections tab, filter on and off: no Provisional / Top 100 / PR+digits / #N in text or tooltips', proj.hits.slice(0, 5).join(' ; '));
 
 /* ---- 5. $1 prospect floor ---- */
-const fl = await ev(`(()=>({ids:Object.keys(PFLOOR).sort(), cells:Object.keys(PFLOOR).map(id=>{ const p=S.players.find(x=>x.id===id);
-  const d=document.createElement('div'); d.innerHTML=aavCellHTML(p); return d.textContent+' | '+d.firstChild.title; })}))()`);
-ok(JSON.stringify(fl.ids) === JSON.stringify([...FLOOR_IDS].sort()), `$1 prospect floor = the same 10 names as 11/18`, fl.ids.join(' '));
+const fl = await ev(`(()=>{
+  const priced = PROSPECT_FLOOR_IDS.filter(id => ((S.players.find(x=>x.id===id)||{}).val||0) > 0);
+  return {ids:Object.keys(PFLOOR).sort(), priced, cells:Object.keys(PFLOOR).map(id=>{ const p=S.players.find(x=>x.id===id);
+  const d=document.createElement('div'); d.innerHTML=aavCellHTML(p); return d.textContent+' | '+d.firstChild.title; })};
+})()`);
+const floorShown = [...FLOOR_IDS].filter(id => !fl.priced.includes(id)).sort();
+ok(JSON.stringify(fl.priced) === JSON.stringify(['p6587b4a']) && JSON.stringify(fl.ids) === JSON.stringify(floorShown),
+  '$1 prospect floor: frozen 10, Ryan Sloan dropped because val > 0', `shown ${fl.ids.join(' ')} priced ${fl.priced.join(' ')}`);
 ok(fl.cells.every(c => /^\$1 \| /.test(c) && !/#\d|PR\s?\d|Top.?100/i.test(c)), '$1 flag shows no rank', fl.cells[0]);
 
 /* ---- 6. write-ups ---- */

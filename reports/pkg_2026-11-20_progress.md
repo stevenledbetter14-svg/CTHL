@@ -179,5 +179,23 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - Setting all 48 `k` values to 999 leaves inflation, every maxBid, every `p.val`, the meter, and the money board unchanged. Caminero's cell and card box follow $999. `k` stays out of the pot.
 - `node tools/test-keeper-aav-fallback.mjs`: ALL PASS.
 
+### Reference board + test rebaseline — DONE
+- `node tools/build-ref-board.mjs` wrote `tests/fixtures/ref_board_2026-11-20.csv` from commit `3e75f73` (SEED_VER `2027-actuals.9`): 653 rows, 202 priced non-keepers ($2,058), 48 keepers ($512). `git rm` `tests/fixtures/ref_board_2026-11-18.csv`.
+- `compared === 202` stays (the priced non-keeper count did not change). Comment now names the 11/20 board.
+- Pins moved to the new curve: SEED_VER `2027-actuals.9`; keeper salary **$512**; Kurtz $50, Julio Rodríguez $41, Schlittler $35, Rice $38, Gilbert $35. The frozen 11/14 pot checks ($3,041.48) were left alone.
+- `tools/test-data-split.mjs`: `REFRESH_REF` is `b4f19a6` (seed, AAV, and cards). CARDS check now asserts no `t` and no provisional / Top 100 text, because that baseline already had the ranks removed. Keepers 48 / $512, Caminero in, Jenkins out.
+- `$1` floor test: frozen 10 ids remain; Ryan Sloan (`val` 1) drops the flag. Crochet projections pin is 4.29 (`p27.KBB`).
+- Rotoworld coverage is **616 / 708** (the 7 adds have no new link). `tests/README.md` expect updated.
+
+### Tests — ALL PASS
+- `tests/single_pass_test.mjs` 36/36
+- `tools/test-card-lines.mjs` ALL PASS
+- `tools/test-data-split.mjs` ALL PASS
+- `tools/test-keeper-aav-fallback.mjs` ALL PASS
+- `tools/test-no-ranks-writeups.mjs` ALL PASS
+- `tools/test-rotoworld-links.mjs` ALL PASS (616/708)
+- `tools/test-seed-safety.mjs` ALL PASS
+- `node tools/build-ref-board.mjs --check` OK
+
 ### Next
-`node tools/build-ref-board.mjs`, update `compared ===` in `tests/single_pass_test.mjs`, `git rm` the 11/18 board fixture, rebaseline pinned SEED_VER / AAV / keeper checks the way `c7ce2c9` did.
+Write `reports/pool_refresh_2026-11-20_summary.md` in the 11/18 format.
