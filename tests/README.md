@@ -38,4 +38,5 @@ node tools/build-ref-board.mjs --check   # exits 1 if the fixture is missing or 
 node tools/test-card-lines.mjs
 node tools/test-seed-safety.mjs
 node tools/test-data-split.mjs
+node tools/test-no-ranks-writeups.mjs   # no prospect ranks + card write-ups (2026-11-20)
 ```

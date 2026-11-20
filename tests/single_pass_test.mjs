@@ -227,12 +227,15 @@ try {
     return {n: ids.length, bad};`);
   ok(sold.n > 0 && sold.bad.length === 0, `sold box opens blank for all ${sold.n} priced, undrafted players`, sold.bad.slice(0, 5).join(', '));
 
-  /* 7. no $ on card backs (every player, keepers included) */
+  /* 7. no CTHL $ on card backs (every player, keepers included). 2026-11-20 (spec 4.1): real
+     contract / bonus money may appear only inside an Eno-approved write-up (#cbWriteup =
+     WRITEUPS2027[id].text, e.g. Caminero's $87,500), never a bare $N auction-sized figure. */
   const backs = await evaluate(`
     const bad = [];
-    for (const p of S.players) { cardBack(p); const t = document.getElementById('cardBack').textContent; if (t.includes('$')) bad.push(p.name); }
+    for (const p of S.players) { cardBack(p); const wt = document.getElementById('cbWriteup').textContent, ap = WRITEUPS2027[p.id], t = document.getElementById('cardBack').textContent.replace(wt, '');
+      if (t.includes('$') || (wt && (!ap || wt !== ap.text || /\\$\\d+(?!\\d)(?![,.]\\d)(?!\\s?(?:M\\b|million|billion))/.test(wt)))) bad.push(p.name); }
     return {n: S.players.length, bad};`);
-  ok(backs.bad.length === 0, `no $ on any card back (${backs.n} players)`, backs.bad.slice(0, 5).join(', '));
+  ok(backs.bad.length === 0, `no CTHL $ on any card back (${backs.n} players; real money only inside an approved write-up)`, backs.bad.slice(0, 5).join(', '));
 
   /* 8. no $ on the printed list (Draft List): only the $$$ write-in header,
         and an owned row's actual sale/keeper price — never an AAV */

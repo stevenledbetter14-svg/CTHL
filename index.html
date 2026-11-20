@@ -79,8 +79,6 @@ tr:hover td{background:#f0f6ff}
 .pill.keeper{background:#fff3cd;color:var(--gold)}
 .pill.taxi{background:#e0f0fa;color:#0b6aa2}
 .pill.drafted{background:#e6f4ea;color:var(--green)}
-/* Top-100 prospect — keeper-league value the AAV can't see (LABR is redraft) */
-.pill.prospect{background:#efe3fb;color:#6b2fb5;font-weight:800;letter-spacing:.2px}
 table.pool td.aav .adp{font-size:15px;color:var(--dim);font-weight:600;display:block;line-height:1.1}
 button.btn{background:var(--accent);color:#fff;border:none;padding:10px 20px;border-radius:5px;font-weight:700;cursor:pointer;font-size:16px;font-family:var(--font)}
 button.btn:hover{background:var(--navy)}
@@ -408,7 +406,7 @@ a{color:var(--link)}
 .cf-front.fs .cf-head{background:#e9b23c;border:2px solid #2a1a08;border-radius:3px;padding:2px 8px}
 .cf-front.fs .cf-name .pc-name{color:#3d2a0c;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
 .cf-front.fs .cf-name .pc-sub,.cf-front.fs .cf-name .pc-sub b{color:#3d2a0c}
-.cf-front.fs .cf-name .pc-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}  /* the cut tail is the Top 100 pill, already in the tag */
+.cf-front.fs .cf-name .pc-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}  /* a long name ellipsizes rather than wrapping */
 .cf-front.fs .cf-sub2{color:#3d2a0c;position:absolute;right:14px;top:14px;max-width:118px;text-align:right;line-height:1.25}  /* beside the banner */
 /* All-Star: red nameplate, AL/NL disc, red-white-blue star strip (unchanged
    look; white stars get a navy edge so they read on the white front). */
@@ -799,21 +797,22 @@ a{color:var(--link)}
 </dialog>
 
 <!-- Baked data (player pool, AAVs, card data, keeper list, Rotoworld ids,
-     club logos) lives in data/*.js: one plain script each, loaded in order
+     club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.18-1"></script>
-<script src="data/aav-2027.js?v=2026.11.18-1"></script>
-<script src="data/cards-2027.js?v=2026.11.18-1"></script>
-<script src="data/keepers-2027.js?v=2026.11.18-1"></script>
-<script src="data/rotoid.js?v=2026.11.18-1"></script>
-<script src="data/logos.js?v=2026.11.18-1"></script>
+<script src="data/seed-2027.js?v=2026.11.20-1"></script>
+<script src="data/aav-2027.js?v=2026.11.20-1"></script>
+<script src="data/cards-2027.js?v=2026.11.20-1"></script>
+<script src="data/keepers-2027.js?v=2026.11.20-1"></script>
+<script src="data/rotoid.js?v=2026.11.20-1"></script>
+<script src="data/logos.js?v=2026.11.20-1"></script>
+<script src="data/writeups-2027.js?v=2026.11.20-1"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.18-1';
+const APP_VER = '2026.11.20-1';
 const APP_BUILT = '2026-11-16';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -826,7 +825,8 @@ const DATA_FAIL = (function(){
     'cards-2027.js': typeof CARDS !== 'undefined',
     'keepers-2027.js': typeof KEEPERS2027 !== 'undefined',
     'rotoid.js': typeof ROTOID !== 'undefined',
-    'logos.js': typeof LOGO !== 'undefined'
+    'logos.js': typeof LOGO !== 'undefined',
+    'writeups-2027.js': typeof WRITEUPS2027 !== 'undefined'
   };
   const bad = [];
   const tags = [...document.querySelectorAll('script[src^="data/"]')].map(s => s.getAttribute('src'));
@@ -1174,8 +1174,7 @@ function cardFront(p){
     : f==='f' ? '<span class="fs-w"><span class="fs-o" aria-hidden="true">Future Stars</span><span class="fs-txt">Future Stars</span></span><span class="fs-star">★</span>' : '';
   const rk=CARDS.rk[p.id];
   $('cfTag').textContent = f==='r' ? '2026 AL Rookie of the Year voting · '+(rk==='1st'?'Winner':rk)
-    : f==='f' ? 'Provisional Top 100 #'+CARDS.t[p.id]
-    : f==='a' ? '2026 All-Star' : '';
+    : f==='a' ? '2026 All-Star' : '';   // Future Stars: banner only, no tag (2026-11-20, no prospect rank)
   $('cfLg').textContent = CARDS.l[p.id]||'AL';
 }
 /* Card back. No $ anywhere on this side — values, AAV and salaries live on
@@ -1242,7 +1241,12 @@ function cardBack(p){
     html += t + '</tbody></table></div>';
   });
   $('cbStats').innerHTML = html;
-  $('cbWriteup').textContent = CARDS.w[p.id]||'';
+  /* 2026-11-20 (spec 4.3): the write-up slot reads only WRITEUPS2027
+     (data/writeups-2027.js, Eno-approved text keyed by pool id). No entry =
+     blank slot. Never falls back to the old CARDS.w auto recap. Card back
+     only: not on the Draft List or the printed PDF. */
+  const wu=WRITEUPS2027[p.id];
+  $('cbWriteup').textContent = (wu && wu.text) || '';
 }
 /* ================= DRAFTING ================= */
 let dlgPlayer=null;
@@ -1267,18 +1271,16 @@ function openPick(id, mode){
   // otherwise look empty for a player that does have a signal, so flag it.
   const projOnly = !prBadge && !isProspect(p) && p.val<=0 && (p.ord||0)>0;
   $('dlgSub').innerHTML = `<b>${esc(p.team)}</b> · ${esc(dispElig(p))||'—'}`
-    + (cardProspectRank(p) ? ` · <span class="pill prospect" title="${esc(cardProspectTitle(p))}">${esc(cardProspectTitle(p))}</span>` : '')
     + (prBadge ? ` · <span style="opacity:.8" title="Rank among AL-eligible players by NFBC ADP">ADP ${esc(prBadge)}</span>` : '')
-    + (projOnly ? ` · <span style="opacity:.6" title="No NFBC ADP and not a Top 100 prospect — ranked off our own projection order instead">no ADP</span>` : '');
+    + (projOnly ? ` · <span style="opacity:.6" title="No NFBC ADP — ranked off our own projection order instead">no ADP</span>` : '');
   // unpriced players still get something in the box — position rank when we
-  // have ADP, otherwise the prospect rank, otherwise the LABR proj-tier
-  // flag, in that order (see tailScore())
+  // have ADP, otherwise a dash (2026-11-20: the prospect-rank branch is gone,
+  // no prospect rank is shown anywhere)
   const ab=$('dlgAav');
   const a27=aavOf(p);
   if(p.pick && p.pick.keeper){ ab.textContent='🔒 '+fmt$(p.pick.price); ab.previousElementSibling.textContent='Keeper'; }
   else if(a27 && a27.a>0){ ab.textContent=fmt$(a27.a); ab.previousElementSibling.textContent='CTHL AAV 2027'; }
   else if(prBadge){ ab.textContent=prBadge; ab.previousElementSibling.textContent='ADP'; }
-  else if(cardProspectRank(p)){ ab.textContent='PR'+cardProspectRank(p); ab.previousElementSibling.textContent='Top Prospect'; }
   // 2026-08-16: was "LABR tier / proj" — internal jargon that read as an
   // error to anyone but us. Unpriced, un-ADP'd players just show a dash.
   else { ab.textContent='—'; ab.previousElementSibling.textContent='CTHL AAV'; }
@@ -1549,39 +1551,21 @@ function tailScore(p){
   // Neither LABR nor NFBC has this player — doesn't happen in the 2026 set
   // (all 453 $0 players carry an `ord`) but will for names added later
   // without either source's coverage. Rather than sink to true zero, a
-  // tagged Top 100 prospect gets a small score (well under the ~1000 floor
-  // of real ord/adp signal) so they don't rank below total unknowns.
+  // player with a preseason prospect rank (p.pr) gets a small score (well
+  // under the ~1000 floor of real ord/adp signal) so they don't rank below
+  // total unknowns. Sort input only: the rank is never shown (2026-11-20).
   const bp=bestProspectRank(p);
   return bp ? 500-bp/2 : 0;
 }
 function taxiCmp(a,b){
   return ((b.val||0)-(a.val||0)) || (tailScore(b)-tailScore(a));
 }
-// on both preseason top 100s, or just one — p.pr is [MLBrank, P361rank], 0 = absent
+/* p.pr is [MLBrank, P361rank] from the preseason lists, 0 = absent. Internal
+   sort input only (tailScore, the "no ADP" check). 2026-11-20 (Steven: "lose
+   the verbiage 'provisional top 100 prospect' and a ranking"): no prospect
+   rank is shown anywhere — no PR badge, no Top 100 title, no card-front tag,
+   no Top Prospects filter. The card-front rank map is gone from the card data. */
 function isProspect(p){ return Array.isArray(p.pr); }
-function prospectTitle(p){
-  if(!isProspect(p)) return '';
-  const [m,q]=p.pr;
-  const bits=[]; if(m) bits.push('MLB #'+m); if(q) bits.push('P361 #'+q);
-  return 'Top 100 prospect — '+bits.join(' · ');
-}
-function prospectBadge(p){
-  if(!isProspect(p)) return '';
-  const best=Math.min(...p.pr.filter(Boolean));
-  return ` <span class="pill prospect" title="${prospectTitle(p)}">PR${best}</span>`;
-}
-/* Card-front prospect rank (2026-11-11). The provisional Top 100
-   (CARDS.t, cthl_top100_provisional.csv, rank <= 100, the same number the
-   Future Stars front prints) is the only source for card-front PR tags.
-   Players not on that list get no tag, even with a preseason MLB/P361 rank
-   in p.pr (Enddy Azocar's leftover PR99 dropped 2026-11-11). */
-function cardProspectRank(p){
-  return CARDS.t[p.id] || null;
-}
-function cardProspectTitle(p){
-  const t=CARDS.t[p.id];
-  return t ? 'Top 100 prospect — Provisional #'+t : '';
-}
 function bestProspectRank(p){
   if(!isProspect(p)) return null;
   const vals=p.pr.filter(Boolean);
@@ -1680,7 +1664,7 @@ let RANK_OF={};
 function computeOverallRanks(){
   RANK_OF={};
   // NOTE 2026-08-07: filter must match tailScore()'s own definition of "has a
-  // signal", not just ord/adp directly — tailScore already gives Top 100
+  // signal", not just ord/adp directly — tailScore already gives ranked
   // prospects with neither LABR order nor NFBC ADP a real (if modest) score
   // instead of zero, precisely because LABR and NFBC are both redraft-only
   // and structurally blind to keeper-stash value. Checking ord/adp here
@@ -1722,14 +1706,18 @@ function overallRank(p){ return RANK_OF[p.id]||null; }
       dilute all 250 genuine values to encode something that isn't about money.
    2. It does not re-rank. tailScore() already floats these players up the $0
       tail; this only changes what the AAV column prints. */
-const PROSPECT_FLOOR_N = 10;
+/* 2026-11-20: the set is frozen to the 10 names the rank rule picked on the
+   11/18 pool (spec 1.3: same 10 names, no rank shown or read for the flag).
+   Franklin Arias, Ryan Sloan, Grady Emerson, Roch Cholowsky, Theo Gillen,
+   Vahn Lackey, JoJo Parker, Zyhir Hope, Caleb Bonemer, Arjun Nimmala.
+   A name that gets a price drops the flag; the set only changes on Eno's say. */
+const PROSPECT_FLOOR_IDS = ['pdc823df','p6587b4a','p6ccee2a','p96f7374','p8985064',
+                            'p5b997e0','p9c8df46','p4da2d2a','p5d22ea3','pec92b6a'];
 let PFLOOR = {};
 function computeProspectFloor(){
   PFLOOR={};
-  const cand=(S.players||[])
-    .filter(p=>!((p.val||0)>0) && isProspect(p) && bestProspectRank(p))
-    .sort((a,b)=>bestProspectRank(a)-bestProspectRank(b));
-  cand.slice(0, PROSPECT_FLOOR_N).forEach(p=>{ PFLOOR[p.id]=1; });
+  const ids=new Set(PROSPECT_FLOOR_IDS);
+  (S.players||[]).filter(p=>ids.has(p.id) && !((p.val||0)>0)).forEach(p=>{ PFLOOR[p.id]=1; });
 }
 function floorVal(p){ return PFLOOR[p.id]||0; }
 /* What the AAV column should print for a player: his keeper salary if he's
@@ -1738,7 +1726,7 @@ function floorVal(p){ return PFLOOR[p.id]||0; }
 function aavCellHTML(p){
   if(p.pick && p.pick.keeper) return `<b>🔒 ${fmt$(p.pick.price)}</b>`;
   if(p.val>0) return `<b>${fmt$(p.val)}</b>`;
-  if(floorVal(p)) return `<b class="pfloor" title="Top-100 prospect with no market price — flagged as worth a roster spot at the $1 minimum. Not drawn from the $2,570 pot.">$1</b>`;
+  if(floorVal(p)) return `<b class="pfloor" title="Prospect with no market price — flagged as worth a roster spot at the $1 minimum. Not drawn from the $2,570 pot.">$1</b>`;
   return '—';
 }
 /* CTHL AAV column (AAV_2027): kept players show their keeper display $
@@ -1930,8 +1918,7 @@ function renderMeter(){
    and MLB filters, search, count. Owner now rides in the Player column instead
    of a separate Status column. Stat sorting survives via the Sort-by control,
    since Projected Stats is one column. */
-let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1, poolProspectOnly=false;
-function toggleProspectOnly(){ poolProspectOnly=!poolProspectOnly; renderPool(); }
+let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1;
 // stat columns per mode — each one is clickable, CBS-style
 /* 2026-11-05: Projections tab shows 2027 Steamer (p27) by default. No year
    toggle existed; 2026 lines stay on the player card. Columns match the
@@ -2046,7 +2033,6 @@ function renderPool(){
   const posList = poolMode==='H' ? ['C','1B','2B','3B','SS','MI','CI','OF','DH'] : ['SP','RP'];
   $('poolPos').innerHTML=[`<button class="${!poolPos?'on':''}" onclick="poolSet('pos','')">ALL</button>`]
     .concat(posList.map(x=>`<button class="${poolPos===x?'on':''}" onclick="poolSet('pos','${x}')">${x}</button>`))
-    .concat([`<button class="${poolProspectOnly?'on':''}" onclick="toggleProspectOnly()" title="Show only Top 100 prospects (P361 + MLB.com union)">★ Top Prospects</button>`])
     .join('');
   const clubs=[...new Set(S.players.map(p=>p.team))].filter(Boolean).sort();
   $('mlbFilter').innerHTML=[`<button class="${!mlbSel?'on':''}" onclick="poolSet('mlb','')">ALL</button>`]
@@ -2057,8 +2043,7 @@ function renderPool(){
     .filter(p=>!poolPos || ((poolPos==='SP'||poolPos==='RP') ? (p.elig||'').split('/').includes(poolPos) : slotEligible(p,poolPos)))
     .filter(p=>!q || p.name.toLowerCase().includes(q))
     .filter(p=>!mlbSel || p.team===mlbSel)
-    .filter(p=>!hide || !p.pick)
-    .filter(p=>!poolProspectOnly || isProspect(p));
+    .filter(p=>!hide || !p.pick);
   rows.sort((a,b)=>{
     const x=poolVal(a,poolSortKey), y=poolVal(b,poolSortKey);
     const c=(typeof x==='string')? String(x).localeCompare(String(y)) : (x||0)-(y||0);

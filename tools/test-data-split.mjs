@@ -24,6 +24,15 @@ const REF = argv.includes('--ref') ? argv[argv.indexOf('--ref') + 1] : 'b5a63b7'
 const NONET = argv.includes('--no-net');
 const FILES = [['seed-2027.js', 'SEED2026'], ['aav-2027.js', 'AAV_2027'], ['cards-2027.js', 'CARDS'],
                ['keepers-2027.js', 'KEEPERS2027'], ['rotoid.js', 'ROTOID'], ['logos.js', 'LOGO']];
+/* 2026-11-20: data/writeups-2027.js (WRITEUPS2027, Eno-approved card write-ups) is new in this
+   build, so it has no old-build baseline: it is in the tag / guard / values-only checks only. */
+const ALL_FILES = FILES.concat([['writeups-2027.js', 'WRITEUPS2027']]);
+/* 2026-11-20 rank removal (spec zuck_2026-11-20_package.md 1.2): CARDS.t (provisional Top 100
+   rank) is gone and the 51 CARDS.w recaps that led with "No. N on the provisional Top 100
+   prospect list" were rebuilt without it (build_writeups.py). The baseline drops t and takes
+   exactly those 51 w entries from the current file; they are checked on their own below. */
+const RANK_DROP = new Set(['CARDS']);
+const RANK_RE = /provisional|Top 100/;
 /* 2026-11-16 card lines: tools/p27-card-fields.py appends G/AB/H (hitters) and
    G/L/H/ER/WHIP/KBB (pitchers; KBB = unrounded Steamer SO/BB) to every SEED2026 p27. The baseline is the old
    build minus exactly those keys; nothing else in SEED2026 may differ. */
@@ -56,6 +65,7 @@ const SEED_VER_BASE = '2027-actuals.8';   // 11/18 refresh (the old build's was 
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
   if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
+  if(name === 'CARDS'){ delete old.t; for(const id in old.w) if(RANK_RE.test(old.w[id])) old.w[id] = cur.w[id]; }
   return old;
 };
 let fails = 0;
@@ -76,12 +86,21 @@ for(const [f, name] of FILES){
   OLD[name] = structuredClone(vm.runInContext(name, ctx));   // into this realm, so deep-equal can compare
   if(refd) OLD[name] = stripCardVal(name, OLD[name]);
   const src = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8');
-  if(KEEPER_OWNED.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (keeper-owned fields differ by design: compared by value below)`);
+  if(RANK_DROP.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (2026-11-20 rank removal: compared by value below)`);
+  else if(KEEPER_OWNED.has(name)) ok(constLine(src, name).length === 1, `data/${f}: one ${name} line (keeper-owned fields differ by design: compared by value below)`);
   else ok(constLine(src, name).length === 1 && stripCardSrc(name, constLine(src, name)[0]) === (refd ? stripCardSrc(name, lines[0]) : lines[0]), `data/${f}: ${name} source line byte-identical (${lines[0].length} chars)`);
 }
 const NEW = vm.createContext({});
 for(const [f] of FILES) vm.runInContext(fs.readFileSync(path.join(ROOT, 'data', f), 'utf8'), NEW, { filename: f });
+const OLDCARDS = structuredClone(OLD.CARDS);
 for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInContext(name, NEW)); OLDJSON[name] = JSON.stringify(OLD[name]); }
+{
+  const cur = vm.runInContext('CARDS', NEW), ch = Object.keys(OLDCARDS.w).filter(k => OLDCARDS.w[k] !== cur.w[k]);
+  ok(!('t' in cur) && 't' in OLDCARDS, 'CARDS: t (provisional Top 100 rank) dropped');
+  ok(ch.length === 51 && ch.every(k => RANK_RE.test(OLDCARDS.w[k]) && cur.w[k] && !RANK_RE.test(cur.w[k])) && Object.keys(cur.w).length === Object.keys(OLDCARDS.w).length,
+    'CARDS.w: exactly the 51 provisional Top 100 recaps changed, none mentions it now', `${ch.length} changed`);
+  ok(Object.values(cur.w).every(t => !RANK_RE.test(t)), 'CARDS.w: no recap mentions "provisional" or "Top 100"');
+}
 for(const [f, name] of FILES){
   const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
   ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields and the 11/16 keeper sync' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : ''}`);
@@ -101,7 +120,7 @@ for(const [f, name] of FILES){
   const bad = pl.filter(p => !CARD_ADD[p27Side(p.p27)].every(k => typeof p.p27[k] === 'number' && isFinite(p.p27[k])));
   ok(pl.length > 600 && bad.length === 0, `SEED2026: all ${pl.length} p27 lines carry the card fields (H: G AB H · P: G L H ER WHIP KBB)`, bad.slice(0, 5).map(p => p.name).join(', '));
 }
-for(const [f, name] of FILES){
+for(const [f, name] of ALL_FILES){
   const bare = fs.readFileSync(path.join(ROOT, 'data', f), 'utf8').replace(/\/\*[\s\S]*?\*\/|^\/\/.*$/gm, '').trim();
   ok(new RegExp(`^const ${name} ?= ?\\{.*\\};$`, 's').test(bare) && bare.split('\n').length === 1, `data/${f} holds values only (comments + one const, no code)`);
 }
@@ -109,12 +128,12 @@ for(const [f, name] of FILES){
 /* ---------------- 2. index.html wiring ---------------- */
 const APP_VER = (html.match(/const APP_VER = '([^']+)'/) || [])[1];
 ok(!!APP_VER && APP_VER !== (oldHtml.match(/const APP_VER = '([^']+)'/) || [])[1], `APP_VER bumped for the split build (${APP_VER})`);
-ok(FILES.every(([, n]) => constLine(html, n).length === 0), 'index.html no longer defines any moved const');
+ok(ALL_FILES.every(([, n]) => constLine(html, n).length === 0), 'index.html no longer defines any moved const');
 const tags = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
-ok(JSON.stringify(tags) === JSON.stringify(FILES.map(([f]) => `data/${f}?v=${APP_VER}`)), 'one <script src> per data file, in order, each ?v=APP_VER', tags.join(' '));
+ok(JSON.stringify(tags) === JSON.stringify(ALL_FILES.map(([f]) => `data/${f}?v=${APP_VER}`)), `one <script src> per data file (${ALL_FILES.length}), in order, each ?v=APP_VER`, tags.join(' '));
 const firstApp = html.indexOf('if(DATA_FAIL) throw');
 ok(tags.every(t => html.indexOf(t) < firstApp) && html.indexOf('const DATA_FAIL') < firstApp, 'data tags and guard come before the app script');
-ok(FILES.every(([f, n]) => html.includes(`'${f}': typeof ${n} !== 'undefined'`)), 'guard checks every data global');
+ok(ALL_FILES.every(([f, n]) => html.includes(`'${f}': typeof ${n} !== 'undefined'`)), 'guard checks every data global');
 ok((html.match(/if\(DATA_FAIL\) throw new Error\(DATA_FAIL\);/g) || []).length === 2, 'both app scripts stop on DATA_FAIL');
 ok(fs.readFileSync(path.join(ROOT, 'index.html')).length < 300000, `index.html is markup/CSS/code only (${fs.statSync(path.join(ROOT, 'index.html')).size} bytes)`);
 ok(SEED_VER_BASE === (html.match(/const SEED_VER = '([^']+)'/) || [])[1], `SEED_VER unchanged (${SEED_VER_BASE})`);
@@ -122,7 +141,7 @@ ok(SEED_VER_BASE === (html.match(/const SEED_VER = '([^']+)'/) || [])[1], `SEED_
 /* ---------------- 3. data-writing tools, on temp copies ---------------- */
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cthl-split-'));
 fs.mkdirSync(path.join(tmp, 'data'));
-for(const [f] of FILES) fs.copyFileSync(path.join(ROOT, 'data', f), path.join(tmp, 'data', f));
+for(const [f] of ALL_FILES) fs.copyFileSync(path.join(ROOT, 'data', f), path.join(tmp, 'data', f));
 const nonConst = (t, n) => t.split('\n').filter(l => !l.startsWith(`const ${n}`)).join('\n');
 {
   // aav: knock one price off in the copy; --write must restore the block in data/aav-2027.js
@@ -215,7 +234,7 @@ rewrite = null;
   const t2 = fs.mkdtempSync(path.join(os.tmpdir(), 'cthl-split-file-'));
   fs.copyFileSync(path.join(ROOT, 'index.html'), path.join(t2, 'index.html'));
   fs.mkdirSync(path.join(t2, 'data'));
-  for(const [f] of FILES) if(f !== 'seed-2027.js') fs.copyFileSync(path.join(ROOT, 'data', f), path.join(t2, 'data', f));
+  for(const [f] of ALL_FILES) if(f !== 'seed-2027.js') fs.copyFileSync(path.join(ROOT, 'data', f), path.join(t2, 'data', f));
   await broken('file://, data/seed-2027.js missing', 'file://' + path.join(t2, 'index.html'), /data\/seed-2027\.js did not load/);
   fs.rmSync(t2, { recursive: true, force: true });
 }

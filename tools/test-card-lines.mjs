@@ -14,7 +14,9 @@
 //      SO/BB, — when SO or BB is missing or BB is 0;
 //   3b. Projections tab K/BB = p27.KBB (unrounded Steamer SO/BB) for every
 //      pitcher, Crochet 4.23;
-//   4. no $ anywhere on any card back;
+//   4. no $ anywhere on any card back, except real contract / bonus money inside an
+//      Eno-approved write-up (#cbWriteup = WRITEUPS2027[id].text, e.g. $87,500; 2026-11-20
+//      spec 4.1) - never a bare $N auction-sized figure;
 //   5. the Sold price box opens blank on every undrafted card;
 //   6. 0 console errors after all of it.
 // Writes the check CSV and two screenshots (hitter, pitcher):
@@ -83,7 +85,9 @@ const res = await ev(`(()=>{
   for(const p of S.players){
     openPick(p.id);
     const back=document.getElementById('cardBack'), q=p.p27;
-    if(/\\$/.test(back.textContent)) dollar.push(p.name);
+    const wu=document.getElementById('cbWriteup'), wt=wu.textContent, appr=WRITEUPS2027[p.id];
+    const rest=back.textContent.replace(wt,'');
+    if(/\\$/.test(rest) || (wt && (!appr || wt!==appr.text || /\\$\\d+(?!\\d)(?![,.]\\d)(?!\\s?(?:M\\b|million|billion))/.test(wt)))) dollar.push(p.name);
     if(!p.pick && document.getElementById('dlgPrice').value!=='') price.push(p.name+'='+document.getElementById('dlgPrice').value);
     const grids=[...back.querySelectorAll('.cb-grid')];
     if(grids.some(g=>/2027/.test(g.querySelector('caption').textContent))) bad.push(p.name+' still has a separate 2027 box');
@@ -134,7 +138,7 @@ ok(res.hkbb.length === 0, '2025-26 pitching rows: K/BB = that row\'s SO/BB, — 
 const dash = res.out.filter(r => r.type === 'pitcher' && r.cells && r.cells[PH.indexOf('K/BB')] === '\u2014');
 console.log(`2027 K/BB "—": ${dash.length} pitchers: ${dash.map(r => r.name).join(', ')}`);
 console.log(`"No 2027 projection": ${res.nop.length} cards: ${res.nop.join(', ')}`);
-ok(res.dollar.length === 0, `no $ on any card back (${res.out.length} cards)`, res.dollar.slice(0, 5).join(', '));
+ok(res.dollar.length === 0, `no CTHL $ on any card back (${res.out.length} cards; real money only inside an approved write-up)`, res.dollar.slice(0, 5).join(', '));
 ok(res.price.length === 0, `Sold price box opens blank on all ${res.undrafted} undrafted cards`, res.price.slice(0, 5).join(', '));
 
 // check CSV: one row per pool player, the 2027 line as shown on the card
