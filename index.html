@@ -1560,10 +1560,12 @@ function taxiCmp(a,b){
   return ((b.val||0)-(a.val||0)) || (tailScore(b)-tailScore(a));
 }
 /* p.pr is [MLBrank, P361rank] from the preseason lists, 0 = absent. Internal
-   sort input only (tailScore, the "no ADP" check). 2026-11-20 (Steven: "lose
-   the verbiage 'provisional top 100 prospect' and a ranking"): no prospect
-   rank is shown anywhere — no PR badge, no Top 100 title, no card-front tag,
-   no Top Prospects filter. The card-front rank map is gone from the card data. */
+   sort input only (tailScore, the "no ADP" check, the Top Prospects filter).
+   2026-11-20 (Steven: "lose the verbiage 'provisional top 100 prospect' and a
+   ranking"): no prospect rank is shown anywhere — no PR badge, no Top 100
+   title, no card-front tag. The card-front rank map is gone from the card data.
+   Steven 1:08 PM 11/20: "The Top Prospect button stays in the projections tab"
+   — the ★ Top Prospects filter is back, with no rank or "Provisional" shown. */
 function isProspect(p){ return Array.isArray(p.pr); }
 function bestProspectRank(p){
   if(!isProspect(p)) return null;
@@ -1923,7 +1925,8 @@ function renderMeter(){
    and MLB filters, search, count. Owner now rides in the Player column instead
    of a separate Status column. Stat sorting survives via the Sort-by control,
    since Projected Stats is one column. */
-let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1;
+let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1, poolProspectOnly=false;
+function toggleProspectOnly(){ poolProspectOnly=!poolProspectOnly; renderPool(); }
 // stat columns per mode — each one is clickable, CBS-style
 /* 2026-11-05: Projections tab shows 2027 Steamer (p27) by default. No year
    toggle existed; 2026 lines stay on the player card. Columns match the
@@ -2038,6 +2041,7 @@ function renderPool(){
   const posList = poolMode==='H' ? ['C','1B','2B','3B','SS','MI','CI','OF','DH'] : ['SP','RP'];
   $('poolPos').innerHTML=[`<button class="${!poolPos?'on':''}" onclick="poolSet('pos','')">ALL</button>`]
     .concat(posList.map(x=>`<button class="${poolPos===x?'on':''}" onclick="poolSet('pos','${x}')">${x}</button>`))
+    .concat([`<button class="${poolProspectOnly?'on':''}" onclick="toggleProspectOnly()" title="Show only top prospects">★ Top Prospects</button>`])
     .join('');
   const clubs=[...new Set(S.players.map(p=>p.team))].filter(Boolean).sort();
   $('mlbFilter').innerHTML=[`<button class="${!mlbSel?'on':''}" onclick="poolSet('mlb','')">ALL</button>`]
@@ -2048,7 +2052,8 @@ function renderPool(){
     .filter(p=>!poolPos || ((poolPos==='SP'||poolPos==='RP') ? (p.elig||'').split('/').includes(poolPos) : slotEligible(p,poolPos)))
     .filter(p=>!q || p.name.toLowerCase().includes(q))
     .filter(p=>!mlbSel || p.team===mlbSel)
-    .filter(p=>!hide || !p.pick);
+    .filter(p=>!hide || !p.pick)
+    .filter(p=>!poolProspectOnly || isProspect(p));
   rows.sort((a,b)=>{
     const x=poolVal(a,poolSortKey), y=poolVal(b,poolSortKey);
     const c=(typeof x==='string')? String(x).localeCompare(String(y)) : (x||0)-(y||0);

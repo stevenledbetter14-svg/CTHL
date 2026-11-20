@@ -7,7 +7,11 @@
 //   3. every Future Stars card (CARDS.f[id]==='f'): banner still shown, cfTag empty, and the
 //      document text has no "Provisional", no "Top 100 prospect", no PR+digits badge;
 //      no card at all shows any of those (whole pool);
-//   4. Projections tab: no "Top Prospects" button, no "Top 100" text;
+//   4. Projections tab (Steven 1:08 PM 11/20: "The Top Prospect button stays"): the
+//      ★ Top Prospects button is there; clicking it filters the pool to p.pr players only
+//      (0 < count < full pool, hitters and pitchers); the tab text and every title/tooltip,
+//      filter on and off, has no "Provisional", "Top 100", PR+digits or "#N" rank (the
+//      overall-rank column is checked to be the whole-pool rank, not a prospect rank);
 //   5. $1 prospect floor: PFLOOR is exactly the 10 names the rank rule picked on 11/18,
 //      and its cell shows $1 with no rank;
 //   6. write-ups: the 10 seed ids each show WRITEUPS2027[id].text exactly in #cbWriteup
@@ -39,7 +43,9 @@ ok(tags.length === 7 && tags.every(t => t.endsWith('?v=' + APP_VER)) && tags.inc
   `seven data files, each ?v=APP_VER, writeups-2027.js included`, tags.join(' '));
 ok(html.includes(`'writeups-2027.js': typeof WRITEUPS2027 !== 'undefined'`), 'data-file guard checks WRITEUPS2027');
 ok(!/CARDS\.t\b/.test(html), 'index.html never reads CARDS.t');
-ok(!/★ Top Prospects|toggleProspectOnly|poolProspectOnly|cardProspectRank|cardProspectTitle|prospectBadge|prospectTitle/.test(html), 'no Top Prospects filter / PR badge code left in index.html');
+ok(!/cardProspectRank|cardProspectTitle|prospectBadge|prospectTitle/.test(html), 'no PR badge / prospect-title code left in index.html');
+ok(/toggleProspectOnly\(\)" title="Show only top prospects">★ Top Prospects</.test(html) && /\.filter\(p=>!poolProspectOnly \|\| isProspect\(p\)\)/.test(html),
+  'Top Prospects button + filter present, tooltip "Show only top prospects"');
 
 let hide = null;
 const srv = http.createServer((q, r) => {
@@ -101,12 +107,42 @@ const fs3 = await ev(`(()=>{
 ok(fs3.fsN === 51 && fs3.n === 51 && fs3.bad.length === 0, `all ${fs3.n} Future Stars cards: banner kept, cfTag empty`, fs3.bad.slice(0, 5).join(' ; '));
 ok(fs3.any.length === 0, 'no card (whole pool) shows "Provisional", "Top 100 prospect" or a PR+digits badge', fs3.any.slice(0, 5).join(' ; '));
 
-/* ---- 4. Projections tab ---- */
-const proj = await ev(`(()=>{ show('draft'); renderPool();
-  const v=document.getElementById('view-draft');
-  return {btn:[...v.querySelectorAll('button')].filter(b=>/Top Prospects/i.test(b.textContent)).length,
-          top:/Top 100|Top Prospect/i.test(v.innerText), rank:new RegExp(${JSON.stringify(RANK_RE)},'i').test(v.innerText)}; })()`);
-ok(proj.btn === 0 && !proj.top && !proj.rank, 'Projections tab: no Top Prospects button, no Top 100 / PR text', JSON.stringify(proj));
+/* ---- 4. Projections tab: Top Prospects button kept, no rank shown ---- */
+const NUM_RE = String.raw`Provisional|Top 100|\bPR\s?\d+\b|#\d+`;
+const proj = await ev(`(()=>{ show('draft'); poolProspectOnly=false; $('search').value=''; $('hideDrafted').checked=false;
+  const re=new RegExp(${JSON.stringify(NUM_RE)},'i'), v=document.getElementById('view-draft'), out={};
+  // the td.rank column is the whole-pool overall rank (every player, not a prospect rank):
+  // left out of the text scan, but each cell must equal '#'+overallRank(p), never renumbered
+  const scan=tag=>{ const hits=[], c=v.cloneNode(true);
+    [...v.querySelectorAll('td.rank')].forEach(td=>{ const p=S.players.find(x=>x.id===td.closest('tr').dataset.id) || null;
+      const name=td.closest('tr').querySelector('td.pl')?.innerText||'', q=p||S.players.find(x=>x.kind===poolMode && name.includes(x.name));
+      const rk=q&&overallRank(q); if(td.textContent!==(rk?'#'+rk:'—')) hits.push(tag+' rank cell '+td.textContent+' != overall rank for '+name.slice(0,30)); });
+    c.querySelectorAll('td.rank').forEach(td=>td.remove());
+    document.body.appendChild(c); const txt=c.innerText; c.remove();
+    if(re.test(txt)) hits.push(tag+' text: '+txt.match(re)[0]);
+    v.querySelectorAll('[title]').forEach(e=>{ if(re.test(e.title)) hits.push(tag+' title: '+e.title.slice(0,80)); }); return hits; };
+  const btn=()=>[...v.querySelectorAll('#poolPos button')].find(b=>/★ Top Prospects/.test(b.textContent));
+  const hits=[];
+  for(const m of ['H','P']){
+    poolSet('mode',m); poolSet('pos',''); poolSet('mlb','');
+    const full=S.players.filter(p=>p.kind===m).length, cnt=()=>+($('poolCount').textContent.match(/\\d+/)||[0])[0];
+    const b0=btn(), n0=cnt(); hits.push(...scan(m+' off'));
+    if(b0) b0.click();
+    const b1=btn(), n1=cnt();
+    const want=S.players.filter(p=>p.kind===m && isProspect(p)).length;
+    hits.push(...scan(m+' on'));
+    out[m]={btn:!!b0, title:b0&&b0.title, on:!!(b1&&b1.classList.contains('on')), full, n0, n1, want, flag:poolProspectOnly};
+    if(b1) b1.click();
+    out[m].back=cnt(); out[m].off=!poolProspectOnly;
+  }
+  out.hits=hits; return out; })()`);
+for(const m of ['H', 'P']){
+  const r = proj[m];
+  ok(r.btn && r.title === 'Show only top prospects', `Projections ${m}: ★ Top Prospects button present, tooltip "Show only top prospects"`, JSON.stringify(r.title));
+  ok(r.on && r.flag && r.n0 === r.full && r.n1 === r.want && r.n1 > 0 && r.n1 < r.full && r.back === r.full && r.off,
+    `Projections ${m}: click filters to prospects only (${r.n1} of ${r.full}), click again restores`, JSON.stringify(r));
+}
+ok(proj.hits.length === 0, 'Projections tab, filter on and off: no Provisional / Top 100 / PR+digits / #N in text or tooltips', proj.hits.slice(0, 5).join(' ; '));
 
 /* ---- 5. $1 prospect floor ---- */
 const fl = await ev(`(()=>({ids:Object.keys(PFLOOR).sort(), cells:Object.keys(PFLOOR).map(id=>{ const p=S.players.find(x=>x.id===id);

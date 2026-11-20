@@ -79,7 +79,19 @@ Released by Steven 12:21 PM ET 2026-11-20 ("send it with these changes"). Cherry
 ### Test results (after Phase B2)
 test-keeper-aav-fallback ALL PASS · test-rotoworld-links --expect 616/701 ALL PASS · test-no-ranks-writeups ALL PASS · test-card-lines ALL PASS · test-seed-safety ALL PASS · test-data-split 64/64 · single_pass_test 36/36.
 
+## Phase C — section 1 correction (Top Prospects button restored) — DONE (2026-11-20)
+
+Steven 1:08 PM ET 11/20 (relayed by Eno): "The Top Prospect button stays in the projections tab the verbiage Provisional Top 100 and the #rank is to be removed."
+- `index.html`: restored from ed02bb5's removal: `poolProspectOnly`, `toggleProspectOnly()`, the `★ Top Prospects` button on the Projections position row, and `.filter(p=>!poolProspectOnly || isProspect(p))`. Tooltip is now **"Show only top prospects"** (was "Show only Top 100 prospects (P361 + MLB.com union)"). Filters on the seed's `p.pr` (unchanged, 42 players: 31 hitters, 11 pitchers).
+- Rank display NOT restored: no `prospectBadge` / PR pill, no `prospectTitle`, no `cardProspectRank/Title`, no `.pill.prospect`, cfTag stays blank. isProspect comment updated.
+- The pool's `#N` column is the whole-pool overall rank (every player, value order). It is not a prospect rank and the spec doesn't mention it, so it stays. In the filtered view a prospect shows their overall rank (e.g. #211), not a 1..N prospect order. Flag for Steven in case "#rank" meant that column too.
+- `tools/test-no-ranks-writeups.mjs` check 4 inverted: button present with that tooltip (H and P); clicking filters to prospects only (H 31 of 313, P 11 of 337) and clicking again restores; tab text + every `[title]`, filter on and off, has no Provisional / Top 100 / PR+digits / #N (the overall-rank cells are checked to equal `'#'+overallRank(p)`). The static check still forbids prospectBadge/prospectTitle/cardProspect*.
+- APP_VER unchanged 2026.11.20-1; SEED_VER unchanged; no data file changed.
+
+### Test results (after Phase C)
+test-no-ranks-writeups ALL PASS · test-keeper-aav-fallback ALL PASS · test-rotoworld-links --expect 616/701 ALL PASS · test-card-lines ALL PASS · test-seed-safety ALL PASS · test-data-split ALL PASS · single_pass_test 36/36.
+
 ### Next step
-- Sections 1, 2, 4 and 3.6 are committed on pkg-2026-11-20. Remaining: section 3 (re-pull Steamer, keepers from the room read-only, pool changes, SEED_VER bump, AAV rerun, cards + pitch-hist backfill, Draft List PDF; the operator uploads it to OneDrive). Note for section 3: the AAV rerun will re-price Jenkins once he is out of the room's keeper list; the 3.6 test pins him as a kept {k:8}, so update its fixture ids/values then.
+- Sections 1 (incl. the 1:08 PM Top Prospects button correction), 2, 4 and 3.6 are committed on pkg-2026-11-20. Remaining: section 3 (re-pull Steamer, keepers from the room read-only, pool changes, SEED_VER bump, AAV rerun, cards + pitch-hist backfill, Draft List PDF; the operator uploads it to OneDrive). Note for section 3: the AAV rerun will re-price Jenkins once he is out of the room's keeper list; the 3.6 test pins him as a kept {k:8}, so update its fixture ids/values then.
 - Section 2 follow-up: 85 names in `reports/rotoworld_unresolved_2026-11-20.csv` need a hand review (or a `--sitemap-years all` re-crawl, which also records candidate ids).
 - Still no push / PR / preview until Steven says so in his own words.
