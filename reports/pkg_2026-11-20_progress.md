@@ -152,5 +152,16 @@ Wrapper `/tmp/cthl_1120_match.py` (match.py not edited). Identity from `archive_
 - Spot: Gray $13 / 175 IP, May $3 / 160 IP, Sullivan $0 / 30 IP, Cairo $0 / 51 PA, Lamkin $0 / 1 IP, Honeycutt $0 / 1 PA, DeBarge $0 / 12 PA, Jenkins $8 / 379 PA (not kept), Fermin still the pitcher line (56 IP).
 - `tools/p27-card-fields.py --write`: 2,958 card fields added on the 649. Exit 1 only because 7 struck players (Castillo, Martin, Scholtens, Foster, Abner, Hinds, Valera) still hold an old p27 and are no longer in the match file. Their lines were not rewritten. Live pool cards are the 649.
 
+### AAV single pass — DONE
+- `KEEPERS_CSV` in `tools/aav_single_pass.py` now points at `keeper_split_2026-11-20_room.csv` (48 / $512). `reports/README.md` matches. `--write` matched SEED2026.picks.
+- Solved pot **$3,051.18** (H $2,267.50 / P $783.68), implied inflation **1.1872** (H 1.1761 / P 1.2207). Vs 11/18 **$3,033.93 / 1.1805**: **+$17.25 / +0.0067**.
+- Cash: **$512** keeper salaries + **$2,058** non-keeper AAVs = **$2,570**. 12 $1 stashes. Keeper curve values sum to $990 and stay out of the cash (display only).
+- Generator diff vs `aav_run_2026-11-18.csv`: 75 moved (max $6), 5 added, 5 dropped; pool +7 / −3. Ranked top movers (including entries): Gray +16, Montes −6, Garcia −5, Loftin +5, Roccaforte +4, Arroyo −4, May +3, Massey +3.
+- Into the 250: Gray $16, May $3, Roccaforte $4, Kay $2, Burress $1 S (Sloan left the stash and is $2 paid). Out: Williamson, Castillo, Malgeri, Prielipp, Kremer, $2 each.
+- Adds: Gray and May priced. Sullivan $0 with a real line but IP 108 → 30 (flagged, not overwritten). Cairo $0, PA 11 → 51. Lamkin 1 IP, Honeycutt 1 PA, DeBarge 12 PA, all $0, near-zero flagged. Rose has no Steamer line: no values row, no AAV entry.
+- **Walker Jenkins `p6377140` is `{a:8}`**, a regular non-keeper, not `{k:N}`. The $8 is inside the $2,058. The 3.6 fallback still applies only to a `{k}` with no `a`. **Caminero `pabd0d7f` is `{k:56}`** against his $32 salary.
+- Report `reports/aav_run_2026-11-20.md` / `.csv` (Projections line stamped pulled 11/20/2026). CSV columns `aav_1118`, `aav_change`, `proj_change_vs_1118`. 164 rounded PA/IP changes vs the 11/18 JSON. `data/aav-2027.js` updated (89 entries changed).
+- Pool checkpoint committed as `42bc827` before this run. This log entry is committed with the AAV report and `data/aav-2027.js`.
+
 ### Next
-AAV single pass `--write` with `keeper_split_2026-11-20_room.csv`, then the movers / PA-IP report.
+Cards: `pending_adds.py` / `pull_adds_statsapi.py` for the 7 adds including Rose (she is not in the values file), `build_card_data.py --inject`, `tools/mlb-stats-pull.py`, then `tools/pitch-hist-backfill.py --write`. Confirm `CARDS` has no `t`. Then Jenkins fixture in `tools/test-keeper-aav-fallback.mjs`, ref board, test rebaseline, summary.
