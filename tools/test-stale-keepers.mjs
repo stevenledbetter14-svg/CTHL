@@ -1,12 +1,15 @@
 #!/usr/bin/env node
-// Stale official-room keeper snapshot (2026-11-23). The default room still has
-// the 11/12 board: Angel Martinez (Birdland $2, p4720771) and Walker Jenkins
-// (Money Bags $5, p6377140), and not Kevin McGonigle or Junior Caminero.
-// dropClearedBaked() removes Martinez and Jenkins. fillMissingBakedKeepers()
-// (called from rebuildPickRefs even when bakedSet is already current) puts the
-// seed replacements back: McGonigle Birdland $20, Caminero Money Bags $32.
-// Result: 48 of 50 / $512. Never Catch Up and Dealers stay at 4.
-// Headless Chrome, ?room=local, then a stale snapshot applied in page. No Firebase writes.
+// Two ways a current-version board can be missing McGonigle and Caminero.
+// (a) localStorage 'cthl-auction' stamped seedVer 2027-actuals.9 and bakedSet
+//     2027-keeperval.4, seed keepers minus those two (46). load() → migrate()
+//     must call fillMissingBakedKeepers().
+// (b) stale official-room shape: Martinez (Birdland $2) and Jenkins (Money
+//     Bags $5) in, McGonigle and Caminero out. rebuildPickRefs() drops the
+//     cleared names and fills the seed replacements.
+// Both: 48 keepers / $512 / pot $2088, McGonigle Birdland $20, Caminero Money
+// Bags $32, Martinez and Jenkins absent, 48 of 50. Never Catch Up and Dealers
+// stay at 4. No Firebase writes.
+// Headless Chrome, ?room=local.
 //   node tools/test-stale-keepers.mjs
 import { spawn } from 'child_process';
 import fs from 'fs'; import http from 'http'; import path from 'path';
@@ -60,6 +63,57 @@ for(let i = 0; i < 40; i++){ await sleep(200); if(await ev(`document.readyState=
 await sleep(1500);
 ok(await ev(`typeof S!=='undefined' && S.players.length>600 && DATA_FAIL===''`), 'app loads (room=local)');
 
+const potOf = `(()=>{ renderMoney(); const foot=(document.getElementById('moneyFoot')||{}).textContent||''; const m=foot.match(/\\$(\\d+) in the pot/); return {pot:m?Number(m[1]):null, foot}; })()`;
+const shape = `
+  const ks = S.picks.filter(k=>k.keeper);
+  const one = id => ks.find(k=>String(k.pid)===id) || null;
+  const counts = {};
+  ks.forEach(k=>{ counts[k.team]=(counts[k.team]||0)+1; });
+  const pot = ${potOf};
+  return {
+    n: ks.length,
+    sum: ks.reduce((s,k)=>s+(Number(k.price)||0),0),
+    pot: pot.pot,
+    foot: pot.foot,
+    mcg: one('p2020362'),
+    cam: one('pabd0d7f'),
+    mart: one('p4720771'),
+    jenk: one('p6377140'),
+    fill: document.getElementById('keepFillCount').textContent,
+    open: {ncu: counts['Never Catch Up']||0, dealers: counts['Dealers']||0},
+    canWrite: SY.canWrite,
+    seedVer: S.seedVer,
+    bakedSet: S.bakedSet
+  };
+`;
+const expectBoard = (label, report) => {
+  ok(report.n === 48 && report.sum === 512, `${label}: 48 keepers / $512`, `${report.n} / $${report.sum}`);
+  ok(report.pot === 2088, `${label}: pot $2088`, `${report.pot} · ${report.foot}`);
+  ok(report.mcg && report.mcg.team === 'Birdland' && report.mcg.price === 20, `${label}: McGonigle Birdland $20`, JSON.stringify(report.mcg));
+  ok(report.cam && report.cam.team === 'Money Bags' && report.cam.price === 32, `${label}: Caminero Money Bags $32`, JSON.stringify(report.cam));
+  ok(!report.mart && !report.jenk, `${label}: Martinez and Jenkins absent`);
+  ok(String(report.fill).includes('48 of 50'), `${label}: keepFillCount is 48 of 50`, report.fill);
+  ok(report.open.ncu === 4 && report.open.dealers === 4, `${label}: Never Catch Up and Dealers stay at 4`, JSON.stringify(report.open));
+};
+
+const local = await ev(`(()=>{
+  const saved = JSON.parse(JSON.stringify(SEED2026));
+  saved.seedVer = '2027-actuals.9';
+  saved.bakedSet = '2027-keeperval.4';
+  saved.picks = (saved.picks||[]).filter(k=>k.pid!=='p2020362' && k.pid!=='pabd0d7f');
+  const before = saved.picks.filter(k=>k.keeper).length;
+  localStorage.setItem('cthl-auction', JSON.stringify(saved));
+  load();
+  show('keepers');
+  const body = (()=>{ ${shape} })();
+  body.before = before;
+  body.viaLoad = true;
+  return body;
+})()`);
+ok(local.before === 46, 'localStorage save starts at 46 keepers (McGonigle and Caminero missing)', String(local.before));
+ok(local.seedVer === '2027-actuals.9' && local.bakedSet === '2027-keeperval.4', 'load() kept seedVer .9 and bakedSet .4', `${local.seedVer} ${local.bakedSet}`);
+expectBoard('load()', local);
+
 const report = await ev(`(()=>{
   const seed = (SEED2026.picks||[]).filter(k=>k.keeper);
   const byId = id => seed.find(k=>k.pid===id);
@@ -92,17 +146,14 @@ const report = await ev(`(()=>{
     heading: [...document.querySelectorAll('#view-keepers h2')].map(h=>h.childNodes[0] && h.childNodes[0].textContent.trim()),
     header: (document.querySelector('#keepBoardTable thead th.aav')||{}).textContent || '',
     open: {ncu: counts['Never Catch Up']||0, dealers: counts['Dealers']||0},
-    canWrite: SY.canWrite
+    canWrite: SY.canWrite,
+    pot: (${potOf}).pot,
+    foot: (${potOf}).foot
   };
 })()`);
 
 ok(report.before === 48, 'stale snapshot starts at 48 keepers (Martinez + Jenkins in, McGonigle + Caminero out)', String(report.before));
-ok(report.n === 48 && report.sum === 512, 'after rebuildPickRefs: 48 keepers / $512', `${report.n} / $${report.sum}`);
-ok(report.mcg && report.mcg.team === 'Birdland' && report.mcg.price === 20, 'McGonigle present at Birdland $20', JSON.stringify(report.mcg));
-ok(report.cam && report.cam.team === 'Money Bags' && report.cam.price === 32, 'Caminero present at Money Bags $32', JSON.stringify(report.cam));
-ok(!report.mart && !report.jenk, 'Martinez and Jenkins absent');
-ok(String(report.fill).includes('48 of 50'), 'keepFillCount is 48 of 50', report.fill);
-ok(report.open.ncu === 4 && report.open.dealers === 4, 'Never Catch Up and Dealers stay at 4', JSON.stringify(report.open));
+expectBoard('rebuildPickRefs()', report);
 ok(!report.declared, 'no #declaredKeepers in the live DOM');
 ok(report.heading.includes('Eligible players (2027 Keeper List — not the declared keepers)') && !report.heading.some(h => /Declared keepers/.test(h)), 'Keepers headings', JSON.stringify(report.heading));
 ok(/^Keeper/.test(report.header), 'rendered salary header is Keeper', report.header);

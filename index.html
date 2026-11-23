@@ -807,20 +807,20 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.23-2"></script>
-<script src="data/aav-2027.js?v=2026.11.23-2"></script>
-<script src="data/cards-2027.js?v=2026.11.23-2"></script>
-<script src="data/keepers-2027.js?v=2026.11.23-2"></script>
-<script src="data/rotoid.js?v=2026.11.23-2"></script>
-<script src="data/logos.js?v=2026.11.23-2"></script>
-<script src="data/writeups-2027.js?v=2026.11.23-2"></script>
-<script src="data/elig-2027.js?v=2026.11.23-2"></script>
+<script src="data/seed-2027.js?v=2026.11.23-3"></script>
+<script src="data/aav-2027.js?v=2026.11.23-3"></script>
+<script src="data/cards-2027.js?v=2026.11.23-3"></script>
+<script src="data/keepers-2027.js?v=2026.11.23-3"></script>
+<script src="data/rotoid.js?v=2026.11.23-3"></script>
+<script src="data/logos.js?v=2026.11.23-3"></script>
+<script src="data/writeups-2027.js?v=2026.11.23-3"></script>
+<script src="data/elig-2027.js?v=2026.11.23-3"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.23-2';
+const APP_VER = '2026.11.23-3';
 const APP_BUILT = '2026-11-23';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -1073,14 +1073,18 @@ function upgradeBakedKeepers(){
   });
   S.bakedSet = BAKED_KEEPER_SET;
 }
-/* Display-only fill for a room snapshot that still has an older baked set.
-   dropClearedBaked() removes Martinez / Jenkins (and the other cleared names).
-   upgradeBakedKeepers() will not put McGonigle / Caminero back when S.bakedSet
-   is already BAKED_KEEPER_SET, so a stale official room shows 46 of 50.
-   Add any current seed baked keeper who is free and whose team still has a
-   slot. Same guards as the add-loop in upgradeBakedKeepers(). Does not write
-   to Firebase and does not change canWrite. Teams that are genuinely at 4
-   (Never Catch Up, Dealers) stay open: the seed has no fifth keeper for them. */
+/* Idempotent fill for a current-version save or room snapshot that is missing
+   seed baked keepers. dropClearedBaked() removes Martinez / Jenkins (and the
+   other cleared names). upgradeBakedKeepers() returns early when S.bakedSet
+   is already BAKED_KEEPER_SET, so a localStorage save stamped 2027-actuals.9
+   + 2027-keeperval.4 (or a stale official room) can stay at 46 of 50.
+   Called from migrate() on every load and from rebuildPickRefs() on Firebase
+   apply / reconcile. Add any current seed baked keeper (keeper, t 0) who is
+   free (not in S.picks or S.taxi) and whose team is under maxKeep. Never
+   modifies, retags, or removes a declared keeper (t > 0) and never rewrites
+   a pick that already exists. Does not write to Firebase and does not change
+   canWrite. Teams that are genuinely at 4 (Never Catch Up, Dealers) stay
+   open: the seed has no fifth keeper for them. */
 function fillMissingBakedKeepers(){
   const baked = (SEED2026 && SEED2026.picks || []).filter(k=>k.keeper);
   const max = (S.settings && S.settings.maxKeep) || 5;
@@ -1182,6 +1186,7 @@ function migrate(){
   S.taxi.forEach(t=>{ if(PRENAME[t.name]) t.name=PRENAME[t.name]; });
   S.picks=dropClearedBaked(S.picks);
   upgradeBakedKeepers();
+  fillMissingBakedKeepers();
   { // player.pick mirrors S.picks (a saved player list can still carry dropped picks)
     const byPid={}; S.picks.forEach(k=>{ byPid[String(k.pid)]=k; });
     S.players.forEach(p=>{ const k=byPid[String(p.id)]; p.pick = k ? {team:k.team, price:k.price, keeper:!!k.keeper, taxi:!!k.taxi} : null; });
