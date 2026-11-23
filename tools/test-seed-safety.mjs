@@ -142,7 +142,13 @@ async function roomCase(roomSeed, label){
   const r = await roomCase('old-seed.0', 'bump');
   const roomKeys = Object.values(roomPicks).map(k => k.pid+'|'+k.team+'|'+k.price).sort();
   check('2a room on older seed: device goes read-only (seedMismatch)', r.s.mismatch === true && r.s.canWrite === false, JSON.stringify({mismatch:r.s.mismatch, canWrite:r.s.canWrite}));
-  check('2a room board shown, stale local board dropped (room picks win)', JSON.stringify([...r.s.picks].sort()) === JSON.stringify(roomKeys), `local now: ${r.s.picks.length}, room: ${roomKeys.length}; sale shows as ${r.s.picks.find(x=>x.startsWith(roomSale.pid))}`);
+  // 2026-11-23: rebuildPickRefs also fills seed baked keepers the room snapshot
+  // is missing (display only; canWrite stays false, so they are not pushed).
+  // Room picks still win: every room row is on screen, and the stale local
+  // price for the same player is gone.
+  const roomOnScreen = roomKeys.every(k => r.s.picks.includes(k));
+  const staleSale = r.s.picks.some(x => x === roomSale.pid+'|BozOs|5');
+  check('2a room board shown, stale local board dropped (room picks win)', roomOnScreen && !staleSale, `local now: ${r.s.picks.length}, room: ${roomKeys.length}; sale shows as ${r.s.picks.find(x=>x.startsWith(roomSale.pid))}`);
   check('2a nothing written to the room (no stale pick push, meta.seedVer untouched)', r.writes.length === 0 && r.room.meta.seedVer === 'old-seed.0', r.writes.join(', '));
   check('2a room picks unchanged', JSON.stringify(r.room.picks) === JSON.stringify(roomPicks) && JSON.stringify(r.room.taxi) === JSON.stringify(roomTaxi), 'room data changed');
   check('2a sale entry blocked with a message', !r.s.picks.some(x => x.startsWith(r.target+'|')) && r.dialogs.some(m => /different player pool/.test(m)), JSON.stringify(r.dialogs));

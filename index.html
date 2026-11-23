@@ -647,10 +647,6 @@ a{color:var(--link)}
       <div class="teamgrid tx3" id="keeperBoard"></div>
     </div>
     <div class="card">
-      <h2>Declared keepers <span class="muted">— Declared keepers for 2027: team, player, and salary.</span></h2>
-      <div class="poolscroll" style="max-height:28vh;margin-bottom:16px">
-        <table id="declaredKeepers" class="pool fixw"></table>
-      </div>
       <h2>Eligible players (2027 Keeper List — not the declared keepers)</h2>
       <div class="row" style="margin-bottom:10px">
         <input id="keepBoardSearch" placeholder="Search player…" style="width:200px">
@@ -811,20 +807,20 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.23-1"></script>
-<script src="data/aav-2027.js?v=2026.11.23-1"></script>
-<script src="data/cards-2027.js?v=2026.11.23-1"></script>
-<script src="data/keepers-2027.js?v=2026.11.23-1"></script>
-<script src="data/rotoid.js?v=2026.11.23-1"></script>
-<script src="data/logos.js?v=2026.11.23-1"></script>
-<script src="data/writeups-2027.js?v=2026.11.23-1"></script>
-<script src="data/elig-2027.js?v=2026.11.23-1"></script>
+<script src="data/seed-2027.js?v=2026.11.23-2"></script>
+<script src="data/aav-2027.js?v=2026.11.23-2"></script>
+<script src="data/cards-2027.js?v=2026.11.23-2"></script>
+<script src="data/keepers-2027.js?v=2026.11.23-2"></script>
+<script src="data/rotoid.js?v=2026.11.23-2"></script>
+<script src="data/logos.js?v=2026.11.23-2"></script>
+<script src="data/writeups-2027.js?v=2026.11.23-2"></script>
+<script src="data/elig-2027.js?v=2026.11.23-2"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.23-1';
+const APP_VER = '2026.11.23-2';
 const APP_BUILT = '2026-11-23';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -1076,6 +1072,25 @@ function upgradeBakedKeepers(){
     if(!taken && n < max) S.picks.push(JSON.parse(JSON.stringify(b)));
   });
   S.bakedSet = BAKED_KEEPER_SET;
+}
+/* Display-only fill for a room snapshot that still has an older baked set.
+   dropClearedBaked() removes Martinez / Jenkins (and the other cleared names).
+   upgradeBakedKeepers() will not put McGonigle / Caminero back when S.bakedSet
+   is already BAKED_KEEPER_SET, so a stale official room shows 46 of 50.
+   Add any current seed baked keeper who is free and whose team still has a
+   slot. Same guards as the add-loop in upgradeBakedKeepers(). Does not write
+   to Firebase and does not change canWrite. Teams that are genuinely at 4
+   (Never Catch Up, Dealers) stay open: the seed has no fifth keeper for them. */
+function fillMissingBakedKeepers(){
+  const baked = (SEED2026 && SEED2026.picks || []).filter(k=>k.keeper);
+  const max = (S.settings && S.settings.maxKeep) || 5;
+  if(!Array.isArray(S.picks)) S.picks = [];
+  if(!Array.isArray(S.taxi)) S.taxi = [];
+  baked.forEach(b=>{
+    const taken = S.picks.some(k=>String(k.pid)===b.pid) || S.taxi.some(t=>String(t.pid)===b.pid);
+    const n = S.picks.filter(k=>k.keeper && k.team===b.team).length;
+    if(!taken && n < max) S.picks.push(JSON.parse(JSON.stringify(b)));
+  });
 }
 const SEED_VER = '2027-actuals.9';
 /* APP_VER / APP_BUILT: defined in the data-file guard script above. */
@@ -2343,21 +2358,6 @@ function renderKeepers(){
   });
   $('keepFillCount').textContent=`— ${filled} of ${S.settings.teams.length*maxK} declared`;
 
-  const dec=$('declaredKeepers');
-  if(dec){
-    const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    const ks=S.picks.filter(k=>k.keeper).slice().sort((a,b)=>{
-      const t=String(a.team||'').localeCompare(String(b.team||'')); if(t) return t;
-      return String(a.name||'').localeCompare(String(b.name||''));
-    });
-    let html='<thead><tr><th class="pl">Team</th><th class="pl">Player</th><th class="st">Salary</th></tr></thead><tbody>';
-    ks.forEach(k=>{
-      html+=`<tr><td class="pl">${esc(k.team)}</td><td class="pl">${esc(k.name)}</td><td class="st">${fmt$(k.price)}</td></tr>`;
-    });
-    html+='</tbody>';
-    dec.innerHTML=html;
-  }
-
   /* ---- board ---- */
   const all=keeperCandidates();
   const owners=[...new Set(all.map(x=>x.owner))].filter(Boolean).sort();
@@ -2389,7 +2389,7 @@ function renderKeepers(){
   const head='<thead><tr>'
     + `<th class="st rank" onclick="keepSort('rank')" title="Same overall rank used on the Player Pool">Rank${arrow('rank')}</th>`
     + `<th class="pl" onclick="keepSort('name')">Player${arrow('name')}</th>`
-    + `<th class="st aav" onclick="keepSort('kv')">List price${arrow('kv')}</th>`
+    + `<th class="st aav" onclick="keepSort('kv')">Keeper${arrow('kv')}</th>`
     + `<th class="st" onclick="keepSort('owner')">Owner${arrow('owner')}</th>`
     + '<th class="pad"></th></tr></thead>';
   let body='<tbody>';
@@ -3233,6 +3233,8 @@ function rebuildPickRefs(){
   // every inbound room update passes through here: drop cleared baked keepers
   // (CLEARED_BAKED_KEEPERS) so an older room snapshot can't bring them back
   if(typeof dropClearedBaked==='function') S.picks = dropClearedBaked(S.picks);
+  // seed replacements (McGonigle, Caminero, …) even when bakedSet is current
+  if(typeof fillMissingBakedKeepers==='function') fillMissingBakedKeepers();
   (S.players||[]).forEach(p => { p.pick = null; });
   const idx = {};
   (S.players||[]).forEach(p => { idx[String(p.id)] = p; });
