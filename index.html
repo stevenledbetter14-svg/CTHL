@@ -807,20 +807,20 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.23-3"></script>
-<script src="data/aav-2027.js?v=2026.11.23-3"></script>
-<script src="data/cards-2027.js?v=2026.11.23-3"></script>
-<script src="data/keepers-2027.js?v=2026.11.23-3"></script>
-<script src="data/rotoid.js?v=2026.11.23-3"></script>
-<script src="data/logos.js?v=2026.11.23-3"></script>
-<script src="data/writeups-2027.js?v=2026.11.23-3"></script>
-<script src="data/elig-2027.js?v=2026.11.23-3"></script>
+<script src="data/seed-2027.js?v=2026.11.23-4"></script>
+<script src="data/aav-2027.js?v=2026.11.23-4"></script>
+<script src="data/cards-2027.js?v=2026.11.23-4"></script>
+<script src="data/keepers-2027.js?v=2026.11.23-4"></script>
+<script src="data/rotoid.js?v=2026.11.23-4"></script>
+<script src="data/logos.js?v=2026.11.23-4"></script>
+<script src="data/writeups-2027.js?v=2026.11.23-4"></script>
+<script src="data/elig-2027.js?v=2026.11.23-4"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.23-3';
+const APP_VER = '2026.11.23-4';
 const APP_BUILT = '2026-11-23';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -2183,27 +2183,35 @@ function renderPool(){
   if(eg){ eg.hidden=!poolMulti; if(poolMulti) renderEligGrid(); }
 }
 /* Magazine multi-position grid. Rows come only from ELIG2027 (multi===true).
-   Does not read p.elig from the seed. */
+   Does not read p.elig from the seed. A check is a CBS token in row.elig
+   (C/1B/2B/3B/SS/OF), including a spot with 0 MLB games (✓ 0). A
+   source==='statsapi' backup row still uses 20 games, or most-games when
+   fallback is set. † is only that statsapi fallback. Game counts stay visible. */
 const ELIG_POS=['C','1B','2B','3B','SS','OF'];
 function eligQualMap(row){
-  const g=(row&&row.g)||{};
-  const counts=ELIG_POS.map(p=>+g[p]||0);
-  const max=counts.length?Math.max(...counts):0;
   const q={};
-  ELIG_POS.forEach(p=>{
-    const n=+g[p]||0;
-    if(n>=20) q[p]=true;
-    else if(row&&row.fallback&&n>0&&n===max) q[p]=true;
-  });
+  if(row&&row.source==='statsapi'){
+    const g=row.g||{};
+    const counts=ELIG_POS.map(p=>+g[p]||0);
+    const max=counts.length?Math.max(...counts):0;
+    ELIG_POS.forEach(p=>{
+      const n=+g[p]||0;
+      if(n>=20) q[p]=true;
+      else if(row.fallback&&n>0&&n===max) q[p]=true;
+    });
+    return q;
+  }
+  const toks=new Set(String(row&&row.elig||'').split('/'));
+  ELIG_POS.forEach(p=>{ if(toks.has(p)) q[p]=true; });
   return q;
 }
 function renderEligGrid(){
   const box=$('eligGrid'); if(!box) return;
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   const meta=(typeof ELIG2027!=='undefined'&&ELIG2027&&ELIG2027.meta)||{};
-  const src=meta.source||'MLB Stats API';
   const pulled=meta.pulled||'';
-  const note='2026 MLB games, 20-game rule (most-games fallback if none reach 20). Source: '+esc(src)+', pulled '+esc(pulled)+'. CBS eligibility overrides this table once CBS rolls over to 2027.';
+  const gamesPulled=meta.gamesPulled||'';
+  const note='CBS has rolled over and is the source, pulled '+esc(pulled)+'. Game counts are 2026 MLB Stats API fielding (backup), pulled '+esc(gamesPulled)+'.';
   const players=(typeof ELIG2027!=='undefined'&&ELIG2027&&ELIG2027.players)||null;
   if(!players){
     box.innerHTML='<p class="egnote">'+note+'</p><p>Multi-position eligibility is unavailable. The eligibility file did not load.</p>';
@@ -2235,20 +2243,21 @@ function renderEligGrid(){
   const th=(k,lab,title)=>`<th class="st" onclick="eligSort('${k}')" title="${esc(title)}">${lab}${arrow(k)}</th>`;
   const cell=(x,p)=>{
     const n=+(x.r.g&&x.r.g[p])||0;
-    if(!n) return `<td class="st egz" data-pos="${p}">—</td>`;
     if(x.q[p]){
-      const mark=x.r.fallback?'<sup class="egfb" title="most games">†</sup>':'';
+      const mark=(x.r.source==='statsapi'&&x.r.fallback)?'<sup class="egfb" title="most games">†</sup>':'';
       return `<td class="st egq" data-pos="${p}" data-q="1">✓ ${n}${mark}</td>`;
     }
+    if(!n) return `<td class="st egz" data-pos="${p}">—</td>`;
     return `<td class="st egn" data-pos="${p}">${n}</td>`;
   };
   let body='';
   rows.forEach(x=>{
     const dh=+(x.r.g&&x.r.g.DH)||0;
+    const statsFb=x.r.source==='statsapi'&&x.r.fallback;
     const bits=[dh?dh+' games at DH':''];
-    if(x.r.fallback) bits.push('most games');
+    if(statsFb) bits.push('most games');
     const title=bits.filter(Boolean).join('. ');
-    const fb=x.r.fallback?' <span class="egfb" title="most games">†</span>':'';
+    const fb=statsFb?' <span class="egfb" title="most games">†</span>':'';
     body+=`<tr data-id="${esc(x.id)}"${title?` title="${esc(title)}"`:''}>`
       + `<td class="pl">${esc(x.r.name)}${fb}</td><td>${esc(x.r.team)}</td>`
       + ELIG_POS.map(p=>cell(x,p)).join('')
@@ -2262,7 +2271,7 @@ function renderEligGrid(){
     + ELIG_POS.map(p=>th(p,p,'Sort by games at '+p)).join('')
     + th('nq','Elig','Sort by number of qualifying field positions')
     + '</tr></thead><tbody>'+body+'</tbody></table></div>'
-    + '<p class="egnote">† most games — no position reached 20. A check is a qualifying spot (20 or more games, or that most-games fallback). '+rows.length+' shown.</p>';
+    + '<p class="egnote">A check is a CBS-eligible spot (or, for a statsapi-backup row, the 20-game / most-games fallback). † most games applies only to a statsapi-backup fallback row. '+rows.length+' shown.</p>';
 }
 
 function renderTeams(){
