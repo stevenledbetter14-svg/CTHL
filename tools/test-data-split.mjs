@@ -25,8 +25,9 @@ const NONET = argv.includes('--no-net');
 const FILES = [['seed-2027.js', 'SEED2026'], ['aav-2027.js', 'AAV_2027'], ['cards-2027.js', 'CARDS'],
                ['keepers-2027.js', 'KEEPERS2027'], ['rotoid.js', 'ROTOID'], ['logos.js', 'LOGO']];
 /* 2026-11-20: data/writeups-2027.js (WRITEUPS2027, Eno-approved card write-ups) is new in this
-   build, so it has no old-build baseline: it is in the tag / guard / values-only checks only. */
-const ALL_FILES = FILES.concat([['writeups-2027.js', 'WRITEUPS2027']]);
+   build, so it has no old-build baseline: it is in the tag / guard / values-only checks only.
+   2026-11-23: data/elig-2027.js (ELIG2027) is the same — tag / guard / values-only only. */
+const ALL_FILES = FILES.concat([['writeups-2027.js', 'WRITEUPS2027'], ['elig-2027.js', 'ELIG2027']]);
 /* 2026-11-20 rank removal (spec zuck_2026-11-20_package.md 1.2): CARDS.t (provisional Top 100
    rank) is gone and the 51 CARDS.w recaps that led with "No. N on the provisional Top 100
    prospect list" were rebuilt without it (build_writeups.py). The baseline drops t and takes
