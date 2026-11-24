@@ -906,7 +906,6 @@ const POOL_OVERRIDES = {
     "p9474031": "OF",   // Tanner Murray (CHW, CBS SS/MI/OF)
     "p4720771": "OF",   // Angel Martinez (CLE, CBS 2B/MI/OF)
     "p66d2287": "OF",   // Daniel Schneemann (CLE, CBS 2B/3B/SS/MI/CI/OF)
-    "p47469a4": "OF",   // David Fry (CLE, CBS C/1B/CI/OF)
     "p83f73f1": "OF",   // Zach McKinstry (DET, CBS 2B/3B/SS/MI/CI/OF)
     "p353c631": "OF",   // Brice Matthews (HOU, CBS 2B/MI/OF)
     "pfa7f0ea": "OF",   // Isaac Collins (KCR, CBS 2B/MI/OF)
@@ -994,7 +993,31 @@ const POOL_OVERRIDES = {
     "pb4d66a3": "fa",   // George Valera (CLE) - FA
     "p2c1eea1": "nl:COL",   // Luis Castillo (CHW) - Traded to NL (COL)
     "peeeacbe": "nl:COL",   // Davis Martin (CHW) - Traded to NL (COL)
-    "p4274a3e": "fa"   // Jesse Scholtens (TBR) - FA
+    "p4274a3e": "fa",   // Jesse Scholtens (TBR) - FA
+    "pa72991b": "nl:LAD",   // Royce Lewis (MIN) - Traded to NL (LAD)
+    "p330698a": "fa",   // Trevor Larnach (MIN) - FA
+    "pfcf00fe": "fa",   // Bailey Ober (MIN) - FA
+    "pa91c243": "fa",   // Matt Wallner (MIN) - FA
+    "p47469a4": "fa",   // David Fry (CLE) - FA
+    "pdfe0189": "fa",   // Matt Vierling (DET) - FA
+    "p838f5d1": "nl:CHC",   // Joey Bart (CHW) - Traded to NL (CHC)
+    "pd42fddb": "fa",   // Nick Mears (KCR) - FA
+    "pacaab5e": "nl:NYM",   // Yunior Tur (ATH) - Traded to NL (NYM)
+    "p303bef8": "fa",   // Jake Miller (DET) - FA
+    "p38fc373": "fa",   // Trey Sweeney (DET) - FA
+    "p6d76b07": "fa",   // Connor Wong (BOS) - FA
+    "p1276a52": "fa",   // Anthony Gose (KCR) - FA
+    "p459c945": "nl:COL",   // Chase Lee (TOR) - Traded to NL (COL)
+    "pf179f2d": "fa",   // Cole Sulser (TBR) - FA
+    "p44d82a5": "fa",   // Davis Schneider (TOR) - FA
+    "pf26149e": "fa",   // Fernando Cruz (NYY) - FA
+    "p8f6d055": "nl:ARI",   // Johan Oviedo (BOS) - Traded to NL (ARI)
+    "pc1d3fcf": "nl:PHI",   // Jordan Leasure (CHW) - Traded to NL (PHI)
+    "pa365141": "fa",   // José Buttó (TEX) - FA
+    "pb239f3c": "fa",   // Kyle Isbel (KCR) - FA
+    "p2db3997": "fa",   // Luis Gil (NYY) - FA
+    "p9b2bd6c": "fa",   // Luke Raley (SEA) - FA
+    "p2607679": "fa"   // Taylor Trammell (HOU) - FA
   },
   "exclude": [
 
@@ -1086,7 +1109,7 @@ function fillMissingBakedKeepers(){
     if(!taken && n < max) S.picks.push(JSON.parse(JSON.stringify(b)));
   });
 }
-const SEED_VER = '2027-actuals.9';
+const SEED_VER = '2027-actuals.10';
 /* APP_VER / APP_BUILT: defined in the data-file guard script above. */
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();

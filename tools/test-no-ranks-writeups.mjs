@@ -15,11 +15,12 @@
 //   5. $1 prospect floor: PROSPECT_FLOOR_IDS is still the 10 names from 11/18. A name with
 //      val > 0 drops the flag (Ryan Sloan, val 1, after the 11/20 re-pull).
 //      and its cell shows $1 with no rank;
-//   6. write-ups: the 61 approved ids each show WRITEUPS2027[id].text exactly in #cbWriteup.
+//   6. write-ups: the 105 ids each show WRITEUPS2027[id].text exactly in #cbWriteup.
 //      The original 10 pilots (approved_by Eno) match a block of pilot_2026-11-19.md when
-//      /workspace/db2027 is present. The other 51 are approved_by Steven and are not checked
-//      against that file. No CTHL $ amount, no "Provisional Top 100"; every other card's
-//      slot is empty (no CARDS.w fallback); no write-up text on the Draft List tab;
+//      /workspace/db2027 is present. The other 51 of the original 61 are approved_by Steven
+//      and are not checked against that file. The 44 from batch 2026-11-24 are approved_by
+//      null and approved_date null. No CTHL $ amount, no "Provisional Top 100"; every other
+//      card's slot is empty (no CARDS.w fallback); no write-up text on the Draft List tab;
 //   7. guard: data/writeups-2027.js missing -> DATA_FAIL names it;
 //   8. 0 console errors after all of it.
 //   node tools/test-no-ranks-writeups.mjs
@@ -32,8 +33,9 @@ const WebSocket = require('ws');
 const ROOT = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const PILOT = '/workspace/db2027/writeups/pilot_2026-11-19.md';
 const FLOOR_IDS = ['pdc823df', 'p6587b4a', 'p6ccee2a', 'p96f7374', 'p8985064', 'p5b997e0', 'p9c8df46', 'p4da2d2a', 'p5d22ea3', 'pec92b6a'];
-const WU_IDS = ['p301850c', 'p5c9bcf3', 'pabd0d7f', 'p87322e2', 'p8c74fc1', 'p7f1b103', 'pf97704', 'p9ccea09', 'p28aaca5', 'pbd68516', 'pf29d0da', 'p895e8b6', 'p95e60af', 'p953f48f', 'p2020362', 'pf10637c', 'p8fcd7f4', 'p4ba2e16', 'p3672d6a', 'p537390e', 'pe315128', 'p6bae4b5', 'p988af3f', 'p5d39d0a', 'p82b3359', 'pb4d19ec', 'pba6785e', 'p18b962a', 'p86b38f3', 'pf977fae', 'p7c99a58', 'pd726c86', 'pe225715', 'pf0ce583', 'p8c38fb2', 'p6b44680', 'p83239ef', 'p15b40ae', 'pd70820f', 'p9d33a01', 'p8aa4248', 'p7abec53', 'p7ebff20', 'p66c1494', 'p6aa8b9e', 'p8604871', 'p873be07', 'pe0cfab4', 'p8b0d590', 'pc7a2ea2', 'pbd6b881', 'pd3bf6d0', 'pa5aa3c8', 'p9a2ef80', 'p3488f87', 'p518ae45', 'p68739f', 'peaefc4d', 'p8cdb305', 'p930d6ea', 'pe8bec9'];
+const WU_IDS = ['p301850c', 'p5c9bcf3', 'pabd0d7f', 'p87322e2', 'p8c74fc1', 'p7f1b103', 'pf97704', 'p9ccea09', 'p28aaca5', 'pbd68516', 'pf29d0da', 'p895e8b6', 'p95e60af', 'p953f48f', 'p2020362', 'pf10637c', 'p8fcd7f4', 'p4ba2e16', 'p3672d6a', 'p537390e', 'pe315128', 'p6bae4b5', 'p988af3f', 'p5d39d0a', 'p82b3359', 'pb4d19ec', 'pba6785e', 'p18b962a', 'p86b38f3', 'pf977fae', 'p7c99a58', 'pd726c86', 'pe225715', 'pf0ce583', 'p8c38fb2', 'p6b44680', 'p83239ef', 'p15b40ae', 'pd70820f', 'p9d33a01', 'p8aa4248', 'p7abec53', 'p7ebff20', 'p66c1494', 'p6aa8b9e', 'p8604871', 'p873be07', 'pe0cfab4', 'p8b0d590', 'pc7a2ea2', 'pbd6b881', 'pd3bf6d0', 'pa5aa3c8', 'p9a2ef80', 'p3488f87', 'p518ae45', 'p68739f', 'peaefc4d', 'p8cdb305', 'p930d6ea', 'pe8bec9', 'p98289fc', 'p7d103', 'pa4b9a9c', 'p8dd63cb', 'pb8dee08', 'p243d357', 'pae3a2b7', 'pfd56a92', 'pd3ac94a', 'p9d1de2a', 'pe8c1474', 'p6377140', 'pdc823df', 'p5d22ea3', 'pe7e8f9f', 'p27e9e06', 'p76b3e3', 'pbd0561e', 'p4bc46e0', 'p0a2b0d2', 'p3f9d52f', 'pf12b4da', 'p64ab4f3', 'p2085963', 'p48b4a89', 'p4cdd205', 'pbd7c94a', 'p218e0b7', 'pda33ea0', 'pe7b3e25', 'pf92e233', 'p30f9705', 'p19f9919', 'p119a72d', 'pa7773b6', 'p5daf106', 'pd82e198', 'p90fbbd1', 'pbd62888', 'p77216e9', 'p6587b4a', 'p2a96fb1', 'p3451d01', 'pdf0a965'];
 const PILOT_IDS = new Set(WU_IDS.slice(0, 10));
+const NEW_IDS = new Set(WU_IDS.slice(61));
 let fails = 0;
 const ok = (c, msg, extra = '') => { if(!c) fails++; console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}${extra ? '  — ' + extra : ''}`); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -166,7 +168,7 @@ const wu = await ev(`(()=>{
   for(const p of S.players){
     openPick(p.id);
     const slot=document.getElementById('cbWriteup').textContent, back=document.getElementById('cardBack').textContent;
-    if(ids.includes(p.id)) out.push({id:p.id, name:p.name, slot, back, want:(WRITEUPS2027[p.id]||{}).text, ap:(WRITEUPS2027[p.id]||{}).approved_by,
+    if(ids.includes(p.id)) out.push({id:p.id, name:p.name, slot, back, want:(WRITEUPS2027[p.id]||{}).text, ap:(WRITEUPS2027[p.id]||{}).approved_by, ad:(WRITEUPS2027[p.id]||{}).approved_date,
       money:[p.val, p.pick&&p.pick.price, (aavOf(p)||{}).a, (aavOf(p)||{}).k].filter(x=>x>0)});
     else if(slot!==''){ empty.push(p.name); if(CARDS.w[p.id] && slot===CARDS.w[p.id]) fallback.push(p.name); }
     pickDlg.close();
@@ -174,16 +176,19 @@ const wu = await ev(`(()=>{
   return {keys:Object.keys(WRITEUPS2027).sort(), out, empty, fallback, others:S.players.length-ids.length,
     w:Object.keys(CARDS.w).filter(k=>!ids.includes(k)).length};
 })()`);
-ok(WU_IDS.length === 61 && JSON.stringify(wu.keys) === JSON.stringify([...WU_IDS].sort()) && wu.out.length === 61, 'WRITEUPS2027 holds exactly these 61 ids, all in the pool', wu.keys.join(' '));
+ok(WU_IDS.length === 105 && NEW_IDS.size === 44 && JSON.stringify(wu.keys) === JSON.stringify([...WU_IDS].sort()) && wu.out.length === 105, 'WRITEUPS2027 holds exactly these 105 ids, all in the pool', wu.keys.join(' '));
 // CTHL $ = a bare auction-sized dollar figure ($N, not $N,NNN / $N.NM / $N million real money)
 const CTHL$ = /\$\d+(?!\d)(?![,.]\d)(?!\s?(?:M\b|million|billion))/;
 for(const r of wu.out){
-  const realOnly = !CTHL$.test(r.back) && r.money.every(m => !new RegExp(`\\$${m}(?![\\d,])`).test(r.back));
+  // Same exceptions as CTHL$: $3.2 million is a signing bonus, not the auction $3.
+  const realOnly = !CTHL$.test(r.back) && r.money.every(m => !new RegExp(`\\$${m}(?!\\d)(?![,.]\\d)(?!\\s?(?:M\\b|million|billion))`).test(r.back));
   const isPilot = PILOT_IDS.has(r.id);
-  const apOk = r.ap === (isPilot ? 'Eno' : 'Steven');
+  const isNew = NEW_IDS.has(r.id);
+  const apOk = isPilot ? r.ap === 'Eno' : (isNew ? r.ap == null && r.ad == null : r.ap === 'Steven');
+  const who = isPilot ? 'Eno' : (isNew ? 'null' : 'Steven');
   const pilotOk = !isPilot || !pilot || pilot.has(r.slot);
   ok(r.slot === r.want && apOk && pilotOk && realOnly && !/Provisional Top 100/i.test(r.back),
-    `${r.name}: card back shows the exact approved text${isPilot && pilot ? ' (= pilot_2026-11-19.md)' : ''}, approved_by ${isPilot ? 'Eno' : 'Steven'}, no CTHL $, no Provisional Top 100`,
+    `${r.name}: card back shows the exact approved text${isPilot && pilot ? ' (= pilot_2026-11-19.md)' : ''}, approved_by ${who}, no CTHL $, no Provisional Top 100`,
     r.slot === r.want ? (r.back.match(CTHL$) || [''])[0] : 'slot: ' + r.slot.slice(0, 80));
 }
 ok(wu.empty.length === 0, `the other ${wu.others} cards: write-up slot empty`, wu.empty.slice(0, 5).join(', '));
