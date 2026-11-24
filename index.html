@@ -152,12 +152,6 @@ table.pool th.mlb,table.pool td.mlb{padding-left:6px;padding-right:6px;min-width
 table.pool th.el,table.pool td.el{width:92px;min-width:92px;max-width:92px;white-space:normal;word-break:break-word;line-height:1.25;font-size:14px;padding-left:6px;padding-right:6px}
 table.pool th.own,table.pool td.own{width:var(--ownw,140px);min-width:var(--ownw,140px);max-width:var(--ownw,140px);text-align:center;overflow:hidden;text-overflow:ellipsis}
 .poolscroll{max-height:74vh;overflow:auto;scrollbar-gutter:stable;max-width:100%}
-#eligGrid .egnote{font-size:13.5px;color:#333;line-height:1.45;margin:0 0 8px}
-#eligGrid .egfb{font-weight:500;color:#555}
-#eligGrid td.egq{font-weight:750;color:#111}
-#eligGrid td.egn{font-weight:450;color:#777}
-#eligGrid td.egz{color:#aaa}
-#eligGrid[hidden]{display:none}
 /* Taxi Board only — see the long comment in renderTaxiBoard(). Fixed layout so
    the <colgroup> widths are honoured exactly instead of being treated as
    suggestions, and a trailing spacer column that soaks up the slack so it
@@ -351,8 +345,8 @@ a{color:var(--link)}
 .filterbar button{background:#fff;border:1px solid var(--line);color:var(--dim);padding:8px 17px;border-radius:5px;cursor:pointer;font-size:16.5px;font-weight:700}
 .filterbar button.on{color:var(--accent);border-color:var(--accent)}
 /* ---- Player Card — two-sided (2026-11-11; front redone 2026-11-17) ----
-   Back = CTHL homage to the 1987 look (gray stock, purple banner, yellow
-   stat grid): real 2025-26 lines, the 2027 projection row and the write-up.
+   Back = CTHL homage to the 1987 Topps look (gray stock, royal-blue banner,
+   yellow stat grid): real 2025-26 lines, the 2027 projection row and the write-up.
    NO $ on the back.
    2026-11-16 (Steven): no flip — both faces show at once.
    2026-11-17 (Steven): the front drops the baseball-card look. It is a small
@@ -452,33 +446,31 @@ a{color:var(--link)}
 .cf-saleact .btn{font-size:17px;padding:8px 22px}
 .cf-news{padding:8px 10px 0}
 .cf-news:empty{display:none}
-/* back: gray stock, purple banner, yellow grid */
-.cf-back{background:#bdb8ac;background-image:radial-gradient(rgba(0,0,0,.06) 1px,transparent 1px);background-size:5px 5px;border:3px solid #6d6a62;padding:12px 12px 10px;color:#1a1a1a}
-.cb-top{display:flex;gap:10px;align-items:stretch}
-.cb-no{flex:0 0 auto;width:54px;border-radius:50%;background:#fff;border:2px solid #4b2a7b;display:flex;align-items:center;justify-content:center;font:900 13px/1 Georgia,serif;color:#4b2a7b;transform:rotate(-8deg);aspect-ratio:1}
-.cb-ban{flex:1;min-width:0;background:#4b2a7b;color:#fff;border-radius:4px;padding:6px 12px}
-.cb-ban .nm{font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cb-ban .vt{font-size:13px;opacity:.92;margin-top:2px}
-.cb-grid{margin-top:10px;overflow-x:auto;background:#f4dc4a;border:2px solid #4b2a7b}
+/* back: gray stock, royal-blue banner, yellow grid (1987 Topps) */
+.cf-back{background:#bdbdac;background-image:radial-gradient(rgba(0,0,0,.06) 1px,transparent 1px);background-size:5px 5px;border:3px solid #6d6a62;padding:12px 12px 10px;color:#1a1a1a}
+.cb-top{display:block}
+.cb-ban{width:100%;background:#1d3f9e;color:#fff;border-radius:4px;padding:8px 12px}
+.cb-ban .nm{font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;line-height:1.15;text-align:left;white-space:nowrap}
+.cb-grid{margin-top:10px;overflow-x:auto;background:#ece27a;border:2px solid #1d3f9e;color:#102048}
 .cb-grid table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
-.cb-grid caption{caption-side:top;text-align:left;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#4b2a7b;padding:4px 6px 0}
-.cb-grid th{background:#4b2a7b;color:#f4dc4a;font-weight:800;padding:3px 4px;text-align:right;white-space:nowrap}
-.cb-grid td{padding:2px 4px;text-align:right;white-space:nowrap;border-bottom:1px solid rgba(75,42,123,.18)}
+.cb-grid caption{caption-side:top;text-align:left;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#1d3f9e;padding:4px 6px 0}
+.cb-grid th{background:#1d3f9e;color:#ece27a;font-weight:800;padding:3px 4px;text-align:right;white-space:nowrap}
+.cb-grid td{padding:2px 4px;text-align:right;white-space:nowrap;border-bottom:1px solid rgba(29,63,158,.28);color:#102048}
 .cb-grid th.l,.cb-grid td.l{text-align:left}
-.cb-grid tr.tot td{font-weight:800;border-top:1px solid #4b2a7b}
+.cb-grid tr.tot td{font-weight:800;border-top:1px solid #1d3f9e}
 .cb-grid tr.mlb td{font-weight:700}
-.cb-grid tr.proj td{font-style:italic;background:rgba(255,255,255,.35);border-top:2px solid #4b2a7b}
+.cb-grid tr.proj td{font-style:italic;background:rgba(255,255,255,.35);border-top:2px solid #1d3f9e}
 .cb-grid td.none{text-align:left;color:#555;font-style:italic}
 .cb-empty{margin-top:10px;font-style:italic;color:#444;font-size:14px}
-.cb-wu{margin-top:10px;font-style:italic;font-size:15px;line-height:1.45;background:rgba(255,255,255,.35);border-left:4px solid #4b2a7b;padding:8px 10px;min-height:2.9em}
+.cb-wu{margin-top:10px;font-style:italic;font-size:15px;line-height:1.45;color:#1d3f9e;background:transparent;border-left:4px solid #1d3f9e;padding:8px 10px;min-height:2.9em}
 .cb-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:700;color:#3b3b3b}
-.cb-foot .mk{font:900 14px/1 Georgia,serif;color:#4b2a7b;border:2px solid #4b2a7b;border-radius:12px;padding:2px 8px}
+.cb-foot .mk{font:900 14px/1 Georgia,serif;color:#1d3f9e;border:2px solid #1d3f9e;border-radius:12px;padding:2px 8px}
 .pc-body{background:#fff;padding:16px 22px 18px}
 @media(max-width:520px){
   .cf{padding:6px 6px 0}
   .cb-grid table{font-size:10.5px}
   .cb-grid th,.cb-grid td{padding:2px 2px}
-  .cb-ban .nm{font-size:18px}
+  .cb-ban .nm{font-size:20px}
 }
 .pc-sec{font-size:13.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:700;border-bottom:2px solid #e8ebf0;padding-bottom:5px;margin:14px 0 9px}
 .pc-sec:first-child{margin-top:0}
@@ -560,7 +552,6 @@ a{color:var(--link)}
       <div class="poolscroll" id="poolScroll">
         <table id="poolTable" class="pool fixw"><thead></thead><tbody></tbody></table>
       </div>
-      <div id="eligGrid" hidden></div>
     </div>
     <div class="card">
       <h2>Teams</h2>
@@ -785,8 +776,7 @@ a{color:var(--link)}
     </section>
     <section class="cf-face cf-back" id="cardBack" aria-label="Card back">
       <div class="cb-top">
-        <div class="cb-no">CTHL</div>
-        <div class="cb-ban"><div class="nm" id="cbName"></div><div class="vt" id="cbVitals"></div></div>
+        <div class="cb-ban"><div class="nm" id="cbName"></div></div>
       </div>
       <div id="cbStats"></div>
       <div class="cb-wu" id="cbWriteup"></div>
@@ -807,21 +797,20 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.23-4"></script>
-<script src="data/aav-2027.js?v=2026.11.23-4"></script>
-<script src="data/cards-2027.js?v=2026.11.23-4"></script>
-<script src="data/keepers-2027.js?v=2026.11.23-4"></script>
-<script src="data/rotoid.js?v=2026.11.23-4"></script>
-<script src="data/logos.js?v=2026.11.23-4"></script>
-<script src="data/writeups-2027.js?v=2026.11.23-4"></script>
-<script src="data/elig-2027.js?v=2026.11.23-4"></script>
+<script src="data/seed-2027.js?v=2026.11.24-1"></script>
+<script src="data/aav-2027.js?v=2026.11.24-1"></script>
+<script src="data/cards-2027.js?v=2026.11.24-1"></script>
+<script src="data/keepers-2027.js?v=2026.11.24-1"></script>
+<script src="data/rotoid.js?v=2026.11.24-1"></script>
+<script src="data/logos.js?v=2026.11.24-1"></script>
+<script src="data/writeups-2027.js?v=2026.11.24-1"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.23-4';
-const APP_BUILT = '2026-11-23';
+const APP_VER = '2026.11.24-1';
+const APP_BUILT = '2026-11-24';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
    header turns red and a red box says what failed. Both app scripts below
@@ -834,8 +823,7 @@ const DATA_FAIL = (function(){
     'keepers-2027.js': typeof KEEPERS2027 !== 'undefined',
     'rotoid.js': typeof ROTOID !== 'undefined',
     'logos.js': typeof LOGO !== 'undefined',
-    'writeups-2027.js': typeof WRITEUPS2027 !== 'undefined',
-    'elig-2027.js': typeof ELIG2027 !== 'undefined'
+    'writeups-2027.js': typeof WRITEUPS2027 !== 'undefined'
   };
   const bad = [];
   const tags = [...document.querySelectorAll('script[src^="data/"]')].map(s => s.getAttribute('src'));
@@ -1056,9 +1044,11 @@ function dropClearedBaked(arr){
    (t 0) that aren't in the new set come off, new ones go on if that player is
    free and the team has room. Keepers someone declared (t > 0), sales and taxi
    picks are never touched. Not a SEED_VER change. */
-/* 2026-11-06: baked set = Steven's keepers room (steven-keepers-b442410a), 48 / $467.
-   2026-11-16: synced again on Steven's "update the keepers": 48 / $485 (+McGonigle Birdland $20, -Martinez).
-   2026-11-20: synced again on Steven's swap: 48 / $512 (+Junior Caminero Money Bags $32, -Walker Jenkins). */
+/* From 2026-11-24 the official room and this seed are the keeper source of
+   record. History: 2026-11-06 baked set 48 / $467; 2026-11-16 synced again on
+   Steven's "update the keepers" 48 / $485 (+McGonigle Birdland $20, -Martinez);
+   2026-11-20 synced again on Steven's swap 48 / $512 (+Junior Caminero Money
+   Bags $32, -Walker Jenkins). */
 const BAKED_KEEPER_SET = '2027-keeperval.4';
 function upgradeBakedKeepers(){
   if(S.bakedSet === BAKED_KEEPER_SET) return;
@@ -1265,9 +1255,29 @@ function cardProjLine(p,sd){
     return String(v);
   });
 }
+/* One line across the full banner. Shrink until it fits; wrap only if a
+   long name still overflows at the floor (phone width). */
+function fitCardBanner(){
+  const el=$('cbName'); if(!el) return;
+  el.style.fontSize='';
+  el.style.whiteSpace='nowrap';
+  el.style.overflowWrap='';
+  if(!el.clientWidth) return;
+  let size=parseFloat(getComputedStyle(el).fontSize)||28;
+  while(size>15 && el.scrollWidth>el.clientWidth+1){
+    size-=0.5;
+    el.style.fontSize=size+'px';
+  }
+  if(el.scrollWidth>el.clientWidth+1){
+    el.style.whiteSpace='normal';
+    el.style.overflowWrap='break-word';
+  }
+}
 function cardBack(p){
-  $('cbName').textContent = p.name;
-  $('cbVitals').textContent = [p.team, dispElig(p), p.kind==='P'?'Pitcher':'Hitter'].filter(Boolean).join(' · ');
+  /* Banner is one line: NAME • POS (1987 Topps). Team and Hitter/Pitcher
+     stay off this row; the club stays in the grid's Club column. */
+  const pos=dispElig(p);
+  $('cbName').textContent=(p.name+(pos?' • '+pos:'')).toUpperCase();
   const rows=CARDS.s[p.id]||[], q=p.p27;
   const qSide = q ? (('PA' in q)?'H':'P') : p.kind;
   const sides=[qSide]; rows.forEach(r=>{ if(!sides.includes(r[1])) sides.push(r[1]); });
@@ -1392,6 +1402,7 @@ function openPick(id, mode){
   $('dlgAav').parentElement.style.display = liveSale ? 'none' : '';
   cardFront(p); cardBack(p);
   $('pickDlg').showModal();
+  fitCardBanner();
   if(!p.pick && !dlgTaxiMode && !dlgKeepMode) $('dlgPrice').focus();
 }
 /* ================= PLAYER CARD =================
@@ -1974,16 +1985,8 @@ function renderMeter(){
    and MLB filters, search, count. Owner now rides in the Player column instead
    of a separate Status column. Stat sorting survives via the Sort-by control,
    since Projected Stats is one column. */
-let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1, poolProspectOnly=false, poolMulti=false;
-let eligSortKey='name', eligSortDir=1, eligPos='';
+let poolMode='H', poolPos='', poolSortKey='val', poolSortDir=-1, poolProspectOnly=false;
 function toggleProspectOnly(){ poolProspectOnly=!poolProspectOnly; renderPool(); }
-function toggleMultiPos(){ poolMulti=!poolMulti; renderPool(); }
-function eligSet(k,v){ if(k==='pos') eligPos=v; renderEligGrid(); }
-function eligSort(k){
-  if(eligSortKey===k) eligSortDir*=-1;
-  else { eligSortKey=k; eligSortDir=(k==='name'||k==='team')?1:-1; }
-  renderEligGrid();
-}
 // stat columns per mode — each one is clickable, CBS-style
 /* 2026-11-05: Projections tab shows 2027 Steamer (p27) by default. No year
    toggle existed; 2026 lines stay on the player card. Columns match the
@@ -2098,8 +2101,7 @@ function renderPool(){
   const posList = poolMode==='H' ? ['C','1B','2B','3B','SS','MI','CI','OF','DH'] : ['SP','RP'];
   $('poolPos').innerHTML=[`<button class="${!poolPos?'on':''}" onclick="poolSet('pos','')">ALL</button>`]
     .concat(posList.map(x=>`<button class="${poolPos===x?'on':''}" onclick="poolSet('pos','${x}')">${x}</button>`))
-    .concat([`<button class="${poolProspectOnly?'on':''}" onclick="toggleProspectOnly()" title="Show only top prospects">★ Top Prospects</button>`,
-      `<button class="${poolMulti?'on':''}" onclick="toggleMultiPos()" title="2026 MLB multi-position eligibility">Multi-Pos</button>`])
+    .concat([`<button class="${poolProspectOnly?'on':''}" onclick="toggleProspectOnly()" title="Show only top prospects">★ Top Prospects</button>`])
     .join('');
   const clubs=[...new Set(S.players.map(p=>p.team))].filter(Boolean).sort();
   $('mlbFilter').innerHTML=[`<button class="${!mlbSel?'on':''}" onclick="poolSet('mlb','')">ALL</button>`]
@@ -2178,100 +2180,6 @@ function renderPool(){
   });
   const shown=Math.min(rows.length,500);
   $('poolCount').textContent = `— ${rows.length} ${poolMode==='H'?'hitters':'pitchers'}${rows.length>shown?` (showing ${shown})`:''}`;
-  const ps=$('poolScroll'), eg=$('eligGrid');
-  if(ps) ps.hidden=!!poolMulti;
-  if(eg){ eg.hidden=!poolMulti; if(poolMulti) renderEligGrid(); }
-}
-/* Magazine multi-position grid. Rows come only from ELIG2027 (multi===true).
-   Does not read p.elig from the seed. A check is a CBS token in row.elig
-   (C/1B/2B/3B/SS/OF), including a spot with 0 MLB games (✓ 0). A
-   source==='statsapi' backup row still uses 20 games, or most-games when
-   fallback is set. † is only that statsapi fallback. Game counts stay visible. */
-const ELIG_POS=['C','1B','2B','3B','SS','OF'];
-function eligQualMap(row){
-  const q={};
-  if(row&&row.source==='statsapi'){
-    const g=row.g||{};
-    const counts=ELIG_POS.map(p=>+g[p]||0);
-    const max=counts.length?Math.max(...counts):0;
-    ELIG_POS.forEach(p=>{
-      const n=+g[p]||0;
-      if(n>=20) q[p]=true;
-      else if(row.fallback&&n>0&&n===max) q[p]=true;
-    });
-    return q;
-  }
-  const toks=new Set(String(row&&row.elig||'').split('/'));
-  ELIG_POS.forEach(p=>{ if(toks.has(p)) q[p]=true; });
-  return q;
-}
-function renderEligGrid(){
-  const box=$('eligGrid'); if(!box) return;
-  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-  const meta=(typeof ELIG2027!=='undefined'&&ELIG2027&&ELIG2027.meta)||{};
-  const pulled=meta.pulled||'';
-  const gamesPulled=meta.gamesPulled||'';
-  const note='CBS has rolled over and is the source, pulled '+esc(pulled)+'. Game counts are 2026 MLB Stats API fielding (backup), pulled '+esc(gamesPulled)+'.';
-  const players=(typeof ELIG2027!=='undefined'&&ELIG2027&&ELIG2027.players)||null;
-  if(!players){
-    box.innerHTML='<p class="egnote">'+note+'</p><p>Multi-position eligibility is unavailable. The eligibility file did not load.</p>';
-    return;
-  }
-  const all=Object.entries(players).filter(([,r])=>r&&r.multi===true).map(([id,r])=>({id,r,q:eligQualMap(r)}));
-  if(!all.length){
-    box.innerHTML='<p class="egnote">'+note+'</p><p>No multi-position hitters in this eligibility file.</p>';
-    return;
-  }
-  const rows=all.filter(x=>!eligPos||x.q[eligPos]);
-  const val=(x,k)=>{
-    if(k==='name') return x.r.name||'';
-    if(k==='team') return x.r.team||'';
-    if(k==='nq') return ELIG_POS.filter(p=>x.q[p]).length;
-    return +(x.r.g&&x.r.g[k])||0;
-  };
-  rows.sort((a,b)=>{
-    const x=val(a,eligSortKey), y=val(b,eligSortKey);
-    const c=(typeof x==='string')?String(x).localeCompare(String(y)):(x-y);
-    if(c) return c*eligSortDir;
-    return String(a.r.name).localeCompare(String(b.r.name));
-  });
-  const filters=[''].concat(ELIG_POS).map(p=>{
-    const on=eligPos===p?'on':'';
-    return `<button type="button" class="${on}" onclick="eligSet('pos','${p}')">${p||'All'}</button>`;
-  }).join('');
-  const arrow=k=> k===eligSortKey?(eligSortDir>0?' ▲':' ▼'):'';
-  const th=(k,lab,title)=>`<th class="st" onclick="eligSort('${k}')" title="${esc(title)}">${lab}${arrow(k)}</th>`;
-  const cell=(x,p)=>{
-    const n=+(x.r.g&&x.r.g[p])||0;
-    if(x.q[p]){
-      const mark=(x.r.source==='statsapi'&&x.r.fallback)?'<sup class="egfb" title="most games">†</sup>':'';
-      return `<td class="st egq" data-pos="${p}" data-q="1">✓ ${n}${mark}</td>`;
-    }
-    if(!n) return `<td class="st egz" data-pos="${p}">—</td>`;
-    return `<td class="st egn" data-pos="${p}">${n}</td>`;
-  };
-  let body='';
-  rows.forEach(x=>{
-    const dh=+(x.r.g&&x.r.g.DH)||0;
-    const statsFb=x.r.source==='statsapi'&&x.r.fallback;
-    const bits=[dh?dh+' games at DH':''];
-    if(statsFb) bits.push('most games');
-    const title=bits.filter(Boolean).join('. ');
-    const fb=statsFb?' <span class="egfb" title="most games">†</span>':'';
-    body+=`<tr data-id="${esc(x.id)}"${title?` title="${esc(title)}"`:''}>`
-      + `<td class="pl">${esc(x.r.name)}${fb}</td><td>${esc(x.r.team)}</td>`
-      + ELIG_POS.map(p=>cell(x,p)).join('')
-      + `<td class="st" data-elig="1">${esc(x.r.elig)}</td></tr>`;
-  });
-  box.innerHTML='<p class="egnote">'+note+'</p>'
-    + '<div class="filterbar" id="eligFilters">'+filters+'</div>'
-    + '<div class="poolscroll"><table class="pool fixw" id="eligTable"><thead><tr>'
-    + th('name','Player','Sort by name')
-    + th('team','Team','Sort by team')
-    + ELIG_POS.map(p=>th(p,p,'Sort by games at '+p)).join('')
-    + th('nq','Elig','Sort by number of qualifying field positions')
-    + '</tr></thead><tbody>'+body+'</tbody></table></div>'
-    + '<p class="egnote">A check is a CBS-eligible spot (or, for a statsapi-backup row, the 20-game / most-games fallback). † most games applies only to a statsapi-backup fallback row. '+rows.length+' shown.</p>';
 }
 
 function renderTeams(){
@@ -3146,6 +3054,7 @@ $('dlgPrice').oninput=updateDlgMax;
 $('tsTeam').onchange=renderTeamSummary;
 $('addKind').onchange=renderEligBoxes; renderEligBoxes();
 $('keepBoardSearch').oninput=renderKeepers;
+window.addEventListener('resize', ()=>{ const d=$('pickDlg'); if(d&&d.open) fitCardBanner(); });
 </script>
 <script>
 if(DATA_FAIL) throw new Error(DATA_FAIL);   /* data-file guard */
@@ -3186,8 +3095,13 @@ const DEAD_MS = 30000;          // stream silent this long => consider it dead
    silently missing room code means someone runs a blank local draft that looks
    completely normal. Query params survive the wrapper. */
 const OFFICIAL_ROOM = 'cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551';
+/* 2026-11-24: Steven's keepers planning room is retired. A URL that still
+   names it is ignored and opens the official room. The Firebase room is
+   left in place. */
+const RETIRED_ROOMS = ['steven-keepers-b442410a'];
 const params = new URLSearchParams(location.search);
-const qRoom  = (params.get('room')||'').trim();
+let qRoom  = (params.get('room')||'').trim();
+if(RETIRED_ROOMS.includes(qRoom)) qRoom = OFFICIAL_ROOM;
 /* file:// (admin box, headless tests) stays standalone unless ?room= is given,
    so a local test can never write into the live draft room by accident. */
 const ROOM   = qRoom === 'local' ? ''

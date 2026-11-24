@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Admin only. Export a room's full JSON to backups/<room>-<timestamp>.json.
 //   node tools/room-backup.mjs                      # official 2027 draft room
-//   node tools/room-backup.mjs --room steven-keepers-b442410a
+//   node tools/room-backup.mjs --room cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551
 //   node tools/room-backup.mjs --room X --out /some/dir
 // Read-only: never writes to Firebase.
 import fs from 'fs'; import path from 'path'; import { fileURLToPath } from 'url';

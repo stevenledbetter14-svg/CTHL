@@ -11,7 +11,7 @@
 //      in-page objects equal the old embedded ones;
 //   5. a missing data file or a wrong ?v= shows the red CTHL issue + error box.
 //   node tools/test-data-split.mjs [--ref <git rev of the pre-split build>] [--no-net]
-// --no-net skips the sync-keepers write check (it GETs the keepers room).
+// --no-net skips the sync-keepers write check (it GETs the official room, read-only).
 import { spawn, spawnSync, execFileSync } from 'child_process';
 import fs from 'fs'; import http from 'http'; import os from 'os'; import path from 'path'; import vm from 'vm'; import util from 'util';
 import { createRequire } from 'module';
@@ -26,8 +26,9 @@ const FILES = [['seed-2027.js', 'SEED2026'], ['aav-2027.js', 'AAV_2027'], ['card
                ['keepers-2027.js', 'KEEPERS2027'], ['rotoid.js', 'ROTOID'], ['logos.js', 'LOGO']];
 /* 2026-11-20: data/writeups-2027.js (WRITEUPS2027, Eno-approved card write-ups) is new in this
    build, so it has no old-build baseline: it is in the tag / guard / values-only checks only.
-   2026-11-23: data/elig-2027.js (ELIG2027) is the same — tag / guard / values-only only. */
-const ALL_FILES = FILES.concat([['writeups-2027.js', 'WRITEUPS2027'], ['elig-2027.js', 'ELIG2027']]);
+   2026-11-24: data/elig-2027.js stays in the repo but the app no longer loads it. */
+const ALL_FILES = FILES.concat([['writeups-2027.js', 'WRITEUPS2027']]);
+const OFFICIAL_ROOM = 'cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551';
 /* 2026-11-20 rank removal (spec zuck_2026-11-20_package.md 1.2): CARDS.t (provisional Top 100
    rank) is gone and the 51 CARDS.w recaps that led with "No. N on the provisional Top 100
    prospect list" were rebuilt without it (build_writeups.py). The baseline drops t and takes
@@ -177,11 +178,11 @@ const nonConst = (t, n) => t.split('\n').filter(l => !l.startsWith(`const ${n}`)
 }
 if(!NONET){
   const p = path.join(tmp, 'data', 'seed-2027.js'), orig = fs.readFileSync(p, 'utf8');
-  const r = spawnSync('node', [path.join(ROOT, 'tools/sync-keepers.mjs'), '--write', '--seed', p], { encoding: 'utf8' });
+  const r = spawnSync('node', [path.join(ROOT, 'tools/sync-keepers.mjs'), '--write', '--seed', p, '--room', OFFICIAL_ROOM], { encoding: 'utf8' });
   const after = fs.readFileSync(p, 'utf8');
   ok(r.status === 0 && /after write \(re-read\).*data\/seed-2027\.js/.test(r.stdout) && /MATCH/.test(r.stdout), 'sync-keepers --write --seed <copy>: writes data/seed-2027.js and re-read verifies', `exit ${r.status}`);
   ok(nonConst(after, 'SEED2026') === nonConst(orig, 'SEED2026'), 'sync-keepers write touches only the SEED2026 line (header comments kept)');
-  const c = spawnSync('node', [path.join(ROOT, 'tools/sync-keepers.mjs'), '--check', '--html', path.join(tmp, 'index.html')], { encoding: 'utf8' });
+  const c = spawnSync('node', [path.join(ROOT, 'tools/sync-keepers.mjs'), '--check', '--html', path.join(tmp, 'index.html'), '--room', OFFICIAL_ROOM], { encoding: 'utf8' });
   ok(c.status === 0 && /MATCH/.test(c.stdout), 'sync-keepers --html <dir>/index.html (old flag) reads <dir>/data/seed-2027.js');
 }
 fs.rmSync(tmp, { recursive: true, force: true });

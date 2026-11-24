@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // No prospect ranks + card write-ups (2026-11-20, spec zuck_2026-11-20_package.md 1.4 / 4.4).
 // Headless Chrome over http, room=local, every Firebase call failed as offline. Checks:
-//   1. app loads, 0 console errors; APP_VER 2026.11.23-4; eight data <script> tags, each
-//      ?v=APP_VER, writeups-2027.js and elig-2027.js among them and in the data-file guard;
+//   1. app loads, 0 console errors; APP_VER 2026.11.24-1; seven data <script> tags, each
+//      ?v=APP_VER, writeups-2027.js among them and in the data-file guard (elig-2027.js is not loaded);
 //   2. CARDS has no t; the app source never reads CARDS.t;
 //   3. every Future Stars card (CARDS.f[id]==='f'): banner still shown, cfTag empty, and the
 //      document text has no "Provisional", no "Top 100 prospect", no PR+digits badge;
@@ -40,12 +40,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const APP_VER = (html.match(/const APP_VER = '([^']+)'/) || [])[1];
-ok(APP_VER === '2026.11.23-4', `APP_VER ${APP_VER}`);
+ok(APP_VER === '2026.11.24-1', `APP_VER ${APP_VER}`);
 const tags = [...html.matchAll(/<script src="(data\/[^"]+)"><\/script>/g)].map(m => m[1]);
-ok(tags.length === 8 && tags.every(t => t.endsWith('?v=' + APP_VER)) && tags.includes(`data/writeups-2027.js?v=${APP_VER}`) && tags.includes(`data/elig-2027.js?v=${APP_VER}`),
-  `eight data files, each ?v=APP_VER, writeups-2027.js and elig-2027.js included`, tags.join(' '));
+ok(tags.length === 7 && tags.every(t => t.endsWith('?v=' + APP_VER)) && tags.includes(`data/writeups-2027.js?v=${APP_VER}`) && !tags.some(t => t.includes('elig-2027.js')),
+  `seven data files, each ?v=APP_VER, writeups-2027.js included, elig-2027.js not loaded`, tags.join(' '));
 ok(html.includes(`'writeups-2027.js': typeof WRITEUPS2027 !== 'undefined'`), 'data-file guard checks WRITEUPS2027');
-ok(html.includes(`'elig-2027.js': typeof ELIG2027 !== 'undefined'`), 'data-file guard checks ELIG2027');
+ok(!html.includes('elig-2027.js') && !html.includes('ELIG2027'), 'data-file guard does not load ELIG2027');
 ok(!/CARDS\.t\b/.test(html), 'index.html never reads CARDS.t');
 ok(!/cardProspectRank|cardProspectTitle|prospectBadge|prospectTitle/.test(html), 'no PR badge / prospect-title code left in index.html');
 ok(/toggleProspectOnly\(\)" title="Show only top prospects">★ Top Prospects</.test(html) && /\.filter\(p=>!poolProspectOnly \|\| isProspect\(p\)\)/.test(html),

@@ -20,8 +20,9 @@ USAGE (from the repo root)
   pool values don't match the JSON, the run stops and says so.
 
 WHERE TO EDIT
-  * Likely keepers: KEEPERS_CSV below (today: Steven's keepers room, 11/20, 48 / $512;
-    same set as the app's SEED2026.picks and the v3.1 engine). Columns used: pid,
+  * Likely keepers: KEEPERS_CSV below (11/20 set, 48 / $512, same set as the
+    app's SEED2026.picks and the v3.1 engine). From 2026-11-24 the official
+    room and the seed are the keeper source of record. Columns used: pid,
     owner, keeper_salary, kind. If you change it, also change SEED2026.picks in
     data/seed-2027.js (+ BAKED_KEEPER_SET in index.html); --write refuses while the two disagree.
   * Cutoff: CUTOFF_DATE below, the AAV lock right after LABR 2027. Currently 2027-03-15,

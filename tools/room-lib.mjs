@@ -3,7 +3,6 @@
 // listing /drafts is not. Admin-only: none of this is reachable from the app.
 export const DB = 'https://cthl-draft-room-default-rtdb.firebaseio.com';
 export const OFFICIAL_ROOM = 'cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551';
-export const KEEPERS_ROOM = 'steven-keepers-b442410a';
 export const roomUrl = (room, path='') => `${DB}/drafts/${encodeURIComponent(room)}${path}.json`;
 
 export function args(argv = process.argv.slice(2)){

@@ -5,7 +5,7 @@
 // (SEED2026 moved out of index.html into data/seed-2027.js on 2026-11-16.)
 //   node tools/sync-keepers.mjs --check              # report only (no write)
 //   node tools/sync-keepers.mjs --write              # write + verify (Steven's command only)
-//   --room <id>   default steven-keepers-b442410a
+//   --room <id>   default cthl-2027-draft-7dc86b95ad994b0e2663b4d963bd8551 (official room)
 //   --seed <path> default ../data/seed-2027.js
 //   --html <path> old flag: an index.html path, uses data/seed-2027.js beside it
 // Exits 1 on any mismatch (in --check: any difference between room and file).
@@ -13,10 +13,10 @@
 // also needs BAKED_KEEPER_SET bumped (and CLEARED_BAKED_KEEPERS for drops).
 import fs from 'fs';
 import path from 'path';
-import { args, getRoom, KEEPERS_ROOM } from './room-lib.mjs';
+import { args, getRoom, OFFICIAL_ROOM } from './room-lib.mjs';
 
 const a = args();
-const room = String(a.room || KEEPERS_ROOM);
+const room = String(a.room || OFFICIAL_ROOM);
 const seedFile = a.seed ? String(a.seed)
   : a.html ? path.join(path.dirname(String(a.html)), 'data', 'seed-2027.js')
   : new URL('../data/seed-2027.js', import.meta.url).pathname;
