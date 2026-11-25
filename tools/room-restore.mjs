@@ -51,7 +51,8 @@ if(!write){
   console.log(`\nDRY RUN: nothing written. Re-run with --room ${room} --confirm to write.`);
   process.exit(0);
 }
-if(!nP && !nT && hatSame){ console.log('\nRoom already matches the backup. Nothing written.'); process.exit(0); }
+const seedSame = ((cur&&cur.meta)||{}).seedVer === ((backup.meta)||{}).seedVer;
+if(!nP && !nT && hatSame && seedSame){ console.log('\nRoom already matches the backup. Nothing written.'); process.exit(0); }
 
 // safety copy of what is about to be overwritten
 if(cur != null){
