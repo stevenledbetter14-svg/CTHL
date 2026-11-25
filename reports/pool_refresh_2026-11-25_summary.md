@@ -54,6 +54,6 @@ Top 25 starts Junior Caminero $53 K, Bobby Witt Jr. $50, Nick Kurtz $48 K.
 ## What was skipped
 
 - FanGraphs / Steamer re-pull (403).
-- Rotoworld harvest (new players are unlinked; coverage test expect will be 616/722).
+- Rotoworld harvest (new players are unlinked; coverage test expect is 617/722 (one new add matched an existing ROTOID)).
 - Draft List PDF and the 11/25 write-up batch (next on this branch).
 - Room sync / merge / deploy (Steven's go is to ship when the whole branch is complete).

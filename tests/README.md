@@ -40,6 +40,6 @@ node tools/test-seed-safety.mjs
 node tools/test-data-split.mjs
 node tools/test-no-ranks-writeups.mjs   # no prospect ranks + card write-ups (2026-11-20)
 node tools/test-top100-pr.mjs           # AL Top 100 players in the pool carry p.pr (2026-11-25)
-node tools/test-rotoworld-links.mjs [--expect 616/713]   # Rotoworld link coverage via the app's rotoUrl() (2026-11-24; pool 712 → 713, Espinoza added no link)
+node tools/test-rotoworld-links.mjs [--expect 617/722]   # Rotoworld link coverage via the app's rotoUrl() (2026-11-25; pool 713 → 722, one new add matched an existing ROTOID)
 node tools/test-keeper-aav-fallback.mjs   # un-kept keeper shows curve k, display only (3.6, 2026-11-20)
 ```
