@@ -1,8 +1,8 @@
 # CTHL 2027 reference board, built by tools/build-ref-board.mjs (do not edit by hand)
-# source commit f8a618c (2026-11-24), SEED_VER 2027-actuals.10
-# data/seed-2027.js sha256 7b33d7a740765fa4
-# data/aav-2027.js sha256 ea3fed3a555a9ced
-# 633 rows; 202 priced non-keepers ($2058), 48 keepers ($512 salary)
+# source commit a657ac6 (2026-11-24), SEED_VER 2027-actuals.10
+# data/seed-2027.js sha256 1f7bdac934ac778b
+# data/aav-2027.js sha256 a01575ea23426607
+# 634 rows; 202 priced non-keepers ($2058), 48 keepers ($512 salary)
 pool_id,player,team,side,CTHL AAV,kept,keeper salary,keeper display $,stash
 pabd0d7f,Junior Caminero,TBR,H,,Y,32,52,
 p5c9bcf3,Bobby Witt Jr.,KCR,H,49,,,,
@@ -384,6 +384,7 @@ p37dc76f,Erik Sabrowski,CLE,P,0,,,,
 p40f4f4d,Ethan Pecko,HOU,P,0,,,,
 pb793e6e,Evan Reifert,HOU,P,0,,,,
 p98c595e,Felnin Celesten,SEA,H,0,,,,
+pd8ea18b,Francisco Espinoza,MIN,H,0,,,,
 pb394fb3,Franco Aleman,CLE,P,0,,,,
 p101b81,Gabe Speier,SEA,P,0,,,,
 p1eb2010,Gabriel Gonzalez,MIN,H,0,,,,
