@@ -463,14 +463,25 @@ a{color:var(--link)}
 .cb-grid td.none{text-align:left;color:#555;font-style:italic}
 .cb-empty{margin-top:10px;font-style:italic;color:#444;font-size:14px}
 .cb-wu{margin-top:10px;font-style:italic;font-size:15px;line-height:1.45;color:#1d3f9e;background:transparent;border-left:4px solid #1d3f9e;padding:8px 10px;min-height:2.9em}
-.cb-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:700;color:#3b3b3b}
-.cb-foot .mk{font:900 14px/1 Georgia,serif;color:#1d3f9e;border:2px solid #1d3f9e;border-radius:12px;padding:2px 8px}
+/* Bottom strip, 1987 Topps vitals band: cream, thin royal outline, same
+   width as the stat grid. The old left oval is the badge at the right end
+   (the Topps spot). Cream green is held level with red — #f4efb8 itself
+   trips the dialog purple sweep (b>150 and g<r). */
+.cb-foot{display:flex;align-items:center;gap:8px;margin-top:10px;padding:2px 2px 2px 8px;
+  background:#f4f4b8;border:1px solid #1d3f9e;border-radius:2px;
+  font-size:12px;font-weight:700;line-height:1.15;color:#1d3f9e}
+.cb-foot .tx{flex:1 1 auto;min-width:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb-foot .mk{flex:0 0 auto;display:flex;align-items:center;justify-content:center;height:28px;padding:0 8px 1px;
+  background:#13296b;color:#fff;border-radius:4px;white-space:nowrap;overflow:hidden;
+  font:400 15px/1 Pacifico,'Lobster Two','Kaushan Script',cursive;letter-spacing:.2px}
 .pc-body{background:#fff;padding:16px 22px 18px}
 @media(max-width:520px){
   .cf{padding:6px 6px 0}
   .cb-grid table{font-size:10.5px}
   .cb-grid th,.cb-grid td{padding:2px 2px}
   .cb-ban .nm{font-size:20px}
+  .cb-foot{font-size:11px;padding:2px 2px 2px 6px}
+  .cb-foot .mk{height:25px;font-size:13px;padding:0 6px 1px}
 }
 .pc-sec{font-size:13.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:700;border-bottom:2px solid #e8ebf0;padding-bottom:5px;margin:14px 0 9px}
 .pc-sec:first-child{margin-top:0}
@@ -780,7 +791,7 @@ a{color:var(--link)}
       </div>
       <div id="cbStats"></div>
       <div class="cb-wu" id="cbWriteup"></div>
-      <div class="cb-foot"><span class="mk">CTHL</span><span>Crabtown Tagliaboo Haters · 2027</span></div>
+      <div class="cb-foot"><span class="tx">Crabtown Tagliaboo Haters · 2027</span><span class="mk">CTHL</span></div>
     </section>
    </div>
   </div>

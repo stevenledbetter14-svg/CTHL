@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Card back, 2026-11-24: 1987 Topps banner (full-width NAME • POS, royal blue,
 // no top CTHL mark, no team / Hitter / Pitcher on that row) and no purple in
-// #pickDlg. Headless Chrome, ?room=local, Firebase failed as offline.
+// #pickDlg. Footer strip carries one CTHL badge in the Topps spot (navy,
+// white, flush right). Headless Chrome, ?room=local, Firebase failed as offline.
 // $ is allowed only inside an approved write-up (#cbWriteup). The rest of the
 // back, including the banner, has none.
 //   node tools/test-card-back-1124.mjs
@@ -85,6 +86,20 @@ const CARD = `(()=>{
     });
     const proj=back.querySelector('tr.proj');
     const club=proj&&proj.children[1]?proj.children[1].textContent:'';
+    const parse=c=>{ const m=String(c||'').match(/rgba?\\(\\s*([\\d.]+)[,\\s]+([\\d.]+)[,\\s]+([\\d.]+)/); return m?[+m[1],+m[2],+m[3]]:null; };
+    const lin=c=>{ c/=255; return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4); };
+    const lum=(r,g,b)=>0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+    const strip=back.querySelector('.cb-foot');
+    const badge=strip&&strip.querySelector('.mk');
+    const bg=badge?parse(getComputedStyle(badge).backgroundColor):null;
+    const fg=badge?parse(getComputedStyle(badge).color):null;
+    const br=badge?badge.getBoundingClientRect():null;
+    const sr=strip?strip.getBoundingClientRect():null;
+    const cr=back.getBoundingClientRect();
+    const grid=back.querySelector('.cb-grid');
+    const gr=grid?grid.getBoundingClientRect():null;
+    const ref=lum(29,63,158);
+    const marks=[...back.querySelectorAll('*')].filter(el=>!el.querySelector('*') && el.textContent.trim()==='CTHL');
     return {
       name:p.name, team:p.team, pos:dispElig(p),
       banner:nm.textContent,
@@ -103,7 +118,19 @@ const CARD = `(()=>{
         && getComputedStyle(back).display!=='none',
       banBg: getComputedStyle(back.querySelector('.cb-ban')).backgroundColor,
       purples: purples.slice(0, 8),
-      purpleN: purples.length
+      purpleN: purples.length,
+      marks: marks.length,
+      stripW: sr?sr.width:null,
+      gridW: gr?gr.width:null,
+      badge: badge ? {
+        text: badge.textContent.trim(),
+        bg, fg,
+        navy: !!(bg && bg[0]<60 && bg[1]<80 && bg[2]>=80 && lum(bg[0],bg[1],bg[2])<=ref+1e-9),
+        white: !!(fg && fg.every(v=>v>=250)),
+        gap: br&&sr ? +(sr.right-br.right).toFixed(2) : null,
+        inside: !!(br && br.left>=cr.left-0.5 && br.right<=cr.right+0.5 && br.top>=cr.top-0.5 && br.bottom<=cr.bottom+0.5),
+        inStrip: !!(br && sr && br.left>=sr.left-0.5 && br.right<=sr.right+0.5 && br.top>=sr.top-0.5 && br.bottom<=sr.bottom+0.5)
+      } : null
     };
   };
   return {paredes:open('Isaac Paredes'), crochet:open('Garrett Crochet'), long:open('Christian Encarnacion-Strand')};
@@ -120,6 +147,16 @@ const want = (row, label) => {
   ok(row.both, `${label}: front and back both shown`);
   ok(row.purpleN === 0, `${label}: no purple computed colors in #pickDlg`, row.purples.join(' | '));
   ok(row.fits, `${label}: banner text fits`, `font ${row.font}px lines ${row.lines}`);
+  const b = row.badge;
+  ok(!!b, `${label}: CTHL badge exists on the footer strip`);
+  if(b){
+    ok(b.text === 'CTHL', `${label}: badge text is CTHL`, b.text);
+    ok(b.navy, `${label}: badge background is navy, not lighter than #1d3f9e`, JSON.stringify(b.bg));
+    ok(b.white, `${label}: badge text is white`, JSON.stringify(b.fg));
+    ok(b.gap >= -0.5 && b.gap <= 12 && b.inStrip && b.inside, `${label}: badge flush right inside the strip and inside #cardBack`, `gap ${b.gap}px`);
+  }
+  ok(row.marks === 1, `${label}: exactly one CTHL mark on the back`, String(row.marks));
+  ok(row.gridW == null || Math.abs(row.stripW - row.gridW) <= 1, `${label}: footer strip matches the stat grid width`, `strip ${row.stripW} grid ${row.gridW}`);
 };
 want(desk.paredes, 'Paredes');
 // CBS 2027 elig is 3B/CI (was 1B/3B/CI). dispElig hides CI, so the banner is 3B.
@@ -135,6 +172,7 @@ await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, devi
 await sleep(400);
 const phone = await ev(CARD);
 want(phone.paredes, '390 Paredes');
+want(phone.crochet, '390 Crochet');
 want(phone.long, '390 Encarnacion-Strand');
 ok(phone.long.fits && phone.long.font >= 15, 'long name fits at 390px without dropping below 15px', `font ${phone.long.font} lines ${phone.long.lines} fits ${phone.long.fits}`);
 ok(phone.paredes.font >= 18, 'a normal name stays large at 390px', `font ${phone.paredes.font}`);
