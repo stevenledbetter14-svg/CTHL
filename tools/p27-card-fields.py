@@ -15,7 +15,7 @@ Existing p27 values are never changed; new keys go on the end of each p27.
 
 Players are matched the way the existing p27 was built: pool_id -> mlbam from
 /workspace/db2027/steamer/values_2027_steamer.csv (else fg_mlbam in
-match_report.csv, the Steamer match step), then xMLBAMID in the Steamer file.
+match_report.csv, the Steamer match step), then xMLBAMID in the Steamer file (or playerid when fg_mlbam is not numeric, e.g. Taira sa3062990).
 The side (bat/pit) is the side the p27 already carries ('PA' in p27 = hitter), so a card-only pitcher line (Jose Fermin) stays pitching.
 Rounding: counts as the existing p27 counts (1 dp, then whole); WHIP 2 dp;
 KBB 6 dp (the card shows 2), absent when the raw BB is 0.
@@ -63,10 +63,13 @@ def main():
     mlbam = {r['pool_id']: r['fg_mlbam'] for r in csv.DictReader(open(os.path.join(a.steamer, 'match_report.csv'), encoding='utf8')) if r['fg_mlbam']}
     mlbam.update({r['pool_id']: r['mlbam'] for r in csv.DictReader(open(os.path.join(a.steamer, 'values_2027_steamer.csv'), encoding='utf8')) if r['mlbam']})
     src = {}
+    src_pid = {}
     for side in ('bat', 'pit'):
         for x in json.load(open(os.path.join(a.steamer, f'2027_{side}.json'), encoding='utf8')):
             if x.get('xMLBAMID'):
                 src.setdefault(side, {})[int(x['xMLBAMID'])] = x
+            if x.get('playerid'):
+                src_pid.setdefault(side, {})[str(x['playerid'])] = x
 
     added = same = 0
     unmatched, missing = [], []
@@ -76,7 +79,12 @@ def main():
             continue
         side = 'bat' if 'PA' in q else 'pit'
         mid = mlbam.get(p['id'])
-        row = src[side].get(int(mid)) if mid else None
+        row = None
+        if mid:
+            try:
+                row = src[side].get(int(float(mid)))
+            except ValueError:
+                row = src_pid.get(side, {}).get(str(mid))
         if not row:
             unmatched.append((p['id'], p['name'], p['team'], side, mid or ''))
             continue

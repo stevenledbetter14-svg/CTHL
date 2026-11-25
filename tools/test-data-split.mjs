@@ -75,7 +75,7 @@ const RW_ADD = {};
 { const [hd, ...rows] = fs.readFileSync(path.join(ROOT, RW_CSV), 'utf8').trim().split('\n').map(l => l.split(','));
   const c = Object.fromEntries(hd.map((h, i) => [h, i]));
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
-const SEED_VER_BASE = '2027-actuals.10';   // 11/24 refresh (the 11/20 build's was 2027-actuals.9)
+const SEED_VER_BASE = '2027-actuals.11';   // 11/25 refresh (the 11/24 build's was 2027-actuals.10)
 /* 11/25: p.pr on 9 AL Top 100 players the 11/3 import missed. Existing pr on
    the other 42 is still compared to the refresh ref. tools/test-top100-pr.mjs
    pins the nine values. */
@@ -156,8 +156,8 @@ for(const [f, name] of FILES){
   const pk = new Map(sd.picks.map(k => [k.pid, k]));
   const badPick = sd.players.filter(p => { const k = pk.get(p.id); return k ? !(p.pick && p.pick.team === k.team && p.pick.price === k.price && p.pick.keeper === !!k.keeper) : !!p.pick; });
   ok(badPick.length === 0, 'SEED2026 players[].pick matches picks (one per pick, none extra)', badPick.slice(0, 5).map(p => p.name).join(', '));
-  ok(aav.pabd0d7f.k === 52 && aav.p6377140.a === 9 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
-    'AAV_2027: Caminero {k:52}, Jenkins {a:9} (not k); McGonigle still k, Martinez still not');
+  ok(aav.pabd0d7f.k === 53 && aav.p6377140.a === 8 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
+    'AAV_2027: Caminero {k:53}, Jenkins {a:8} (not k); McGonigle still k, Martinez still not');
 }
 {
   const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);

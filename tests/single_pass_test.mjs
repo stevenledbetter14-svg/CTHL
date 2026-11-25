@@ -141,7 +141,7 @@ try {
       blockIds: Object.keys(AAV_2027).length,
       keeperCount: kept.length,
     };`);
-  ok(app.seedVer === '2027-actuals.10', 'SEED_VER stays 2027-actuals.10', app.seedVer);   // 11/24 pool refresh (was .9)
+  ok(app.seedVer === '2027-actuals.11', 'SEED_VER stays 2027-actuals.11', app.seedVer);   // 11/25 pool refresh (was .10)
 
   const byName = new Map();
   for (const p of app.players) { if (!byName.has(p.name)) byName.set(p.name, []); byName.get(p.name).push(p); }

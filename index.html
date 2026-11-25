@@ -808,19 +808,19 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.25-1"></script>
-<script src="data/aav-2027.js?v=2026.11.25-1"></script>
-<script src="data/cards-2027.js?v=2026.11.25-1"></script>
-<script src="data/keepers-2027.js?v=2026.11.25-1"></script>
-<script src="data/rotoid.js?v=2026.11.25-1"></script>
-<script src="data/logos.js?v=2026.11.25-1"></script>
-<script src="data/writeups-2027.js?v=2026.11.25-1"></script>
+<script src="data/seed-2027.js?v=2026.11.25-2"></script>
+<script src="data/aav-2027.js?v=2026.11.25-2"></script>
+<script src="data/cards-2027.js?v=2026.11.25-2"></script>
+<script src="data/keepers-2027.js?v=2026.11.25-2"></script>
+<script src="data/rotoid.js?v=2026.11.25-2"></script>
+<script src="data/logos.js?v=2026.11.25-2"></script>
+<script src="data/writeups-2027.js?v=2026.11.25-2"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.25-1';
+const APP_VER = '2026.11.25-2';
 const APP_BUILT = '2026-11-25';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -895,42 +895,42 @@ function aavOf(p){ const a=(p && AAV_2027[p.id]) || null; return (a && a.k!=null
    Overrides are applied on every load, so they do NOT need a SEED_VER bump. */
 const POOL_OVERRIDES = {
   "section": {
-    "pd3bf6d0": "DH",   // Brent Rooker (ATH, CBS OF)
-    "pcc4169a": "DH",   // Jahmai Jones (BOS, CBS OF)
-    "p57ee05c": "DH",   // Masataka Yoshida (BOS, CBS OF)
-    "p4cbd87a": "DH",   // Mickey Gasper (BOS, CBS C/1B/CI)
-    "p2e05319": "DH",   // Romy Gonzalez (BOS, CBS 1B/2B/MI/CI)
-    "p795e822": "DH",   // Andrew Benintendi (CHW, CBS OF)
+    "pd3bf6d0": "DH",   // Brent Rooker (ATH, CBS DH)
+    "pcc4169a": "DH",   // Jahmai Jones (BOS, CBS DH)
+    "p57ee05c": "DH",   // Masataka Yoshida (BOS, CBS DH)
+    "p4cbd87a": "DH",   // Mickey Gasper (BOS, CBS DH)
+    "p2e05319": "DH",   // Romy Gonzalez (BOS, CBS 1B/CI)
+    "p795e822": "DH",   // Andrew Benintendi (CHW, CBS DH)
     "p9c1caaf": "DH",   // Eduardo Valencia (DET, CBS C)
     "p5d39d0a": "DH",   // Yordan Alvarez (HOU, CBS OF)
     "pf373ca5": "DH",   // Salvador Perez (KCR, CBS C/1B/CI)
-    "p4bc46e0": "DH",   // Moises Ballesteros (LAA, CBS C/1B/CI)
-    "p988af3f": "DH",   // Ben Rice (NYY, CBS C/1B/CI)
-    "p2188287": "DH",   // Giancarlo Stanton (NYY, CBS OF)
+    "p4bc46e0": "DH",   // Moises Ballesteros (LAA, CBS C)
+    "p988af3f": "DH",   // Ben Rice (NYY, CBS 1B/CI)
+    "p2188287": "DH",   // Giancarlo Stanton (NYY, CBS DH)
     "p1038f0b": "DH",   // Dominic Canzone (SEA, CBS OF)
-    "p3672d6a": "DH",   // Yandy Diaz (TBR, CBS 1B/CI)
+    "p3672d6a": "DH",   // Yandy Diaz (TBR, CBS DH)
     "pd17e449": "DH",   // Logan O'Hoppe (TEX, CBS C)
-    "pf776006": "DH",   // Sean Keys (TOR, CBS 1B/3B/CI)
-    "pe0cfab4": "OF",   // Tyler Soderstrom (ATH, CBS 1B/CI/OF)
-    "p7ebff20": "OF",   // Ceddanne Rafaela (BOS, CBS 2B/MI/OF)
+    "pf776006": "DH",   // Sean Keys (TOR, CBS 1B/CI)
+    "pe0cfab4": "OF",   // Tyler Soderstrom (ATH, CBS OF)
+    "p7ebff20": "OF",   // Ceddanne Rafaela (BOS, CBS OF)
     "p7f26144": "OF",   // Sam Antonacci (CHW, CBS 2B/MI/OF)
-    "p9474031": "OF",   // Tanner Murray (CHW, CBS SS/MI/OF)
-    "p4720771": "OF",   // Angel Martinez (CLE, CBS 2B/MI/OF)
-    "p66d2287": "OF",   // Daniel Schneemann (CLE, CBS 2B/3B/SS/MI/CI/OF)
-    "p83f73f1": "OF",   // Zach McKinstry (DET, CBS 2B/3B/SS/MI/CI/OF)
+    "p9474031": "OF",   // Tanner Murray (CHW, CBS OF)
+    "p4720771": "OF",   // Angel Martinez (CLE, CBS OF)
+    "p66d2287": "OF",   // Daniel Schneemann (CLE, CBS 3B/CI/OF)
+    "p83f73f1": "OF",   // Zach McKinstry (DET, CBS 2B/SS/MI/OF)
     "p353c631": "OF",   // Brice Matthews (HOU, CBS 2B/MI/OF)
-    "pfa7f0ea": "OF",   // Isaac Collins (KCR, CBS 2B/MI/OF)
+    "pfa7f0ea": "OF",   // Isaac Collins (KCR, CBS OF)
     "p87322e2": "OF",   // Jac Caglianone (KCR, CBS 1B/CI/OF)
-    "p27e9e06": "OF",   // Cody Bellinger (NYY, CBS 1B/CI/OF)
-    "pce76e9f": "OF",   // Max Schuemann (NYY, CBS 2B/3B/SS/MI/CI/OF)
+    "p27e9e06": "OF",   // Cody Bellinger (NYY, CBS OF)
+    "pce76e9f": "OF",   // Max Schuemann (NYY, CBS OF)
     "p9b2bd6c": "OF",   // Luke Raley (SEA, CBS 1B/CI/OF)
-    "p5dbe302": "OF",   // Ryan Vilade (TBR, CBS 1B/2B/MI/CI/OF)
-    "p263cfa5": "OF",   // Addison Barger (TOR, CBS 3B/CI/OF)
+    "p5dbe302": "OF",   // Ryan Vilade (TBR, CBS 1B/CI/OF)
+    "p263cfa5": "OF",   // Addison Barger (TOR, CBS OF)
     "p44d82a5": "OF",   // Davis Schneider (TOR, CBS 2B/MI/OF)
-    "pd82e198": "OF",   // Cam Cauley (TEX, CBS 2B/SS/MI/OF)
+    "pd82e198": "OF",   // Cam Cauley (TEX, CBS OF)
     "p3f63af8": "IF",   // C.J. Kayfus (CLE, CBS OF)
-    "p6322366": "IF",   // Cooper Flemming (TBR, CBS )
-    "pf938a7d": "C"   // Shawn Ross (TOR, CBS SS/MI)
+    "p6322366": "IF",   // Cooper Flemming (TBR, CBS SS/MI)
+    "pf938a7d": "C"   // Shawn Ross (TOR, CBS C)
   },
   "team": {
     "pcb5c742": "DET",   // Tsung-Che Cheng (was BOS)
@@ -949,12 +949,13 @@ const POOL_OVERRIDES = {
     "pd70a39d": "BOS",   // Nick Fortes (was TBR)
     "pf341e07": "LAA",   // Jace Jung (was DET)
     "pc250f03": "BAL",   // Braden Nett (was ATH)
-    "p23231e1": "BAL"   // Carter Baumler (was TEX)
+    "p23231e1": "BAL",   // Carter Baumler (was TEX)
+    "p7bdc968": "CLE",   // Kris Bubic (was NL)
+    "p2db3997": "DET"   // Luis Gil (was NYY)
   },
   "status": {
     "p18f135d": "nl:WSH",   // Connelly Early (NL) - Traded to NL (WSH)
     "pfc2e6a5": "fa",   // Kevin Gausman (NL) - FA
-    "p7bdc968": "fa",   // Kris Bubic (NL) - FA
     "p10c475": "fa",   // Tarik Skubal (NL) - FA
     "pe883a1d": "fa",   // Kirby Yates (NL) - FA
     "p7b8bcdc": "nl:CHC",   // Gabriel Arias (NL) - Traded to NL (CHC)
@@ -1026,7 +1027,6 @@ const POOL_OVERRIDES = {
     "pc1d3fcf": "nl:PHI",   // Jordan Leasure (CHW) - Traded to NL (PHI)
     "pa365141": "fa",   // José Buttó (TEX) - FA
     "pb239f3c": "fa",   // Kyle Isbel (KCR) - FA
-    "p2db3997": "fa",   // Luis Gil (NYY) - FA
     "p9b2bd6c": "fa",   // Luke Raley (SEA) - FA
     "p2607679": "fa"   // Taylor Trammell (HOU) - FA
   },
@@ -1120,7 +1120,7 @@ function fillMissingBakedKeepers(){
     if(!taken && n < max) S.picks.push(JSON.parse(JSON.stringify(b)));
   });
 }
-const SEED_VER = '2027-actuals.10';
+const SEED_VER = '2027-actuals.11';
 /* APP_VER / APP_BUILT: defined in the data-file guard script above. */
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();

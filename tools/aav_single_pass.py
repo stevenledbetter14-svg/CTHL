@@ -125,10 +125,28 @@ except AssertionError as e:
 def raw_scores(bat_rows, pit_rows):
     """The exact unpadded SGP equations of aav_v2.raw_current (K/BB tilt in the pitcher term),
     on any FanGraphs-format projection set. Returns (valid, scores, team_bb, side_mismatch)."""
-    poolids = {int(r['fg_mlbam']) for r in csv.DictReader((DB / 'steamer/match_report.csv').open()) if r['fg_mlbam']}
-    al = lambda x: x['League'] == 'AL' or (x.get('xMLBAMID') and int(x['xMLBAMID']) in poolids)
-    bat = {int(x['xMLBAMID']): x for x in bat_rows if x.get('xMLBAMID') and al(x)}
-    pit = {int(x['xMLBAMID']): x for x in pit_rows if x.get('xMLBAMID') and al(x)}
+    def mid(r):
+        v = (r.get('fg_mlbam') or '').strip()
+        if not v: return None
+        try: return int(float(v))
+        except ValueError: return v
+    match = {r['pool_id']: r for r in csv.DictReader((DB / 'steamer/match_report.csv').open())}
+    poolids = {mid(r) for r in match.values() if mid(r) is not None}
+    def al(x):
+        if x['League'] == 'AL': return True
+        if x.get('xMLBAMID') and int(x['xMLBAMID']) in poolids: return True
+        if x.get('playerid') and x['playerid'] in poolids: return True
+        return False
+    def index_side(rr):
+        d = {}
+        for x in rr:
+            if x.get('xMLBAMID') and al(x):
+                d[int(x['xMLBAMID'])] = x
+            elif not x.get('xMLBAMID') and x.get('playerid') in poolids:
+                d[x['playerid']] = x
+        return d
+    bat = index_side(bat_rows)
+    pit = index_side(pit_rows)
     top = sorted(pit.values(), key=lambda x: -x['IP'])[:78]
     bb = sum(x['BB'] for x in top) / sum(x['IP'] for x in top) * 862
     raw, roles = {}, {}
@@ -141,7 +159,7 @@ def raw_scores(bat_rows, pit_rows):
             x = pit[i]; raw[i] = (3.822 * x['IP'] / 9 - x['ER']) * 9 / 862 / .123 + (x['SO'] - 3.02 * x['BB']) / bb / .078 + x['SV'] / 5.99 + x['W'] / 1.75
     val, sc, mismatch = {}, {}, []
     for p in ps:
-        i = int(rows[p.id]['mlbam']) if rows[p.id]['mlbam'] else None
+        i = int(rows[p.id]['mlbam']) if rows[p.id]['mlbam'] else mid(match.get(p.id, {}))
         if i in raw:
             if roles[i] != p.side: mismatch.append(p.name); continue    # projected on the other side: no line
             sc[p.id] = raw[i]; val[p.id] = bat[i] if p.side == 'H' else pit[i]
