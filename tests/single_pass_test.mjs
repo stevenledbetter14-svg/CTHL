@@ -141,7 +141,7 @@ try {
       blockIds: Object.keys(AAV_2027).length,
       keeperCount: kept.length,
     };`);
-  ok(app.seedVer === '2027-actuals.9', 'SEED_VER stays 2027-actuals.9', app.seedVer);   // 11/20 pool refresh (was .8)
+  ok(app.seedVer === '2027-actuals.10', 'SEED_VER stays 2027-actuals.10', app.seedVer);   // 11/24 pool refresh (was .9)
 
   const byName = new Map();
   for (const p of app.players) { if (!byName.has(p.name)) byName.set(p.name, []); byName.get(p.name).push(p); }
@@ -160,7 +160,7 @@ try {
     maxDiff = Math.max(maxDiff, d);
   }
   ok(missing.length === 0, 'every reference-board priced non-keeper is on the board', missing.join(', '));
-  /* ref_board_2026-11-20 (11/20 pool refresh): 202 priced non-keepers; update with each rebuild */
+  /* ref_board_2026-11-24 (11/24 pool refresh): 202 priced non-keepers (250 slots − 48 keepers; same count as 11/20); update with each rebuild */
   ok(compared === 202 && maxDiff <= 1, `non-keeper prices vs reference board: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
   /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
      run CSV, diffed vs the reference board the same way, must match the app board */
@@ -171,7 +171,7 @@ try {
     ok(rm === moved && rx === maxDiff, `latest run (${lastRun}) diff vs reference board matches the app board`, `run max $${rx}, moved ${rm}`); }
 
   /* 2. keeper values (board k and the app's rank $) */
-  const want = { 'Nick Kurtz': 50, 'Julio Rodriguez': 41, 'Cam Schlittler': 35, 'Ben Rice': 38, 'Logan Gilbert': 35 };   // 11/20 curve (was 48/39/37/37/37)
+  const want = { 'Nick Kurtz': 47, 'Julio Rodriguez': 39, 'Cam Schlittler': 36, 'Ben Rice': 37, 'Logan Gilbert': 36 };   // 11/24 curve (was 50/41/35/38/35)
   for (const [n, w] of Object.entries(want)) {
     const p = (byName.get(n) || []).find(p => p.kept);
     ok(p && Math.abs(p.a.k - w) <= 1 && Math.abs(p.rank$ - w) <= 1, `keeper value ${n} = $${w} (±$1)`, p ? `board k $${p.a.k}, app rank $${p.rank$}` : 'not kept');

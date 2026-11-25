@@ -58,12 +58,12 @@ const stripCardSrc = (name, l) => name === 'CARDS'
 const KEEPER_AAV_MOVED = ['p1038f0b', 'p176e0ac', 'p2020362', 'p4720771', 'p4cdd205', 'p67ec326', 'p6b44680', 'p6b4cb24',
                           'p7ebff20', 'p930d6ea', 'p9ccea09', 'p9d1de2a', 'pa72991b', 'pbd0561e', 'pd726c86', 'pdd27a6'];
 const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
-/* 2026-11-20 pool refresh (b4f19a6, SEED_VER 2027-actuals.9): retags, 7 adds, keepers 48/$512,
-   the AAV rerun, and the statsapi card inject. For these three the baseline is that refresh
-   build (same card strips on both sides); the other consts still equal the old single-file build.
-   The 11/18 baseline was e5e9a1d. Ranks were already gone by b4f19a6, so the CARDS check below
-   only asserts no t and no provisional / Top 100 text. */
-const REFRESH_REF = 'b4f19a6', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+/* 2026-11-24 pool refresh (f8a618c, SEED_VER 2027-actuals.10): phase 1 (22ad47f) struck 24
+   and added 4; f8a618c reran AAV on the 11/20 Steamer pull (the 11/24 re-pull was blocked).
+   For these three the baseline is that commit (same card strips on both sides); the other
+   consts still equal the old single-file build. The 11/20 baseline was b4f19a6. Ranks were
+   already gone, so the CARDS check below only asserts no t and no provisional / Top 100 text. */
+const REFRESH_REF = 'f8a618c', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
 /* 2026-11-20 Rotoworld harvest (spec zuck_2026-11-20_package.md section 2, tools/rotoworld-harvest.py
    --from-csv): ROTOID gained exactly the matched rows of reports/rotoid_harvest_2026-11-20.csv, appended
    after the stored keys, none replaced. The baseline is the old ROTOID plus those keys. */
@@ -74,10 +74,12 @@ const RW_ADD = {};
 { const [hd, ...rows] = fs.readFileSync(path.join(ROOT, RW_CSV), 'utf8').trim().split('\n').map(l => l.split(','));
   const c = Object.fromEntries(hd.map((h, i) => [h, i]));
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
-const SEED_VER_BASE = '2027-actuals.9';   // 11/20 refresh (the 11/18 build's was 2027-actuals.8)
+const SEED_VER_BASE = '2027-actuals.10';   // 11/24 refresh (the 11/20 build's was 2027-actuals.9)
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
-  if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) old[id] = structuredClone(cur[id]);
+  // Royce Lewis (pa72991b) was struck on 11/24 and is in neither AAV object. Copying
+  // structuredClone(undefined) would invent an own key that deep-equal sees.
+  if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) if(id in cur) old[id] = structuredClone(cur[id]);
   if(name === 'ROTOID') Object.assign(old, RW_ADD);
   if(name === 'CARDS'){ delete old.t; for(const id in old.w) if(RANK_RE.test(old.w[id])) old.w[id] = cur.w[id]; }
   return old;
@@ -132,8 +134,8 @@ for(const [f, name] of FILES){
   const pk = new Map(sd.picks.map(k => [k.pid, k]));
   const badPick = sd.players.filter(p => { const k = pk.get(p.id); return k ? !(p.pick && p.pick.team === k.team && p.pick.price === k.price && p.pick.keeper === !!k.keeper) : !!p.pick; });
   ok(badPick.length === 0, 'SEED2026 players[].pick matches picks (one per pick, none extra)', badPick.slice(0, 5).map(p => p.name).join(', '));
-  ok(aav.pabd0d7f.k === 56 && aav.p6377140.a === 8 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
-    'AAV_2027: Caminero {k:56}, Jenkins {a:8} (not k); McGonigle still k, Martinez still not');
+  ok(aav.pabd0d7f.k === 52 && aav.p6377140.a === 9 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
+    'AAV_2027: Caminero {k:52}, Jenkins {a:9} (not k); McGonigle still k, Martinez still not');
 }
 {
   const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);
