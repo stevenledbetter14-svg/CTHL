@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // No prospect ranks + card write-ups (2026-11-20, spec zuck_2026-11-20_package.md 1.4 / 4.4).
 // Headless Chrome over http, room=local, every Firebase call failed as offline. Checks:
-//   1. app loads, 0 console errors; APP_VER 2026.11.25-2; seven data <script> tags, each
+//   1. app loads, 0 console errors; APP_VER 2026.11.25-3; seven data <script> tags, each
 //      ?v=APP_VER, writeups-2027.js among them and in the data-file guard (elig-2027.js is not loaded);
 //   2. CARDS has no t; the app source never reads CARDS.t;
 //   3. every Future Stars card (CARDS.f[id]==='f'): banner still shown, cfTag empty, and the
@@ -15,10 +15,10 @@
 //   5. $1 prospect floor: PROSPECT_FLOOR_IDS is still the 10 names from 11/18. A name with
 //      val > 0 drops the flag (Ryan Sloan, val 1, after the 11/20 re-pull).
 //      and its cell shows $1 with no rank;
-//   6. write-ups: the 105 ids each show WRITEUPS2027[id].text exactly in #cbWriteup.
+//   6. write-ups: the 114 ids each show WRITEUPS2027[id].text exactly in #cbWriteup.
 //      The original 10 pilots (approved_by Eno) match a block of pilot_2026-11-19.md when
 //      /workspace/db2027 is present. The other 51 of the original 61 are approved_by Steven
-//      and are not checked against that file. The 44 from batch 2026-11-24 are approved_by
+//      and are not checked against that file. The 44 from batch 2026-11-24 and the 9 from batch 2026-11-25 are approved_by
 //      null and approved_date null. No CTHL $ amount, no "Provisional Top 100"; every other
 //      card's slot is empty (no CARDS.w fallback); no write-up text on the Draft List tab;
 //   7. guard: data/writeups-2027.js missing -> DATA_FAIL names it;
@@ -33,7 +33,7 @@ const WebSocket = require('ws');
 const ROOT = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const PILOT = '/workspace/db2027/writeups/pilot_2026-11-19.md';
 const FLOOR_IDS = ['pdc823df', 'p6587b4a', 'p6ccee2a', 'p96f7374', 'p8985064', 'p5b997e0', 'p9c8df46', 'p4da2d2a', 'p5d22ea3', 'pec92b6a'];
-const WU_IDS = ['p301850c', 'p5c9bcf3', 'pabd0d7f', 'p87322e2', 'p8c74fc1', 'p7f1b103', 'pf97704', 'p9ccea09', 'p28aaca5', 'pbd68516', 'pf29d0da', 'p895e8b6', 'p95e60af', 'p953f48f', 'p2020362', 'pf10637c', 'p8fcd7f4', 'p4ba2e16', 'p3672d6a', 'p537390e', 'pe315128', 'p6bae4b5', 'p988af3f', 'p5d39d0a', 'p82b3359', 'pb4d19ec', 'pba6785e', 'p18b962a', 'p86b38f3', 'pf977fae', 'p7c99a58', 'pd726c86', 'pe225715', 'pf0ce583', 'p8c38fb2', 'p6b44680', 'p83239ef', 'p15b40ae', 'pd70820f', 'p9d33a01', 'p8aa4248', 'p7abec53', 'p7ebff20', 'p66c1494', 'p6aa8b9e', 'p8604871', 'p873be07', 'pe0cfab4', 'p8b0d590', 'pc7a2ea2', 'pbd6b881', 'pd3bf6d0', 'pa5aa3c8', 'p9a2ef80', 'p3488f87', 'p518ae45', 'p68739f', 'peaefc4d', 'p8cdb305', 'p930d6ea', 'pe8bec9', 'p98289fc', 'p7d103', 'pa4b9a9c', 'p8dd63cb', 'pb8dee08', 'p243d357', 'pae3a2b7', 'pfd56a92', 'pd3ac94a', 'p9d1de2a', 'pe8c1474', 'p6377140', 'pdc823df', 'p5d22ea3', 'pe7e8f9f', 'p27e9e06', 'p76b3e3', 'pbd0561e', 'p4bc46e0', 'p0a2b0d2', 'p3f9d52f', 'pf12b4da', 'p64ab4f3', 'p2085963', 'p48b4a89', 'p4cdd205', 'pbd7c94a', 'p218e0b7', 'pda33ea0', 'pe7b3e25', 'pf92e233', 'p30f9705', 'p19f9919', 'p119a72d', 'pa7773b6', 'p5daf106', 'pd82e198', 'p90fbbd1', 'pbd62888', 'p77216e9', 'p6587b4a', 'p2a96fb1', 'p3451d01', 'pdf0a965'];
+const WU_IDS = ['p301850c', 'p5c9bcf3', 'pabd0d7f', 'p87322e2', 'p8c74fc1', 'p7f1b103', 'pf97704', 'p9ccea09', 'p28aaca5', 'pbd68516', 'pf29d0da', 'p895e8b6', 'p95e60af', 'p953f48f', 'p2020362', 'pf10637c', 'p8fcd7f4', 'p4ba2e16', 'p3672d6a', 'p537390e', 'pe315128', 'p6bae4b5', 'p988af3f', 'p5d39d0a', 'p82b3359', 'pb4d19ec', 'pba6785e', 'p18b962a', 'p86b38f3', 'pf977fae', 'p7c99a58', 'pd726c86', 'pe225715', 'pf0ce583', 'p8c38fb2', 'p6b44680', 'p83239ef', 'p15b40ae', 'pd70820f', 'p9d33a01', 'p8aa4248', 'p7abec53', 'p7ebff20', 'p66c1494', 'p6aa8b9e', 'p8604871', 'p873be07', 'pe0cfab4', 'p8b0d590', 'pc7a2ea2', 'pbd6b881', 'pd3bf6d0', 'pa5aa3c8', 'p9a2ef80', 'p3488f87', 'p518ae45', 'p68739f', 'peaefc4d', 'p8cdb305', 'p930d6ea', 'pe8bec9', 'p98289fc', 'p7d103', 'pa4b9a9c', 'p8dd63cb', 'pb8dee08', 'p243d357', 'pae3a2b7', 'pfd56a92', 'pd3ac94a', 'p9d1de2a', 'pe8c1474', 'p6377140', 'pdc823df', 'p5d22ea3', 'pe7e8f9f', 'p27e9e06', 'p76b3e3', 'pbd0561e', 'p4bc46e0', 'p0a2b0d2', 'p3f9d52f', 'pf12b4da', 'p64ab4f3', 'p2085963', 'p48b4a89', 'p4cdd205', 'pbd7c94a', 'p218e0b7', 'pda33ea0', 'pe7b3e25', 'pf92e233', 'p30f9705', 'p19f9919', 'p119a72d', 'pa7773b6', 'p5daf106', 'pd82e198', 'p90fbbd1', 'pbd62888', 'p77216e9', 'p6587b4a', 'p2a96fb1', 'p3451d01', 'pdf0a965', 'p506bf2e', 'p298cb3a', 'p7f26144', 'p1f52526', 'p7e9ee51', 'pe5cfedf', 'p1200339', 'p176e0ac', 'p1038f0b'];
 const PILOT_IDS = new Set(WU_IDS.slice(0, 10));
 const NEW_IDS = new Set(WU_IDS.slice(61));
 let fails = 0;
@@ -42,7 +42,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const APP_VER = (html.match(/const APP_VER = '([^']+)'/) || [])[1];
-ok(APP_VER === '2026.11.25-2', `APP_VER ${APP_VER}`);
+ok(APP_VER === '2026.11.25-3', `APP_VER ${APP_VER}`);
 const tags = [...html.matchAll(/<script src="(data\/[^"]+)"><\/script>/g)].map(m => m[1]);
 ok(tags.length === 7 && tags.every(t => t.endsWith('?v=' + APP_VER)) && tags.includes(`data/writeups-2027.js?v=${APP_VER}`) && !tags.some(t => t.includes('elig-2027.js')),
   `seven data files, each ?v=APP_VER, writeups-2027.js included, elig-2027.js not loaded`, tags.join(' '));
@@ -176,7 +176,7 @@ const wu = await ev(`(()=>{
   return {keys:Object.keys(WRITEUPS2027).sort(), out, empty, fallback, others:S.players.length-ids.length,
     w:Object.keys(CARDS.w).filter(k=>!ids.includes(k)).length};
 })()`);
-ok(WU_IDS.length === 105 && NEW_IDS.size === 44 && JSON.stringify(wu.keys) === JSON.stringify([...WU_IDS].sort()) && wu.out.length === 105, 'WRITEUPS2027 holds exactly these 105 ids, all in the pool', wu.keys.join(' '));
+ok(WU_IDS.length === 114 && NEW_IDS.size === 53 && JSON.stringify(wu.keys) === JSON.stringify([...WU_IDS].sort()) && wu.out.length === 114, 'WRITEUPS2027 holds exactly these 114 ids, all in the pool', wu.keys.join(' '));
 // CTHL $ = a bare auction-sized dollar figure ($N, not $N,NNN / $N.NM / $N million real money)
 const CTHL$ = /\$\d+(?!\d)(?![,.]\d)(?!\s?(?:M\b|million|billion))/;
 for(const r of wu.out){
