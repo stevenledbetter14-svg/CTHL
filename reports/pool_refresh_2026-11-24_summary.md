@@ -1,6 +1,6 @@
 # CTHL pool refresh 11/24: summary
 
-Branch `build-1124` (local only). Not pushed. No merge, no Firebase writes, `landing-preview` not touched.
+Branch `build-1124`, pushed to origin and reviewed by Eno (rev 2, 38f02cd). Merged to `main` by fast-forward on Steven's go (11/25, "Push it sync it"); the official room is synced to this seed after a backup. `landing-preview` not touched.
 
 Final state: `APP_VER` **2026.11.24-2**, `SEED_VER` **2027-actuals.10**, **713** pool players, Draft List **636**. Five adds (Freddy Peralta, Henry Godbout, Luke Hill, Bobby Miller, Francisco Espinoza). Displayed eligibility is CBS 2027 via `tools/apply-cbs-elig.mjs`: **95** hitters changed (`reports/elig_audit_2026-11-24.csv`). A hitter with no CBS row gets the statsapi backup, and an empty backup keeps the seed. The card-back footer strip carries one CTHL badge in the Topps spot. Solved pot **$3,040.22**, implied inflation **1.1830** (`reports/aav_run_2026-11-24_2032.md`). The Draft List PDF was rebuilt on this commit (15 pages, 636 players): `/workspace/db2027/rosters/CTHL 2027 Rosters DRAFT 2026-11-24.pdf`.
 
