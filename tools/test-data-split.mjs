@@ -76,7 +76,16 @@ const RW_ADD = {};
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
 const SEED_VER_BASE = '2027-actuals.10';   // 11/24 refresh (the 11/20 build's was 2027-actuals.9)
 const keeperBase = (name, old, cur) => {
-  if(name === 'SEED2026'){ old.picks = structuredClone(cur.picks); old.players.forEach((p, i) => { p.pick = structuredClone(cur.players[i].pick); }); }
+  if(name === 'SEED2026'){
+    old.picks = structuredClone(cur.picks);
+    old.players.forEach((p, i) => {
+      p.pick = structuredClone(cur.players[i].pick);
+      // 11/24: CBS 2027 eligibility now lives on the hitter. Pitcher elig is
+      // still compared to the refresh ref. tools/test-cbs-elig.mjs pins the
+      // hitter strings to data/elig-2027.js.
+      if(p.kind === 'H') p.elig = cur.players[i].elig;
+    });
+  }
   // Royce Lewis (pa72991b) was struck on 11/24 and is in neither AAV object. Copying
   // structuredClone(undefined) would invent an own key that deep-equal sees.
   if(name === 'AAV_2027') for(const id of KEEPER_AAV_MOVED) if(id in cur) old[id] = structuredClone(cur[id]);
@@ -124,7 +133,7 @@ for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInCo
 }
 for(const [f, name] of FILES){
   const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
-  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields and the 11/16 keeper sync' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : name === 'ROTOID' ? ', plus the 11/20 harvest keys' : ''}`);
+  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields, the 11/16 keeper sync, and the 11/24 CBS hitter elig' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : name === 'ROTOID' ? ', plus the 11/20 harvest keys' : ''}`);
 }
 {
   const sd = vm.runInContext('SEED2026', NEW), aav = vm.runInContext('AAV_2027', NEW);

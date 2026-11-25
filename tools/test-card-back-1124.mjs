@@ -122,7 +122,8 @@ const want = (row, label) => {
   ok(row.fits, `${label}: banner text fits`, `font ${row.font}px lines ${row.lines}`);
 };
 want(desk.paredes, 'Paredes');
-ok(desk.paredes.banner === 'ISAAC PAREDES • 1B, 3B', 'Paredes banner is ISAAC PAREDES • 1B, 3B', desk.paredes.banner);
+// CBS 2027 elig is 3B/CI (was 1B/3B/CI). dispElig hides CI, so the banner is 3B.
+ok(desk.paredes.banner === 'ISAAC PAREDES • 3B', 'Paredes banner is ISAAC PAREDES • 3B', desk.paredes.banner);
 want(desk.crochet, 'Crochet');
 ok(desk.crochet.banner === 'GARRETT CROCHET • SP', 'Crochet banner is GARRETT CROCHET • SP', desk.crochet.banner);
 ok(!desk.crochet.wholeDollar, 'Crochet back text has no $', desk.crochet.banner);
