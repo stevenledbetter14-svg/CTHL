@@ -160,7 +160,7 @@ try {
     maxDiff = Math.max(maxDiff, d);
   }
   ok(missing.length === 0, 'every reference-board priced non-keeper is on the board', missing.join(', '));
-  /* ref_board_2026-11-24 (11/24 pool refresh): 202 priced non-keepers (250 slots − 48 keepers; same count as 11/20); update with each rebuild */
+  /* ref_board_2026-11-25 (11/25 pool refresh): 202 priced non-keepers (250 slots − 48 keepers; same count as 11/24); update with each rebuild */
   ok(compared === 202 && maxDiff <= 1, `non-keeper prices vs reference board: max diff $${maxDiff} (<= $1), ${moved} of ${compared} moved`, movedList.slice(0, 10).join('; '));
   /* the board is the latest aav_run (11/16 keeper rerun), not the frozen 11/14 spec report: its
      run CSV, diffed vs the reference board the same way, must match the app board */

@@ -58,13 +58,13 @@ const stripCardSrc = (name, l) => name === 'CARDS'
 const KEEPER_AAV_MOVED = ['p1038f0b', 'p176e0ac', 'p2020362', 'p4720771', 'p4cdd205', 'p67ec326', 'p6b44680', 'p6b4cb24',
                           'p7ebff20', 'p930d6ea', 'p9ccea09', 'p9d1de2a', 'pa72991b', 'pbd0561e', 'pd726c86', 'pdd27a6'];
 const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
-/* 2026-11-24 pool refresh, plus Francisco Espinoza (a657ac6, SEED_VER 2027-actuals.10):
+/* 2026-11-25 pool refresh (2f12920, SEED_VER 2027-actuals.11). Prior baseline a657ac6:
    phase 1 (22ad47f) struck 24 and added 4; f8a618c reran AAV; f554537 added Espinoza
    (seed, elig, cards); a657ac6 reran AAV again (his cell is {a:0}, no other price moved).
    For these three the baseline is a657ac6 (same card strips on both sides); the other
    consts still equal the old single-file build. The 11/20 baseline was b4f19a6. Ranks were
    already gone, so the CARDS check below only asserts no t and no provisional / Top 100 text. */
-const REFRESH_REF = 'a657ac6', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+const REFRESH_REF = '2f12920', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
 /* 2026-11-20 Rotoworld harvest (spec zuck_2026-11-20_package.md section 2, tools/rotoworld-harvest.py
    --from-csv): ROTOID gained exactly the matched rows of reports/rotoid_harvest_2026-11-20.csv, appended
    after the stored keys, none replaced. The baseline is the old ROTOID plus those keys. */
