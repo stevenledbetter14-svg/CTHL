@@ -76,6 +76,10 @@ const RW_ADD = {};
   const c = Object.fromEntries(hd.map((h, i) => [h, i]));
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
 const SEED_VER_BASE = '2027-actuals.10';   // 11/24 refresh (the 11/20 build's was 2027-actuals.9)
+/* 11/25: p.pr on 9 AL Top 100 players the 11/3 import missed. Existing pr on
+   the other 42 is still compared to the refresh ref. tools/test-top100-pr.mjs
+   pins the nine values. */
+const PR_1125 = new Set(['p218e0b7','p8604871','pb8dee08','p6377140','pe8c1474','p3f9d52f','p9e1a8ef','pf92e233','p64ab4f3']);
 const keeperBase = (name, old, cur) => {
   if(name === 'SEED2026'){
     old.picks = structuredClone(cur.picks);
@@ -85,6 +89,14 @@ const keeperBase = (name, old, cur) => {
       // still compared to the refresh ref. tools/test-cbs-elig.mjs pins the
       // hitter strings to data/elig-2027.js.
       if(p.kind === 'H') p.elig = cur.players[i].elig;
+      if(PR_1125.has(p.id)){
+        const next = {};
+        for(const k of Object.keys(p)){
+          next[k] = p[k];
+          if(k === 'mkt') next.pr = structuredClone(cur.players[i].pr);
+        }
+        old.players[i] = next;
+      }
     });
   }
   // Royce Lewis (pa72991b) was struck on 11/24 and is in neither AAV object. Copying
@@ -134,7 +146,7 @@ for(const [, name] of FILES){ OLD[name] = keeperBase(name, OLD[name], vm.runInCo
 }
 for(const [f, name] of FILES){
   const v = stripCardVal(name, structuredClone(vm.runInContext(name, NEW)));
-  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields, the 11/16 keeper sync, and the 11/24 CBS hitter elig' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : name === 'ROTOID' ? ', plus the 11/20 harvest keys' : ''}`);
+  ok(util.isDeepStrictEqual(v, OLD[name]) && JSON.stringify(v) === OLDJSON[name], `${name}: value deep-equal to the old embedded object (key order too)${name === 'SEED2026' ? ', minus the p27 card-line fields, the 11/16 keeper sync, the 11/24 CBS hitter elig, and the 11/25 p.pr on 9 AL Top 100' : name === 'AAV_2027' ? ', minus the 16 entries the 11/16 keeper rerun moved' : name === 'ROTOID' ? ', plus the 11/20 harvest keys' : ''}`);
 }
 {
   const sd = vm.runInContext('SEED2026', NEW), aav = vm.runInContext('AAV_2027', NEW);
