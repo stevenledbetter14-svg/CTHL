@@ -64,7 +64,10 @@ const KEEPER_OWNED = new Set(['SEED2026', 'AAV_2027']);
    For these three the baseline is a657ac6 (same card strips on both sides); the other
    consts still equal the old single-file build. The 11/20 baseline was b4f19a6. Ranks were
    already gone, so the CARDS check below only asserts no t and no provisional / Top 100 text. */
-const REFRESH_REF = '2f12920', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
+/* 2026-11-28 pool refresh (1dbf914, SEED_VER 2027-actuals.12): Griffin add, Gausman DET / Chisholm TOR
+   restored, seed clubs for Bubic/Gil/Gausman/Chisholm, Rotoworld seed id fixes, AAV rerun (Caminero k 53 -> 55). The refresh ref moves to
+   that commit for the same three consts. The 11/25 ref was 2f12920. */
+const REFRESH_REF = '1dbf914', REFRESHED = new Set(['SEED2026', 'AAV_2027', 'CARDS']);
 /* 2026-11-20 Rotoworld harvest (spec zuck_2026-11-20_package.md section 2, tools/rotoworld-harvest.py
    --from-csv): ROTOID gained exactly the matched rows of reports/rotoid_harvest_2026-11-20.csv, appended
    after the stored keys, none replaced. The baseline is the old ROTOID plus those keys. */
@@ -75,7 +78,7 @@ const RW_ADD = {};
 { const [hd, ...rows] = fs.readFileSync(path.join(ROOT, RW_CSV), 'utf8').trim().split('\n').map(l => l.split(','));
   const c = Object.fromEntries(hd.map((h, i) => [h, i]));
   for(const r of rows) if(r[c.id]) RW_ADD[knormJs(r[c.name])] = [r[c.slug], r[c.id]]; }
-const SEED_VER_BASE = '2027-actuals.11';   // 11/25 refresh (the 11/24 build's was 2027-actuals.10)
+const SEED_VER_BASE = '2027-actuals.12';   // 11/28 refresh (11/25 was .11, 11/24 .10)
 /* 11/25: p.pr on 9 AL Top 100 players the 11/3 import missed. Existing pr on
    the other 42 is still compared to the refresh ref. tools/test-top100-pr.mjs
    pins the nine values. */
@@ -156,8 +159,8 @@ for(const [f, name] of FILES){
   const pk = new Map(sd.picks.map(k => [k.pid, k]));
   const badPick = sd.players.filter(p => { const k = pk.get(p.id); return k ? !(p.pick && p.pick.team === k.team && p.pick.price === k.price && p.pick.keeper === !!k.keeper) : !!p.pick; });
   ok(badPick.length === 0, 'SEED2026 players[].pick matches picks (one per pick, none extra)', badPick.slice(0, 5).map(p => p.name).join(', '));
-  ok(aav.pabd0d7f.k === 53 && aav.p6377140.a === 8 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
-    'AAV_2027: Caminero {k:53}, Jenkins {a:8} (not k); McGonigle still k, Martinez still not');
+  ok(aav.pabd0d7f.k === 55 && aav.p6377140.a === 8 && aav.p6377140.k === undefined && aav.p2020362.k !== undefined && aav.p4720771.k === undefined,
+    'AAV_2027: Caminero {k:55} (11/28 rerun), Jenkins {a:8} (not k); McGonigle still k, Martinez still not');
 }
 {
   const pl = vm.runInContext('SEED2026', NEW).players.filter(p => p.p27);

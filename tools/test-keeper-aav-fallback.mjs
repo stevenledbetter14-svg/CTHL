@@ -6,8 +6,9 @@
 // Headless Chrome over http, room=local, every Firebase call failed as offline. Checks:
 //   1. source: aav27Shown() is used only by aav27CellHTML() and openPick(); inflationFactors(),
 //      fullPoolVal(), maxBid(), renderMeter(), renderMoney() never read AAV_2027 / aavOf / aav27*;
-//   2. Junior Caminero (pabd0d7f, kept $32, AAV_2027 {k:53}, no a): kept -> lock + salary;
-//      un-kept -> pool cell and card box show $53 (cell titled "Display only"), not "—".
+//   (11/28 AAV rerun: Caminero's curve k moved 53 -> 55.)
+//   2. Junior Caminero (pabd0d7f, kept $32, AAV_2027 {k:55}, no a): kept -> lock + salary;
+//      un-kept -> pool cell and card box show $55 (cell titled "Display only"), not "—".
 //      Walker Jenkins left the keeper list on 11/20 and is a regular non-keeper. The 11/24
 //      curve prices him {a:8} (was {a:9} on 11/24), so he is the priced control in check 3.
 //   3. a priced non-keeper (Walker Jenkins, {a:8}) still shows a, no curve title;
@@ -81,14 +82,14 @@ const view = id => ev(`(()=>{ const p=S.players.find(x=>x.id===${JSON.stringify(
   const ab=document.getElementById('dlgAav'); const r={cell:aav27CellHTML(p), box:ab.textContent, label:ab.previousElementSibling.textContent, kept:!!(p.pick&&p.pick.keeper)};
   document.getElementById('pickDlg').close(); return r; })()`);
 const k0 = await view(CAMINERO);
-ok(k0.kept && /🔒 \$32/.test(k0.cell) && /Ranked by AAV \$53/.test(k0.cell) && /\$32/.test(k0.box) && k0.label === 'Keeper', 'Caminero kept: lock + $32 salary, ranked by AAV $53', JSON.stringify(k0));
-ok(await ev(`JSON.stringify(AAV_2027[${JSON.stringify(CAMINERO)}])`) === '{"k":53}', 'Caminero AAV_2027 = {k:53} (curve price, no auction a)');
+ok(k0.kept && /🔒 \$32/.test(k0.cell) && /Ranked by AAV \$55/.test(k0.cell) && /\$32/.test(k0.box) && k0.label === 'Keeper', 'Caminero kept: lock + $32 salary, ranked by AAV $55', JSON.stringify(k0));
+ok(await ev(`JSON.stringify(AAV_2027[${JSON.stringify(CAMINERO)}])`) === '{"k":55}', 'Caminero AAV_2027 = {k:55} (curve price, no auction a)');
 ok(await ev(`JSON.stringify(AAV_2027[${JSON.stringify(JENKINS)}])`) === '{"a":8}', 'Jenkins AAV_2027 = {a:8} (regular non-keeper, not a k fallback)');
 const before = await ev(`JSON.stringify(inflationFactors())`);
 await ev(`removePick(${JSON.stringify(CAMINERO)})`);
 const k1 = await view(CAMINERO);
-ok(!k1.kept && k1.cell === '<b title="Keeper-list curve AAV (not kept). Display only: not in the pot until the next AAV run.">$53</b>', 'Caminero un-kept: pool column shows $53 (curve k), titled display-only — not "—"', k1.cell);
-ok(k1.box === '$53' && k1.label === 'CTHL AAV 2027', 'Caminero un-kept: card box shows CTHL AAV 2027 $53', JSON.stringify(k1));
+ok(!k1.kept && k1.cell === '<b title="Keeper-list curve AAV (not kept). Display only: not in the pot until the next AAV run.">$55</b>', 'Caminero un-kept: pool column shows $55 (curve k), titled display-only — not "—"', k1.cell);
+ok(k1.box === '$55' && k1.label === 'CTHL AAV 2027', 'Caminero un-kept: card box shows CTHL AAV 2027 $55', JSON.stringify(k1));
 ok(await ev(`JSON.stringify(inflationFactors())`) !== before, 'un-keeping moves inflation through the keeper salary / p.val only (expected)');
 const c = await view(JENKINS);
 ok(c.cell === '<b>$8</b>' && c.box === '$8' && c.label === 'CTHL AAV 2027', 'Jenkins (priced a=8, not kept): $8 in both, no curve title', JSON.stringify(c));

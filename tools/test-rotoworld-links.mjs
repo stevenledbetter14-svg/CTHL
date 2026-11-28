@@ -8,7 +8,9 @@
 //   4. no ROTOID key is reached by two pool players (a knorm collision needs a seed rwId/rwSlug);
 //   5. every ROTOID / seed rw id is numeric or UUID-style, every slug is lower-case-hyphen;
 //   6. no ROTOID entry stored at --base (default f8aca68, live main) was changed or dropped;
-//   7. index.html loads data/rotoid.js with ?v=APP_VER.
+//   7. index.html loads data/rotoid.js with ?v=APP_VER;
+//   8. the 11/28 fixes (Jacob Wilson 242595, Julio Rodriguez 48480, Jose Ramirez 48521);
+//   9. no seed rwId disagrees with ROTOID (allowlist aside) and every slug matches its player's name.
 //   node tools/test-rotoworld-links.mjs [--expect 616/713] [--base <rev>]
 //        [--csv reports/rotoid_harvest_2026-11-20.csv] [--unresolved reports/rotoworld_unresolved_2026-11-20.csv]
 import fs from 'fs'; import path from 'path'; import vm from 'vm'; import { execFileSync } from 'child_process';
@@ -76,6 +78,33 @@ console.log(`ROTOID: ${Object.keys(B).length} at ${BASE} -> ${Object.keys(RO).le
 /* 7 */
 const APP_VER = (html.match(/const APP_VER = '([^']+)'/) || [])[1];
 ok(html.includes(`src="data/rotoid.js?v=${APP_VER}"`), `index.html loads data/rotoid.js?v=${APP_VER}`);
+
+/* 8 (2026-11-28, spec topps-back-spec-2026-11-28.md section 6): seed rwId/rwSlug that pointed at a
+   different player with the same name. Each resolves to the nbcsports page Eno checked on 11/28. */
+const FIX_1128 = { pe5cfedf: ['Jacob Wilson', 'https://www.nbcsports.com/mlb/jacob-wilson/242595/news'],
+                   p9ccea09: ['Julio Rodriguez', 'https://www.nbcsports.com/mlb/julio-rodriguez/48480/news'],
+                   p7f1b103: ['Jose Ramirez', 'https://www.nbcsports.com/mlb/jose-ramirez/48521/news'] };
+for(const [id, [name, url]] of Object.entries(FIX_1128)){
+  const p = byId[id], u = p && rotoUrl(p);
+  ok(!!p && p.name === name && u.direct && u.url === url, `${name} (${id}) -> ${url}`, u ? u.url : 'not in pool');
+}
+/* 9: mismatch guards. (a) A seed rwId that disagrees with ROTOID for the same name fails unless
+   allowlisted (the harvest checked those pages). (b) Every direct link's slug must match the pool
+   player's own name (knorm of the slug = knorm of the name), so a link to another player fails. */
+const RW_ALLOW = new Set([
+  'p7e9ee51',   // Kazuma Okamoto: seed UUID page checked 11/28 (Blue Jays news); ROTOID has no other id
+  'p4cdd205',   // Roman Anthony: seed UUID page checked 11/28 (Red Sox news)
+]);
+const disagree = P.filter(p => p.rwId && p.rwSlug && RO[knorm(p.name)] && String(RO[knorm(p.name)][1]) !== String(p.rwId) && !RW_ALLOW.has(p.id));
+ok(disagree.length === 0, 'no seed rwId disagrees with ROTOID for the same player (outside the allowlist)', disagree.map(p => `${p.name} ${p.id} seed ${p.rwId} vs ROTOID ${RO[knorm(p.name)][1]}`).join('; '));
+// Nickname slugs Rotoworld itself uses (page checked: same player).
+const SLUG_ALIAS = { 'Louis Varland': 'louie-varland', 'Jacob Latz': 'jake-latz' };
+const slugName = P.filter(p => rotoUrl(p).direct).filter(p => {
+  const slug = rotoUrl(p).url.split('/')[4];
+  if(SLUG_ALIAS[p.name] === slug) return false;
+  return knorm(slug.replace(/-/g, ' ')) !== knorm(p.name);
+});
+ok(slugName.length === 0, `every direct Rotoworld slug matches its pool player's name (${direct.length} links)`, slugName.slice(0, 8).map(p => `${p.name} -> ${rotoUrl(p).url.split('/')[4]}`).join('; '));
 
 console.log(fails ? `\n${fails} FAILED` : '\nALL PASS');
 process.exit(fails ? 1 : 0);

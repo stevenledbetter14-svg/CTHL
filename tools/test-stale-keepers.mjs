@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Two ways a current-version board can be missing McGonigle and Caminero.
-// (a) localStorage 'cthl-auction' stamped seedVer 2027-actuals.11 and bakedSet
+// (a) localStorage 'cthl-auction' stamped seedVer 2027-actuals.12 and bakedSet
 //     2027-keeperval.4, seed keepers minus those two (46). load() → migrate()
 //     must call fillMissingBakedKeepers().
 // (b) stale official-room shape: Martinez (Birdland $2) and Jenkins (Money
@@ -98,7 +98,7 @@ const expectBoard = (label, report) => {
 
 const local = await ev(`(()=>{
   const saved = JSON.parse(JSON.stringify(SEED2026));
-  saved.seedVer = '2027-actuals.11';
+  saved.seedVer = '2027-actuals.12';
   saved.bakedSet = '2027-keeperval.4';
   saved.picks = (saved.picks||[]).filter(k=>k.pid!=='p2020362' && k.pid!=='pabd0d7f');
   const before = saved.picks.filter(k=>k.keeper).length;
@@ -111,7 +111,7 @@ const local = await ev(`(()=>{
   return body;
 })()`);
 ok(local.before === 46, 'localStorage save starts at 46 keepers (McGonigle and Caminero missing)', String(local.before));
-ok(local.seedVer === '2027-actuals.11' && local.bakedSet === '2027-keeperval.4', 'load() kept seedVer .11 and bakedSet .4', `${local.seedVer} ${local.bakedSet}`);
+ok(local.seedVer === '2027-actuals.12' && local.bakedSet === '2027-keeperval.4', 'load() kept seedVer .12 and bakedSet .4', `${local.seedVer} ${local.bakedSet}`);
 expectBoard('load()', local);
 
 const report = await ev(`(()=>{
