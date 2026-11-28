@@ -1,0 +1,81 @@
+name,pool_id,team,side,aav_1125,aav_1128,change,status_1128,pa_ip_change_vs_1125
+Jazz Chisholm Jr.,pd39630d,TOR,H,,25,25,paid,PA new (486)
+Foster Griffin,pa99dce3,CLE,P,,12,12,paid,IP new (164.6)
+Kevin Gausman,pfc2e6a5,DET,P,,9,9,paid,IP new (178.5)
+Anthony Kay,p830e07b,CHW,P,2,0,-2,none,IP +0.0
+Ben Malgeri,p41866cc,DET,H,2,0,-2,none,PA +0
+Brandon Young,p1600a35,BAL,P,2,0,-2,none,IP +0.0
+Junior Caminero,pabd0d7f,TBR,H,53,55,2,keeper,PA +0
+Aaron Judge,p8c74fc1,NYY,H,40,41,1,paid,PA +0
+Adley Rutschman,pf28c105,BOS,H,10,9,-1,paid,PA +0
+Alejandro Kirk,p67ec326,TOR,H,11,10,-1,paid,PA +0
+Alejandro Osuna,p54dd0ba,TEX,H,4,3,-1,paid,PA +0
+Andres Munoz,p7b8444d,SEA,P,23,22,-1,paid,IP +0.0
+Andrew Benintendi,p795e822,CHW,H,6,5,-1,keeper,PA +0
+Anthony Santander,pa4766c5,TOR,H,6,5,-1,paid,PA +0
+Aroldis Chapman,p1a61dbe,BOS,P,19,18,-1,paid,IP +0.0
+Austin Wells,p973f798,NYY,H,7,6,-1,paid,PA +0
+Ben Rice,p988af3f,NYY,H,37,38,1,keeper,PA +0
+Bobby Witt Jr.,p5c9bcf3,KCR,H,50,51,1,paid,PA +0
+Brenton Doyle,p46dd022,CHW,H,3,2,-1,paid,PA +0
+Bryan Baker,p831d03b,TBR,P,20,19,-1,paid,IP +0.0
+Bryan Woo,p537390e,SEA,P,25,24,-1,keeper,IP +0.0
+Cam Schlittler,p28aaca5,NYY,P,36,35,-1,keeper,IP +0.0
+Carlos Correa,pdfd43f3,HOU,H,7,6,-1,paid,PA +0
+Carson Roccaforte,pb645dd7,KCR,H,5,4,-1,paid,PA +0
+Colson Montgomery,p17f5e83,CHW,H,12,11,-1,paid,PA +0
+Colt Emerson,p30f9705,SEA,H,6,5,-1,keeper,PA +0
+David Bednar,pe39639b,NYY,P,23,22,-1,paid,IP +0.0
+Denzer Guzman,p332dd33,LAA,H,3,2,-1,paid,PA +0
+Drew Rasmussen,pf10637c,TBR,P,27,26,-1,keeper,IP +0.0
+Dylan Cease,pe7e8f9f,TOR,P,21,20,-1,paid,IP +0.0
+Ernie Clement,peb4ed2e,TOR,H,10,9,-1,paid,PA +0
+Garrett Crochet,p301850c,BOS,P,39,38,-1,paid,IP +0.0
+Gavin Williams,pe315128,CLE,P,25,24,-1,keeper,IP +0.0
+Gerrit Cole,p66c1494,NYY,P,18,17,-1,keeper,IP +0.0
+Griffin Jax,ped84e91,TBR,P,8,7,-1,paid,IP +0.0
+Gunnar Henderson,p95e60af,BAL,H,33,34,1,paid,PA +0
+Ha-Seong Kim,p449d239,DET,H,3,2,-1,paid,PA +0
+Hunter Brown,p298cb3a,HOU,P,12,11,-1,paid,IP +0.0
+Jacob deGrom,pb4d19ec,TEX,P,34,33,-1,keeper,IP +0.0
+Jarren Duran,p8673472,BOS,H,4,3,-1,paid,PA +0
+Joe Ryan,p3451d01,MIN,P,24,23,-1,paid,IP +0.0
+Jonathan Aranda,p6aa8b9e,TBR,H,21,20,-1,paid,PA +0
+Jordan Westburg,pa09f76b,BAL,H,14,13,-1,keeper,PA +0
+Jose Ramirez,p7f1b103,CLE,H,40,41,1,paid,PA +0
+Josh Hader,p26b94c7,HOU,P,21,20,-1,keeper,IP +0.0
+Joshua Kuroda-Grauer,p2b872c6,ATH,H,3,2,-1,paid,PA +0
+Kade Anderson,p8604871,SEA,P,18,17,-1,paid,IP +0.0
+Kyle Manzardo,peab477d,CLE,H,3,2,-1,paid,PA +0
+Kyle Teel,p5712424,CHW,H,8,7,-1,keeper,PA +0
+Lazaro Montes,pf92e233,SEA,H,5,4,-1,keeper,PA +0
+Logan Gilbert,p82b3359,SEA,P,36,35,-1,keeper,IP +0.0
+Louis Varland,pe7b812a,TOR,P,28,27,-1,paid,IP +0.0
+Lucas Spence,pa881315,HOU,H,4,3,-1,paid,PA +0
+Luis Garcia Jr.,p176e0ac,NYY,H,17,16,-1,paid,PA +0
+Max Fried,p2085963,NYY,P,15,14,-1,paid,IP +0.0
+Michael Arroyo,p3f9d52f,SEA,H,3,2,-1,keeper,PA +0
+Michael Massey,pb0a844e,KCR,H,10,9,-1,paid,PA +0
+Moises Ballesteros,p4bc46e0,LAA,H,6,5,-1,paid,PA +0
+Nick Kurtz,pf97704,ATH,H,48,49,1,keeper,PA +0
+Nick Loftin,pc215a82,KCR,H,8,7,-1,paid,PA +0
+Pablo López,pd2ed2af,MIN,P,5,4,-1,paid,IP +0.0
+Parker Messick,pf0ce583,CLE,P,20,19,-1,paid,IP +0.0
+Patrick Bailey,p5d65a3d,CLE,H,3,2,-1,paid,PA +0
+Payton Tolle,p8c38fb2,BOS,P,21,20,-1,keeper,IP +0.0
+River Ryan,p64ab4f3,DET,P,5,4,-1,paid,IP +0.0
+Ryan Pepiot,pceaf491,TBR,P,3,2,-1,paid,IP +0.0
+Sonny Gray,pb64ce42,MIN,P,16,15,-1,paid,IP +0.0
+Spencer Jones,pcca2a92,NYY,H,14,13,-1,keeper,PA +0
+Spencer Torkelson,pdd27a6,DET,H,16,15,-1,keeper,PA +0
+Tristan Peters,p10a3d6b,CHW,H,5,4,-1,paid,PA +0
+Tyler O'Neill,p6b4cb24,BAL,H,5,4,-1,paid,PA +0
+Tyler Tolbert,pea05754,KCR,H,4,3,-1,paid,PA +0
+Vaughn Grissom,pcda6c6f,LAA,H,6,5,-1,paid,PA +0
+Victor Mesa Jr.,p1f52526,TBR,H,17,16,-1,paid,PA +0
+Vladimir Guerrero Jr.,p895e8b6,TOR,H,31,32,1,paid,PA +0
+Wade Meckler,pb967190,LAA,H,8,7,-1,paid,PA +0
+Yainer Diaz,p19f9919,HOU,H,12,11,-1,paid,PA +0
+Yandy Diaz,p3672d6a,TBR,H,29,30,1,keeper,PA +0
+Yordan Alvarez,p5d39d0a,HOU,H,43,44,1,paid,PA +0
+Zach Neto,pbd68516,LAA,H,36,37,1,keeper,PA +0

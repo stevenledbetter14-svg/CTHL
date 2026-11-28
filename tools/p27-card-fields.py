@@ -60,7 +60,8 @@ def main():
     seed = json.loads(body)
     assert json.dumps(seed, separators=(',', ':'), ensure_ascii=False) == body, 'SEED2026 line does not round-trip'
 
-    mlbam = {r['pool_id']: r['fg_mlbam'] for r in csv.DictReader(open(os.path.join(a.steamer, 'match_report.csv'), encoding='utf8')) if r['fg_mlbam']}
+    fgkey = {r['pool_id']: r['fg_mlbam'] for r in csv.DictReader(open(os.path.join(a.steamer, 'match_report.csv'), encoding='utf8')) if r['fg_mlbam']}
+    mlbam = dict(fgkey)
     mlbam.update({r['pool_id']: r['mlbam'] for r in csv.DictReader(open(os.path.join(a.steamer, 'values_2027_steamer.csv'), encoding='utf8')) if r['mlbam']})
     src = {}
     src_pid = {}
@@ -85,6 +86,10 @@ def main():
                 row = src[side].get(int(float(mid)))
             except ValueError:
                 row = src_pid.get(side, {}).get(str(mid))
+        if not row and fgkey.get(p['id']) and not str(fgkey[p['id']]).isdigit():
+            # Steamer row keyed by FanGraphs playerid (no xMLBAMID yet), e.g. Taira sa3062990
+            # after his 11/28 re-key to MLBAM 838343.
+            row = src_pid.get(side, {}).get(str(fgkey[p['id']]))
         if not row:
             unmatched.append((p['id'], p['name'], p['team'], side, mid or ''))
             continue

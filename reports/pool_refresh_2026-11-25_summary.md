@@ -1,6 +1,6 @@
 # CTHL pool refresh 11/25: summary
 
-Final state (pending write-ups + Draft List PDF on this same branch): `APP_VER` **2026.11.25-2**, `SEED_VER` **2027-actuals.11**, **722** seed players, Draft List **647**. Nine adds and two restorations. Steamer is still the **11/20** FanGraphs pull (11/25 re-pull blocked, Cloudflare 403). Solved pot **$3,043.96**, implied inflation **1.1844** (`reports/aav_run_2026-11-25.md`). Keepers **48 / $512**. Cash check $512 + $2,058 = **$2,570**.
+Final state (**shipped, live** on main c39984e, 11/25, with the write-ups and the Draft List PDF): `APP_VER` **2026.11.25-3**, `SEED_VER` **2027-actuals.11**, **722** seed players, Draft List **647**. Nine adds and two restorations. Steamer is still the **11/20** FanGraphs pull (11/25 re-pull blocked, Cloudflare 403). Solved pot **$3,043.96**, implied inflation **1.1844** (`reports/aav_run_2026-11-25.md`). Keepers **48 / $512**. Cash check $512 + $2,058 = **$2,570**.
 
 Branch `build-1125` already had `6a93812` (room-restore seedVer fix) and `6c2c576` (p.pr on 9 AL Top 100; `APP_VER` 2026.11.25-1). This refresh is the next commits on that branch.
 
@@ -55,5 +55,5 @@ Top 25 starts Junior Caminero $53 K, Bobby Witt Jr. $50, Nick Kurtz $48 K.
 
 - FanGraphs / Steamer re-pull (403).
 - Rotoworld harvest (new players are unlinked; coverage test expect is 617/722 (one new add matched an existing ROTOID)).
-- Draft List PDF and the 11/25 write-up batch (next on this branch).
-- Room sync / merge / deploy (Steven's go is to ship when the whole branch is complete).
+- Draft List PDF and the 11/25 write-up batch: done later on the same branch (c39984e); PDF uploaded 11/25 (647 players).
+- Room sync / merge / deploy: done 11/25 on Steven's go (main c39984e live, APP_VER 2026.11.25-3; official room synced to seedVer .11, 48 / $512).

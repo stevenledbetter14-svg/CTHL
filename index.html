@@ -808,19 +808,19 @@ a{color:var(--link)}
      club logos, card write-ups) lives in data/*.js: one plain script each, loaded in order
      before the app. Every ?v= below must equal APP_VER: bump them together on
      each deploy so a browser never runs new code on an old cached data file. -->
-<script src="data/seed-2027.js?v=2026.11.25-3"></script>
-<script src="data/aav-2027.js?v=2026.11.25-3"></script>
-<script src="data/cards-2027.js?v=2026.11.25-3"></script>
-<script src="data/keepers-2027.js?v=2026.11.25-3"></script>
-<script src="data/rotoid.js?v=2026.11.25-3"></script>
-<script src="data/logos.js?v=2026.11.25-3"></script>
-<script src="data/writeups-2027.js?v=2026.11.25-3"></script>
+<script src="data/seed-2027.js?v=2026.11.28-1"></script>
+<script src="data/aav-2027.js?v=2026.11.28-1"></script>
+<script src="data/cards-2027.js?v=2026.11.28-1"></script>
+<script src="data/keepers-2027.js?v=2026.11.28-1"></script>
+<script src="data/rotoid.js?v=2026.11.28-1"></script>
+<script src="data/logos.js?v=2026.11.28-1"></script>
+<script src="data/writeups-2027.js?v=2026.11.28-1"></script>
 <script>
 /* App build stamp (footer). Bump APP_VER on every deployed build: open pages
    fetch index.html now and then, and a different APP_VER shows the "New
    version" banner. Independent of SEED_VER, which is about the player pool.
    The data <script> tags above carry ?v=<APP_VER>: change them with it. */
-const APP_VER = '2026.11.25-3';
+const APP_VER = '2026.11.28-1';
 const APP_BUILT = '2026-11-25';
 /* Data-file guard (2026-11-16). If a data file is missing, failed to load or
    is tagged for a different build, the app does not start: "CTHL" in the
@@ -951,11 +951,12 @@ const POOL_OVERRIDES = {
     "pc250f03": "BAL",   // Braden Nett (was ATH)
     "p23231e1": "BAL",   // Carter Baumler (was TEX)
     "p7bdc968": "CLE",   // Kris Bubic (was NL)
-    "p2db3997": "DET"   // Luis Gil (was NYY)
+    "p2db3997": "DET",   // Luis Gil (was NYY)
+    "pfc2e6a5": "DET",   // Kevin Gausman (was NL)
+    "pd39630d": "TOR"   // Jazz Chisholm Jr. (was NYY)
   },
   "status": {
     "p18f135d": "nl:WSH",   // Connelly Early (NL) - Traded to NL (WSH)
-    "pfc2e6a5": "fa",   // Kevin Gausman (NL) - FA
     "p10c475": "fa",   // Tarik Skubal (NL) - FA
     "pe883a1d": "fa",   // Kirby Yates (NL) - FA
     "p7b8bcdc": "nl:CHC",   // Gabriel Arias (NL) - Traded to NL (CHC)
@@ -980,7 +981,6 @@ const POOL_OVERRIDES = {
     "p7e26f36": "fa",   // Yoan Moncada (LAA) - FA
     "p9c3a23c": "fa",   // Josh Bell (MIN) - FA
     "p3a12917": "fa",   // Taylor Rogers (MIN) - FA
-    "pd39630d": "fa",   // Jazz Chisholm Jr. (NYY) - FA
     "peffddee": "fa",   // Paul Goldschmidt (NYY) - FA
     "p3a56cc": "fa",   // Trent Grisham (NYY) - FA
     "p73c1cd2": "fa",   // J.P. Crawford (SEA) - FA
@@ -1120,7 +1120,7 @@ function fillMissingBakedKeepers(){
     if(!taken && n < max) S.picks.push(JSON.parse(JSON.stringify(b)));
   });
 }
-const SEED_VER = '2027-actuals.11';
+const SEED_VER = '2027-actuals.12';
 /* APP_VER / APP_BUILT: defined in the data-file guard script above. */
 function seedState(){
   const s = SEED2026 ? JSON.parse(JSON.stringify(SEED2026)) : blankState();
